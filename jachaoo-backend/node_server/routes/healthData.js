@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const HealthData = require('../models/HealthData');
 
-// Save health data
+// Save health data - REMOVED AUTH CHECK
 router.post('/', async (req, res) => {
     try {
         const { userId, name, age, sex, bloodPressure, diabetes, smoker } = req.body;
@@ -10,14 +10,12 @@ router.post('/', async (req, res) => {
         let healthData = await HealthData.findOne({ userId });
 
         if (healthData) {
-            // Update existing data
             healthData = await HealthData.findOneAndUpdate(
                 { userId },
                 { name, age, sex, bloodPressure, diabetes, smoker },
                 { new: true }
             );
         } else {
-            // Create new data
             healthData = new HealthData({
                 userId,
                 name,
@@ -36,7 +34,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Get health data by user ID
+// Get health data by user ID - REMOVED AUTH CHECK
 router.get('/:userId', async (req, res) => {
     try {
         const healthData = await HealthData.findOne({ userId: req.params.userId });
