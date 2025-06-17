@@ -1,6 +1,13 @@
 import requests
+from dotenv import load_dotenv
+import os
+# Load variables from .env file
+load_dotenv()
 
-API_KEY = "AIzaSyBUYwkfib0QceAyuJN71318JZLqrcunpoY"
+# Get the API key from the environment
+api_key = os.getenv("GENAI_API_KEY")
+
+API_KEY = api_key
 API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 def call_gemini_api(prompt: str) -> str:

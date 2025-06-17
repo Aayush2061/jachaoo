@@ -8,17 +8,18 @@ import {
   Alert,
   Button,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 
 // Make sure these are in your app.json or environment variables
-const CLOUDINARY_CLOUD_NAME = "drgny2hcw"; // Replace with your cloud name
-const CLOUDINARY_UPLOAD_PRESET = "medical_reports_mobile"; // Replace with your preset
-const API_BASE_URL = "http://192.168.1.68:5000/api"; // Replace with your backend URL
+const CLOUDINARY_CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME; // Replace with your cloud name
+const CLOUDINARY_UPLOAD_PRESET = `${process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET}`; // Replace with your preset
 
 export default function ReportAnalysis() {
+  // console.log(process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
   const { userId, getToken } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -27,6 +28,8 @@ export default function ReportAnalysis() {
     url: string;
     cloudinaryId: string;
   } | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const compressImage = async (uri: string) => {
     try {
@@ -82,18 +85,21 @@ export default function ReportAnalysis() {
   const saveToDatabase = async (url: string, cloudinaryId: string) => {
     try {
       const token = await getToken();
-      const response = await fetch(`http://192.168.1.68:5000/api/reports`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId,
-          cloudinaryId,
-          url,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/reports`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId,
+            cloudinaryId,
+            url,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -104,6 +110,47 @@ export default function ReportAnalysis() {
     } catch (error: any) {
       console.error("Database save error:", error);
       throw new Error(`Database save failed: ${error.message}`);
+    }
+  };
+
+  const analyzeReport = async (imageUrl: string) => {
+    try {
+      setIsAnalyzing(true);
+      const token = await getToken();
+
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/reports/analyze`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            url: imageUrl,
+          }),
+        }
+      );
+
+      // Add these debug logs:
+      const responseText = await response.text();
+      console.log("RAW RESPONSE:", responseText);
+      console.log("STATUS:", response.status);
+
+      const data = JSON.parse(responseText);
+      console.log("PARSED DATA:", data);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Analysis failed");
+      }
+
+      setAnalysisResult(data);
+      return data;
+    } catch (error) {
+      console.error("Analysis error:", error);
+      throw error;
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -123,19 +170,19 @@ export default function ReportAnalysis() {
       setUploadProgress(0.6);
 
       // 3. Save to database
-      const dbResult = await saveToDatabase(
-        cloudinaryResult.url,
-        cloudinaryResult.cloudinaryId
-      );
-      setUploadProgress(0.9);
+      await saveToDatabase(cloudinaryResult.url, cloudinaryResult.cloudinaryId);
+      setUploadProgress(0.8);
+
+      // 4. Analyze the report
+      await analyzeReport(cloudinaryResult.url);
+      setUploadProgress(1);
 
       setReportData({
         url: cloudinaryResult.url,
         cloudinaryId: cloudinaryResult.cloudinaryId,
       });
 
-      Alert.alert("Success", "Report uploaded and saved successfully!");
-      setUploadProgress(1);
+      Alert.alert("Success", "Report uploaded and analyzed successfully!");
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
@@ -163,13 +210,13 @@ export default function ReportAnalysis() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Upload Medical Report</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Medical Report Analysis</Text>
 
       <Button
         title="Select Report Image"
         onPress={pickImage}
-        disabled={isLoading}
+        disabled={isLoading || isAnalyzing}
       />
 
       {image && (
@@ -180,16 +227,19 @@ export default function ReportAnalysis() {
         />
       )}
 
-      {isLoading && (
+      {(isLoading || isAnalyzing) && (
         <View style={styles.progressContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
-          <Text>Uploading: {Math.round(uploadProgress * 100)}%</Text>
+          <Text>
+            {isAnalyzing ? "Analyzing..." : "Uploading..."}{" "}
+            {Math.round(uploadProgress * 100)}%
+          </Text>
         </View>
       )}
 
-      {image && !isLoading && (
+      {image && !isLoading && !isAnalyzing && (
         <Button
-          title="Upload Report"
+          title="Upload & Analyze Report"
           onPress={handleImageUpload}
           color="#28a745"
         />
@@ -201,18 +251,33 @@ export default function ReportAnalysis() {
           <Text numberOfLines={1} style={styles.urlText}>
             Cloudinary ID: {reportData.cloudinaryId}
           </Text>
-          <Text numberOfLines={1} style={styles.urlText}>
-            URL: {reportData.url.substring(0, 30)}...
-          </Text>
         </View>
       )}
-    </View>
+
+      {analysisResult?.status === "success" ? (
+        <View style={styles.analysisContainer}>
+          <Text style={styles.analysisTitle}>Analysis Results</Text>
+          <ScrollView
+            style={styles.analysisScrollView}
+            contentContainerStyle={styles.analysisContent}
+          >
+            <Text style={styles.analysisText}>{analysisResult.analysis}</Text>
+          </ScrollView>
+        </View>
+      ) : (
+        <Text style={styles.noResultsText}>
+          {analysisResult?.status === "error"
+            ? analysisResult.message
+            : "No analysis available"}
+        </Text>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     backgroundColor: "#f8f9fa",
   },
@@ -252,285 +317,45 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 12,
   },
+  analysisContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#e7f5ff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0ebff",
+  },
+  analysisTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#1864ab",
+  },
+  analysisText: {
+    color: "#364fc7",
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  sectionHeader: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginTop: 10,
+    color: "#1c7ed6",
+  },
+  listItem: {
+    marginLeft: 15,
+  },
+  analysisScrollView: {
+    // maxHeight: 400, // Increased height
+    width: "100%",
+  },
+  analysisContent: {
+    paddingBottom: 20, // Add padding for scroll
+  },
+  noResultsText: {
+    color: "#6c757d",
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
+  },
 });
-
-// import * as ImagePicker from "expo-image-picker";
-// import { useState } from "react";
-// import {
-//   ActivityIndicator,
-//   Button,
-//   Image,
-//   StyleSheet,
-//   Text,
-//   View,
-// } from "react-native";
-
-// export default function ReportAnalysis() {
-//   const [image, setImage] = useState<string | null>(null);
-//   const [result, setResult] = useState<any>(null);
-//   const [loading, setLoading] = useState(false);
-
-//   const pickImage = async () => {
-//     // Request permission
-//     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-//     if (status !== "granted") {
-//       alert("Permission to access photos is required!");
-//       return;
-//     }
-
-//     // Pick image
-//     let result = await ImagePicker.launchImageLibraryAsync({
-//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//       allowsEditing: true,
-//       quality: 0.8,
-//     });
-
-//     if (!result.canceled) {
-//       setImage(result.assets[0].uri);
-//       setResult(null); // Reset previous results
-//     }
-//   };
-
-//   const analyzeReport = () => {
-//     if (!image) return;
-
-//     setLoading(true);
-
-//     // Mock analysis (replace with actual API call later)
-//     setTimeout(() => {
-//       setResult({
-//         lab_report_analysis: [
-//           "Hemoglobin (12.4 g/dL) - Slightly low, possible mild anemia",
-//           "WBC (6.2 x10³/µL) - Within normal range",
-//         ],
-//         diet_plan: {
-//           breakfast: "1 cup oatmeal with berries (rich in iron)",
-//           lunch: "Grilled chicken with spinach salad (iron-rich foods)",
-//         },
-//       });
-//       setLoading(false);
-//     }, 2000); // Simulate network delay
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>Upload Medical Report</Text>
-
-//       <Button title="Select Report Image" onPress={pickImage} color="#4A90E2" />
-
-//       {image && (
-//         <View style={styles.imageContainer}>
-//           <Image source={{ uri: image }} style={styles.image} />
-//           <Button
-//             title="Analyze Report"
-//             onPress={analyzeReport}
-//             color="#28a745"
-//           />
-//         </View>
-//       )}
-
-//       {loading && (
-//         <View style={styles.loadingContainer}>
-//           <ActivityIndicator size="large" color="#4A90E2" />
-//           <Text>Analyzing report...</Text>
-//         </View>
-//       )}
-
-//       {result && (
-//         <View style={styles.resultContainer}>
-//           <Text style={styles.resultTitle}>Analysis Results:</Text>
-
-//           <Text style={styles.sectionTitle}>Lab Findings:</Text>
-//           {result.lab_report_analysis?.map((item: string, index: number) => (
-//             <Text key={index} style={styles.resultText}>
-//               • {item}
-//             </Text>
-//           ))}
-
-//           <Text style={styles.sectionTitle}>Diet Suggestions:</Text>
-//           <Text style={styles.resultText}>
-//             Breakfast: {result.diet_plan?.breakfast}
-//           </Text>
-//           <Text style={styles.resultText}>
-//             Lunch: {result.diet_plan?.lunch}
-//           </Text>
-//         </View>
-//       )}
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: 20,
-//     backgroundColor: "#f8f9fa",
-//   },
-//   title: {
-//     fontSize: 22,
-//     fontWeight: "bold",
-//     marginBottom: 20,
-//     textAlign: "center",
-//     color: "#333",
-//   },
-//   imageContainer: {
-//     marginTop: 20,
-//     alignItems: "center",
-//   },
-//   image: {
-//     width: 300,
-//     height: 200,
-//     resizeMode: "contain",
-//     marginBottom: 15,
-//     borderRadius: 8,
-//     borderWidth: 1,
-//     borderColor: "#ddd",
-//   },
-//   loadingContainer: {
-//     marginTop: 20,
-//     alignItems: "center",
-//   },
-//   resultContainer: {
-//     marginTop: 20,
-//     padding: 15,
-//     backgroundColor: "#fff",
-//     borderRadius: 8,
-//     borderWidth: 1,
-//     borderColor: "#ddd",
-//   },
-//   resultTitle: {
-//     fontSize: 18,
-//     fontWeight: "bold",
-//     marginBottom: 10,
-//     color: "#333",
-//   },
-//   sectionTitle: {
-//     fontSize: 16,
-//     fontWeight: "600",
-//     marginTop: 10,
-//     color: "#444",
-//   },
-//   resultText: {
-//     marginVertical: 4,
-//     color: "#555",
-//   },
-// });
-
-// import * as FileSystem from "expo-file-system";
-// import * as ImageManipulator from "expo-image-manipulator";
-// import * as ImagePicker from "expo-image-picker";
-// import * as MediaLibrary from "expo-media-library";
-// import React, { useState } from "react";
-// import { Alert, Button, Image, ScrollView, Text, View } from "react-native";
-
-// export default function ImageCompressorTest() {
-//   const [original, setOriginal] = useState(null);
-//   const [compressed, setCompressed] = useState(null);
-//   const [originalInfo, setOriginalInfo] = useState(null);
-//   const [compressedInfo, setCompressedInfo] = useState(null);
-
-//   const pickImage = async () => {
-//     const result = await ImagePicker.launchImageLibraryAsync({
-//       allowsEditing: false,
-//       quality: 1,
-//     });
-
-//     if (!result.canceled) {
-//       const uri = result.assets[0].uri;
-//       setOriginal(uri);
-//       await getImageInfo(uri, setOriginalInfo);
-//       compressImage(uri);
-//     }
-//   };
-
-//   const getImageInfo = async (uri, setInfo) => {
-//     const { size } = await FileSystem.getInfoAsync(uri, { size: true });
-//     const manipResult = await ImageManipulator.manipulateAsync(uri, [], {});
-//     const { width, height } = manipResult;
-//     setInfo({
-//       width,
-//       height,
-//       sizeKB: (size / 1024).toFixed(2),
-//     });
-//   };
-
-//   const compressImage = async (uri) => {
-//     try {
-//       const manipulated = await ImageManipulator.manipulateAsync(
-//         uri,
-//         [
-//           {
-//             resize: { width: 1000 }, // Resize width to 1000px
-//           },
-//         ],
-//         {
-//           compress: 0.7, // 60% quality
-//           format: ImageManipulator.SaveFormat.JPEG,
-//         }
-//       );
-//       setCompressed(manipulated.uri);
-//       await getImageInfo(manipulated.uri, setCompressedInfo);
-//     } catch (error) {
-//       Alert.alert("Compression Error", error.message);
-//     }
-//   };
-
-//   const saveCompressed = async () => {
-//     if (!compressed) return;
-
-//     const { status } = await MediaLibrary.requestPermissionsAsync();
-//     if (status !== "granted") {
-//       Alert.alert(
-//         "Permission Required",
-//         "Please grant gallery permission to save the image."
-//       );
-//       return;
-//     }
-
-//     try {
-//       await MediaLibrary.saveToLibraryAsync(compressed);
-//       Alert.alert("Success", "Compressed image saved to gallery!");
-//     } catch (error) {
-//       Alert.alert("Error", "Failed to save image: " + error.message);
-//     }
-//   };
-
-//   return (
-//     <ScrollView style={{ flex: 1, padding: 20 }}>
-//       <Button title="Pick an Image" onPress={pickImage} />
-
-//       {original && originalInfo && (
-//         <View style={{ marginVertical: 20 }}>
-//           <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
-//             Original Image:
-//           </Text>
-//           <Image
-//             source={{ uri: original }}
-//             style={{ height: 200, resizeMode: "contain" }}
-//           />
-//           <Text>Size: {originalInfo.sizeKB} KB</Text>
-//           <Text>
-//             Dimensions: {originalInfo.width} x {originalInfo.height}
-//           </Text>
-//         </View>
-//       )}
-
-//       {compressed && compressedInfo && (
-//         <View style={{ marginVertical: 20 }}>
-//           <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
-//             Compressed Image:
-//           </Text>
-//           <Image
-//             source={{ uri: compressed }}
-//             style={{ height: 200, resizeMode: "contain" }}
-//           />
-//           <Text>Size: {compressedInfo.sizeKB} KB</Text>
-//           <Text>
-//             Dimensions: {compressedInfo.width} x {compressedInfo.height}
-//           </Text>
-//           <Button title="Save to Gallery" onPress={saveCompressed} />
-//         </View>
-//       )}
-//     </ScrollView>
-//   );
-// }
