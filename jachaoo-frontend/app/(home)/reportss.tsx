@@ -134,11 +134,11 @@ export default function ReportAnalysis() {
 
       // Add these debug logs:
       const responseText = await response.text();
-      console.log("RAW RESPONSE:", responseText);
-      console.log("STATUS:", response.status);
+      // console.log("RAW RESPONSE:", responseText);
+      // console.log("STATUS:", response.status);
 
       const data = JSON.parse(responseText);
-      console.log("PARSED DATA:", data);
+      // console.log("PARSED DATA:", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Analysis failed");

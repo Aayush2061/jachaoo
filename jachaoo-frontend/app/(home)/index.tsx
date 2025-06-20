@@ -1,18 +1,17 @@
 import { useUser } from "@clerk/clerk-expo";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
+  Pressable,
+  SafeAreaView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
-  Alert,
-  SafeAreaView,
-  Pressable,
 } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 export default function HomePage() {
   const { user } = useUser();
@@ -80,7 +79,7 @@ export default function HomePage() {
 
       {/* Service Buttons */}
       <View style={styles.buttonContainer}>
-        <Link href="/reports" asChild>
+        <Link href="/(home)/reports" asChild>
           <Pressable style={styles.serviceButton}>
             <MaterialIcons name="analytics" size={24} color="#2980b9" />
             <Text style={styles.buttonText}>Analyze My Report</Text>
@@ -98,6 +97,13 @@ export default function HomePage() {
           <Pressable style={styles.serviceButton}>
             <Ionicons name="medical" size={24} color="#27ae60" />
             <Text style={styles.buttonText}>Symptom Checker</Text>
+          </Pressable>
+        </Link>
+
+        <Link href="/period" asChild>
+          <Pressable style={styles.serviceButton}>
+            <Ionicons name="medical" size={24} color="#27ae60" />
+            <Text style={styles.buttonText}>Periods Tracker</Text>
           </Pressable>
         </Link>
       </View>
