@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const MedicalReport = require('../models/MedicalReport');
+const { deleteFromCloudinary } = require('../utils/cloudinary')
 
 // Create report record
 // In routes/reports.js - Update the POST endpoint
@@ -69,7 +70,8 @@ router.get('/:id', async (req, res) => {
 // Delete report
 router.delete('/:id', async (req, res) => {
     try {
-        const report = await MedicalReport.findOneAndDelete({
+        // 1. Find the report first
+        const report = await MedicalReport.findOne({
             _id: req.params.id,
             userId: req.auth.userId
         });
@@ -78,8 +80,33 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Report not found' });
         }
 
-        res.json({ message: 'Report deleted successfully' });
+        // 2. Delete from Cloudinary (with enhanced logging)
+        console.log(`Starting deletion process for report ${report._id}`);
+        console.log(`Cloudinary ID: ${report.cloudinaryId}`);
+
+        let cloudinaryDeleted = false;
+        if (report.cloudinaryId && report.cloudinaryId !== 'default-id') {
+            cloudinaryDeleted = await deleteFromCloudinary(report.cloudinaryId);
+            console.log(`Cloudinary deletion ${cloudinaryDeleted ? 'succeeded' : 'failed'}`);
+        } else {
+            console.log('Skipping Cloudinary deletion - no valid cloudinaryId');
+            cloudinaryDeleted = true;
+        }
+
+        // 3. Delete from database
+        await MedicalReport.deleteOne({ _id: req.params.id });
+        console.log(`Successfully deleted report ${req.params.id} from database`);
+
+        res.json({
+            message: 'Report deleted successfully',
+            cloudinaryDeleted
+        });
     } catch (err) {
+        console.error('Error deleting report:', {
+            error: err.message,
+            stack: err.stack,
+            params: req.params
+        });
         res.status(500).json({ error: err.message });
     }
 });

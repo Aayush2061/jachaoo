@@ -87,7 +87,10 @@ export default function ReportAnalysis() {
     }
   };
 
-  const analyzeAndSaveReport = async (imageUrl: string) => {
+  const analyzeAndSaveReport = async (
+    imageUrl: string,
+    cloudinaryId: string
+  ) => {
     try {
       const token = await getToken();
 
@@ -127,7 +130,7 @@ export default function ReportAnalysis() {
           },
           body: JSON.stringify({
             url: imageUrl,
-            cloudinaryId: imageUrl.split("/").pop()?.split(".")[0] || "",
+            cloudinaryId: cloudinaryId, // Now using the passed parameter
             analysis: analysisData.analysis,
             reportName,
             labName,
@@ -163,7 +166,10 @@ export default function ReportAnalysis() {
       const cloudinaryData = await uploadToCloudinary(compressedUri);
 
       // 3. Analyze and save to your database
-      const savedReport = await analyzeAndSaveReport(cloudinaryData.url);
+      const savedReport = await analyzeAndSaveReport(
+        cloudinaryData.url,
+        cloudinaryData.cloudinaryId // Add this parameter
+      );
 
       // 4. Redirect to detail view
       //   router.push(`/(home)/reports/${savedReport._id}`);
