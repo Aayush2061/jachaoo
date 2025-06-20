@@ -57,6 +57,12 @@ export default function ReportDetail() {
 
   return (
     <ScrollView style={styles.container}>
+      <Text style={styles.reportName}>{report.reportName}</Text>
+      <Text style={styles.labName}>{report.labName}</Text>
+      <Text style={styles.date}>
+        {new Date(report.createdAt).toLocaleDateString()}
+      </Text>
+
       <Image source={{ uri: report.url }} style={styles.image} />
 
       <View style={styles.analysisContainer}>
@@ -88,5 +94,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: "#333",
+  },
+  reportName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  labName: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 8,
+  },
+  date: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 16,
   },
 });

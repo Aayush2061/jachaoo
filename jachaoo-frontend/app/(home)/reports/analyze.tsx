@@ -13,6 +13,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -21,6 +22,8 @@ export default function ReportAnalysis() {
   const { userId, getToken } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [reportName, setReportName] = useState("");
+  const [labName, setLabName] = useState("");
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -124,8 +127,10 @@ export default function ReportAnalysis() {
           },
           body: JSON.stringify({
             url: imageUrl,
-            cloudinaryId: imageUrl.split("/").pop()?.split(".")[0] || "", // Extract ID from URL
+            cloudinaryId: imageUrl.split("/").pop()?.split(".")[0] || "",
             analysis: analysisData.analysis,
+            reportName,
+            labName,
           }),
         }
       );
@@ -183,6 +188,21 @@ export default function ReportAnalysis() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Medical Report Analysis</Text>
+      <Text style={styles.label}>Report Type</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="e.g., Blood Test, Thyroid Test"
+        value={reportName}
+        onChangeText={setReportName}
+      />
+
+      <Text style={styles.label}>Lab Name</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="e.g., City Lab, Health Diagnostics"
+        value={labName}
+        onChangeText={setLabName}
+      />
 
       <Button
         title="Select Report Image"
@@ -237,5 +257,19 @@ const styles = StyleSheet.create({
   loadingContainer: {
     marginVertical: 20,
     alignItems: "center",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  input: {
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    marginBottom: 12,
   },
 });

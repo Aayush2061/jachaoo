@@ -7,17 +7,21 @@ const MedicalReport = require('../models/MedicalReport');
 // In routes/reports.js
 router.post('/', async (req, res) => {
     try {
-        const { cloudinaryId, url, analysis } = req.body;
+        const { cloudinaryId, url, analysis, reportName, labName } = req.body;
 
         // Validate required fields
-        if (!url) {
-            return res.status(400).json({ error: "URL is required" });
+        if (!url || !reportName || !labName) {
+            return res.status(400).json({
+                error: "URL, report name, and lab name are required"
+            });
         }
 
         const report = new MedicalReport({
             userId: req.auth.userId,
-            cloudinaryId: cloudinaryId || "default-id", // Provide fallback
+            cloudinaryId: cloudinaryId || "default-id",
             url,
+            reportName,
+            labName,
             analysis: analysis || null,
             createdAt: new Date()
         });
@@ -29,11 +33,10 @@ router.post('/', async (req, res) => {
         console.error("Error saving report:", err);
         res.status(400).json({
             error: err.message,
-            details: err.errors // Mongoose validation errors if any
+            details: err.errors
         });
     }
 });
-
 // Get user's reports (updated with sorting)
 router.get('/', async (req, res) => {
     try {
