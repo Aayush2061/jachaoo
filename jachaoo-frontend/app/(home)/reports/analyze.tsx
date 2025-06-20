@@ -26,20 +26,37 @@ export default function ReportAnalysis() {
   const [labName, setLabName] = useState("");
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission required", "Please enable photo library access");
-      return;
-    }
+    try {
+      // Request permissions
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission required",
+          "Please enable photo library access in settings"
+        );
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Correct property name
+        allowsEditing: false,
+        aspect: [4, 3], // Optional: Set to undefined if you want no aspect ratio constraint
+        quality: 1,
+        allowsMultipleSelection: false,
+      });
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      // Handle the result
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
+        console.log("Selected image URI:", result.assets[0].uri);
+      } else {
+        console.log("Image selection was canceled");
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image. Please try again.");
     }
   };
 

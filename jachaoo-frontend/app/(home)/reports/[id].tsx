@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,12 +14,16 @@ import {
   View,
 } from "react-native";
 
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import ImageViewer from "react-native-image-zoom-viewer";
+
 export default function ReportDetail() {
   const { id } = useLocalSearchParams();
   const { getToken } = useAuth();
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [zoomVisible, setZoomVisible] = useState(false);
   const params = useLocalSearchParams();
 
   useEffect(() => {
@@ -57,6 +62,15 @@ export default function ReportDetail() {
       </View>
     );
   }
+
+  const images = [
+    {
+      url: report.url,
+      props: {
+        source: { uri: report.url },
+      },
+    },
+  ];
 
   const handleDelete = async () => {
     Alert.alert(
@@ -107,49 +121,88 @@ export default function ReportDetail() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#2980b9" />
-        </TouchableOpacity>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="#2980b9" />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleDelete}
-          disabled={deleting}
-          style={styles.deleteButton}
-        >
-          {deleting ? (
-            <ActivityIndicator size="small" color="#ff4444" />
-          ) : (
-            <MaterialIcons name="delete" size={24} color="#ff4444" />
-          )}
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.reportName}>{report.reportName}</Text>
-      <Text style={styles.labName}>{report.labName}</Text>
-      <Text style={styles.date}>
-        {new Date(report.createdAt).toLocaleDateString()}
-      </Text>
-
-      {/* Your existing content */}
-      <Image source={{ uri: report.url }} style={styles.image} />
-
-      <View style={styles.analysisContainer}>
-        <Text style={styles.analysisTitle}>Analysis Results</Text>
-        <Text style={styles.analysisText}>
-          {report.analysis || "No analysis available"}
+          <TouchableOpacity
+            onPress={handleDelete}
+            disabled={deleting}
+            style={styles.deleteButton}
+          >
+            {deleting ? (
+              <ActivityIndicator size="small" color="#ff4444" />
+            ) : (
+              <MaterialIcons name="delete" size={24} color="#ff4444" />
+            )}
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.reportName}>{report.reportName}</Text>
+        <Text style={styles.labName}>{report.labName}</Text>
+        <Text style={styles.date}>
+          {new Date(report.createdAt).toLocaleDateString()}
         </Text>
-      </View>
-    </ScrollView>
+
+        {/* Clickable thumbnail that opens zoom viewer */}
+        <TouchableOpacity
+          onPress={() => setZoomVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={{ uri: report.url }}
+            style={styles.imageThumbnail}
+            resizeMode="contain"
+          />
+          <View style={styles.zoomHint}>
+            <MaterialIcons name="zoom-in" size={24} color="white" />
+            <Text style={styles.zoomHintText}>Pinch to zoom</Text>
+          </View>
+        </TouchableOpacity>
+
+        <View style={styles.analysisContainer}>
+          <Text style={styles.analysisTitle}>Analysis Results</Text>
+          <Text style={styles.analysisText}>
+            {report.analysis || "No analysis available"}
+          </Text>
+        </View>
+
+        {/* Zoomable image modal */}
+        <Modal visible={zoomVisible} transparent={true}>
+          <ImageViewer
+            imageUrls={images}
+            enableSwipeDown
+            onSwipeDown={() => setZoomVisible(false)}
+            swipeDownThreshold={50}
+            renderHeader={() => (
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setZoomVisible(false)}
+              >
+                <MaterialIcons name="close" size={30} color="white" />
+              </TouchableOpacity>
+            )}
+            renderIndicator={() => null}
+          />
+        </Modal>
+      </ScrollView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  image: { width: "100%", height: 300, borderRadius: 8 },
+  // container: { flex: 1, padding: 16 },
+  image: {
+    width: "100%",
+    height: undefined, // Let height adjust based on aspect ratio
+    aspectRatio: 1, // Default to square, adjust as needed
+    borderRadius: 8,
+  },
   analysisContainer: {
     marginTop: 20,
     padding: 16,
@@ -193,5 +246,36 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
+  },
+  container: { flex: 1, padding: 16 },
+  imageThumbnail: {
+    width: "100%",
+    height: 300,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  zoomHint: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 5,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  zoomHintText: {
+    color: "white",
+    marginLeft: 5,
+    fontSize: 12,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 20,
+    padding: 5,
   },
 });
