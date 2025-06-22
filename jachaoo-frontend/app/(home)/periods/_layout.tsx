@@ -22,7 +22,7 @@ export default function PeriodLayout() {
           headerShown: false,
         }}
       />
-      <Stack.Screen name="dashboard" />
+      <Stack.Screen name="dashboard/index" />
     </Stack>
   );
 }

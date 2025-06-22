@@ -1,5 +1,8 @@
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   ImageBackground,
   Pressable,
   StyleSheet,
@@ -9,6 +12,48 @@ import {
 
 export default function PeriodTrackerGetStarted() {
   const router = useRouter();
+  const { user } = useUser();
+  const { getToken } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkPeriodData = async () => {
+      try {
+        if (!user?.id) return;
+        setIsChecking(true); //this is added to add loading page at the time when checks at database whether user has filled the onboarding page or not
+        const token = await getToken();
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        // const text = await response.text();
+        // console.log("Raw response:", text);
+        const data = await response.json();
+
+        if (data.exists !== false) {
+          router.replace("/(home)/periods/dashboard");
+        }
+      } catch (error) {
+        console.error("Error checking period data:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkPeriodData();
+  }, [user?.id]);
+
+  if (isChecking) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#9b59b6" />
+      </View>
+    );
+  }
 
   return (
     <ImageBackground
@@ -87,5 +132,11 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });

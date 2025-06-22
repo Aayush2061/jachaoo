@@ -2,16 +2,18 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node'); // Correct import
+const { ClerkExpressRequireAuth, ClerkExpressWithAuth } = require('@clerk/clerk-sdk-node'); // Correct import
 const app = express();
 
-// Initialize Clerk
-const clerkMiddleware = ClerkExpressRequireAuth();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(ClerkExpressWithAuth());
 
+
+// Initialize Clerk
+const clerkMiddleware = ClerkExpressRequireAuth();
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -21,9 +23,12 @@ mongoose.connect(process.env.MONGODB_URI)
 // Routes
 const healthDataRouter = require('./routes/healthData');
 const reportsRouter = require('./routes/reports');
+const periodDataRouter = require('./routes/periodData');
 
 app.use('/api/health', healthDataRouter);
 app.use('/api/reports', clerkMiddleware, reportsRouter);
+app.use('/api/periods', clerkMiddleware, periodDataRouter);
+// app.use('/api/periods', periodDataRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,6 +1,14 @@
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import AppearanceQuestion from "./questions/appearance";
 import ConcernQuestion from "./questions/concern";
 import ConditionsQuestion from "./questions/conditions";
@@ -21,6 +29,8 @@ type FormData = {
 };
 
 export default function PeriodOnboarding() {
+  const { user } = useUser();
+  const { getToken } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
@@ -35,13 +45,50 @@ export default function PeriodOnboarding() {
     mainConcern: null,
   });
 
+  const submitData = async () => {
+    const token = await getToken(); // 🔐 Get auth token
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/periods`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: user?.id,
+            lastPeriodDate: formData.lastPeriodDate,
+            duration: formData.duration,
+            cycleLength: formData.cycleLength,
+            symptoms: formData.symptoms,
+            appearance: formData.appearance,
+            conditions: formData.conditions,
+            contraceptive: formData.contraceptive,
+            tryingToConceive: formData.tryingToConceive,
+            mainConcern: formData.mainConcern,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to save period data");
+      }
+
+      router.replace("/(home)/periods/dashboard");
+    } catch (error) {
+      console.error("Error saving period data:", error);
+      Alert.alert("Error", "Failed to save period tracking data");
+    }
+  };
+
   const nextStep = () => {
     if (step < 5) {
       setStep(step + 1);
     } else {
       // Submit data and navigate to main period tracker
       console.log("Form data:", formData);
-      router.replace("/(home)/periods/dashboard");
+      submitData();
     }
   };
 

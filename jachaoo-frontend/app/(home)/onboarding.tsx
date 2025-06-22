@@ -1,3 +1,5 @@
+import { useUser } from "@clerk/clerk-expo";
+import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -9,8 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { useUser } from "@clerk/clerk-expo";
 
 export default function OnboardingScreen() {
   const { user } = useUser();
