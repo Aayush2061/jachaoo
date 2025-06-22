@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -61,67 +62,69 @@ export default function ProfilePage() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        {user?.imageUrl && (
-          <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
-        )}
-        <Text style={styles.name}>
-          {user?.fullName || `${user?.firstName} ${user?.lastName}` || "User"}
-        </Text>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Text style={styles.sectionTitle}>Account Information</Text>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Email:</Text>
-          <Text style={styles.value}>
-            {user?.primaryEmailAddress?.emailAddress || "Not available"}
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          {user?.imageUrl && (
+            <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+          )}
+          <Text style={styles.name}>
+            {user?.fullName || `${user?.firstName} ${user?.lastName}` || "User"}
           </Text>
         </View>
-      </View>
 
-      {healthData && (
         <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Health Information</Text>
+          <Text style={styles.sectionTitle}>Account Information</Text>
 
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Name:</Text>
-            <Text style={styles.value}>{healthData.name}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Age:</Text>
-            <Text style={styles.value}>{healthData.age}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Sex:</Text>
-            <Text style={styles.value}>{healthData.sex}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>High Blood Pressure:</Text>
-            <Text style={styles.value}>{healthData.bloodPressure}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Diabetes:</Text>
-            <Text style={styles.value}>{healthData.diabetes}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Smoker:</Text>
-            <Text style={styles.value}>{healthData.smoker}</Text>
+            <Text style={styles.label}>Email:</Text>
+            <Text style={styles.value}>
+              {user?.primaryEmailAddress?.emailAddress || "Not available"}
+            </Text>
           </View>
         </View>
-      )}
 
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutButtonText}>Sign Out</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {healthData && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.sectionTitle}>Health Information</Text>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Name:</Text>
+              <Text style={styles.value}>{healthData.name}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Age:</Text>
+              <Text style={styles.value}>{healthData.age}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Sex:</Text>
+              <Text style={styles.value}>{healthData.sex}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>High Blood Pressure:</Text>
+              <Text style={styles.value}>{healthData.bloodPressure}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Diabetes:</Text>
+              <Text style={styles.value}>{healthData.diabetes}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Smoker:</Text>
+              <Text style={styles.value}>{healthData.smoker}</Text>
+            </View>
+          </View>
+        )}
+
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutButtonText}>Sign Out</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -131,6 +134,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
+    paddingTop: 20,
   },
   header: {
     alignItems: "center",

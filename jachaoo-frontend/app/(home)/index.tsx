@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-expo";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -12,7 +12,6 @@ import {
   Text,
   View,
 } from "react-native";
-
 export default function HomePage() {
   const { user } = useUser();
   const router = useRouter();
@@ -100,10 +99,10 @@ export default function HomePage() {
           </Pressable>
         </Link>
 
-        <Link href="/period" asChild>
+        <Link href="/(home)/periods" asChild>
           <Pressable style={styles.serviceButton}>
-            <Ionicons name="medical" size={24} color="#27ae60" />
-            <Text style={styles.buttonText}>Periods Tracker</Text>
+            <FontAwesome name="calendar" size={24} color="#9b59b6" />
+            <Text style={styles.buttonText}>Period Tracker</Text>
           </Pressable>
         </Link>
       </View>

@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Stack } from "expo-router";
-
+import { SafeAreaProvider } from "react-native-safe-area-context";
 export default function HomeLayout() {
   const { isSignedIn, isLoaded } = useAuth();
 
@@ -13,29 +13,35 @@ export default function HomeLayout() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "Home",
-          headerShown: true,
+    <SafeAreaProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false, // This hides headers for all child stacks
         }}
-      />
-      <Stack.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name="onboarding"
-        options={{
-          title: "Health Information",
-          headerShown: true,
-          gestureEnabled: false, // Prevent swipe back
-        }}
-      />
-    </Stack>
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            title: "Home",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            title: "Health Information",
+            headerShown: true,
+            gestureEnabled: false, // Prevent swipe back
+          }}
+        />
+      </Stack>
+    </SafeAreaProvider>
   );
 }
