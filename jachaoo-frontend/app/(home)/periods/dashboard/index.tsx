@@ -2,26 +2,32 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import SymptomsSection from "./components/SymptomsSection";
 export default function PeriodDashboard() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const [periodData, setPeriodData] = useState<any>(null);
-
-  const router = useRouter();
-  const userSymptoms = ["Night Sweats", "Insomnia"];
-  const userName = "Aayush Bhandari";
-  const userAge = "21 years";
+  const [healthData, setHealthData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPeriodData = async () => {
       try {
+        setLoading(true);
         if (!user?.id) return;
 
         const token = await getToken(); // 🔐 Get token here
 
-        const response = await fetch(
+        //Periods related data fetch
+        const periodsDataResponse = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
           {
             headers: {
@@ -30,15 +36,40 @@ export default function PeriodDashboard() {
           }
         );
 
-        const data = await response.json();
-        setPeriodData(data);
+        const periodData = await periodsDataResponse.json();
+        console.log(periodData);
+        setPeriodData(periodData);
+
+        //healthData fetch code
+        const healthDataResponse = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
+        );
+        const healthData = await healthDataResponse.json();
+        setHealthData(healthData);
+        console.log(healthData);
       } catch (error) {
-        console.error("Error fetching period data:", error);
+        console.error("Error fetching period data or healthdata:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPeriodData();
   }, [user?.id]);
+  const router = useRouter();
+  const currentSymptoms = periodData?.symptoms || [];
+  const userName = "Aayush Bhandari";
+  const userAge = "21 years";
+
+  // 👇 Show loading indicator while data is being fetched
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#9b59b6" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header Section */}
@@ -65,13 +96,22 @@ export default function PeriodDashboard() {
       </View> */}
 
       {/* User Profile Section */}
-      <View style={styles.profileSection}>
-        <Text style={styles.userName}>Aayush Bhandari</Text>
-        <Text style={styles.userAge}>21 years</Text>
-      </View>
+      {healthData && (
+        <View style={styles.profileSection}>
+          <Text style={styles.userName}>{healthData.name}</Text>
+          <Text style={styles.userAge}>{healthData.age} years</Text>
+        </View>
+      )}
 
       {/* Symptoms Section */}
-      <SymptomsSection initialSymptoms={userSymptoms} />
+      <SymptomsSection
+        initialSymptoms={currentSymptoms}
+        userId={user?.id}
+        onSymptomsUpdate={(updatedSymptoms) => {
+          // Optional: Update local state if needed
+          setPeriodData({ ...periodData, symptoms: updatedSymptoms });
+        }}
+      />
 
       {/* Features Section */}
       <View style={styles.featuresContainer}>
