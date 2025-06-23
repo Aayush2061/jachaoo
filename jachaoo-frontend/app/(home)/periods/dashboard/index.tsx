@@ -1,7 +1,7 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -17,50 +17,44 @@ export default function PeriodDashboard() {
   const [periodData, setPeriodData] = useState<any>(null);
   const [healthData, setHealthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPeriodData = async () => {
-      try {
-        setLoading(true);
-        if (!user?.id) return;
-
-        const token = await getToken(); // 🔐 Get token here
-
-        //Periods related data fetch
-        const periodsDataResponse = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // ✅ Include token
-            },
-          }
-        );
-
-        const periodData = await periodsDataResponse.json();
-        console.log(periodData);
-        setPeriodData(periodData);
-
-        //healthData fetch code
-        const healthDataResponse = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
-        );
-        const healthData = await healthDataResponse.json();
-        setHealthData(healthData);
-        console.log(healthData);
-      } catch (error) {
-        console.error("Error fetching period data or healthdata:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPeriodData();
-  }, [user?.id]);
   const router = useRouter();
-  const currentSymptoms = periodData?.symptoms || [];
-  const userName = "Aayush Bhandari";
-  const userAge = "21 years";
+  useFocusEffect(
+    useCallback(() => {
+      const fetchPeriodData = async () => {
+        try {
+          setLoading(true);
+          if (!user?.id) return;
 
+          const token = await getToken();
+          const periodsDataResponse = await fetch(
+            `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const periodData = await periodsDataResponse.json();
+          setPeriodData(periodData);
+
+          const healthDataResponse = await fetch(
+            `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
+          );
+          const healthData = await healthDataResponse.json();
+          setHealthData(healthData);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchPeriodData();
+    }, [user?.id])
+  );
+
+  const currentSymptoms = periodData?.symptoms || [];
   // 👇 Show loading indicator while data is being fetched
   if (loading) {
     return (
@@ -79,7 +73,10 @@ export default function PeriodDashboard() {
           <Text style={styles.phaseText}>Follicle Phase - Day 2 of 15</Text>
         </View>
 
-        <Pressable style={styles.editButton}>
+        <Pressable
+          style={styles.editButton}
+          onPress={() => router.push("/(home)/periods/edit")}
+        >
           <Ionicons name="pencil" size={18} color="#9b59b6" />
           <Text style={styles.editText}>Edit details</Text>
         </Pressable>
