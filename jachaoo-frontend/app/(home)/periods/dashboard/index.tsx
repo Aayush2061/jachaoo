@@ -69,7 +69,9 @@ export default function PeriodDashboard() {
       {/* Header Section */}
       <View style={styles.header}>
         <View style={styles.dateContainer}>
-          <Text style={styles.monthText}>June</Text>
+          <Text style={styles.monthText}>
+            {new Date().toLocaleString("default", { month: "long" })}
+          </Text>
           <Text style={styles.phaseText}>Follicle Phase - Day 2 of 15</Text>
         </View>
 
@@ -115,7 +117,10 @@ export default function PeriodDashboard() {
         <Text style={styles.sectionTitle}>Track Your Cycle</Text>
 
         <View style={styles.featureRow}>
-          <Pressable style={styles.featureCard}>
+          <Pressable
+            style={styles.featureCard}
+            onPress={() => router.push("/(home)/periods/symptoms")}
+          >
             <MaterialCommunityIcons
               name="clipboard-pulse"
               size={28}

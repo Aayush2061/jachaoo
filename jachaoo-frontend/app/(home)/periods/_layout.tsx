@@ -22,7 +22,14 @@ export default function PeriodLayout() {
           headerShown: false,
         }}
       />
-      <Stack.Screen name="dashboard/index" />
+      <Stack.Screen
+        name="dashboard/index"
+        options={{ title: "Dashboard" }} // Add this
+      />
+      <Stack.Screen
+        name="symptoms"
+        options={{ title: "Track Symptoms" }} // Add this for your symptoms screen
+      />
     </Stack>
   );
 }
