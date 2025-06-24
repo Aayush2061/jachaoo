@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { getCyclePhaseInfo } from "../../../utils/cycleUtils";
 import SymptomsSection from "./components/SymptomsSection";
 export default function PeriodDashboard() {
   const { user } = useUser();
@@ -36,6 +37,7 @@ export default function PeriodDashboard() {
           );
 
           const periodData = await periodsDataResponse.json();
+          console.log(periodData);
           setPeriodData(periodData);
 
           const healthDataResponse = await fetch(
@@ -53,6 +55,32 @@ export default function PeriodDashboard() {
       fetchPeriodData();
     }, [user?.id])
   );
+
+  // Add this function to calculate phase info
+  const getCurrentPhaseInfo = () => {
+    if (
+      !periodData ||
+      !periodData.lastPeriodDate ||
+      !periodData.cycleLength ||
+      !periodData.duration
+    ) {
+      return null;
+    }
+
+    try {
+      return getCyclePhaseInfo({
+        lastPeriodDate: periodData.lastPeriodDate,
+        cycleLength: periodData.cycleLength,
+        duration: periodData.duration,
+        today: new Date(),
+      });
+    } catch (error) {
+      console.error("Error calculating cycle phase:", error);
+      return null;
+    }
+  };
+  // Get the phase info
+  const phaseInfo = getCurrentPhaseInfo();
 
   const currentSymptoms = periodData?.symptoms || [];
   // 👇 Show loading indicator while data is being fetched
@@ -72,7 +100,11 @@ export default function PeriodDashboard() {
           <Text style={styles.monthText}>
             {new Date().toLocaleString("default", { month: "long" })}
           </Text>
-          <Text style={styles.phaseText}>Follicle Phase - Day 2 of 15</Text>
+          <Text style={styles.phaseText}>
+            {phaseInfo
+              ? `${phaseInfo.phase} - Day ${phaseInfo.currentDay}`
+              : "Cycle data not available"}
+          </Text>
         </View>
 
         <Pressable
