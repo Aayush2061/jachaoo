@@ -174,7 +174,10 @@ export default function PeriodDashboard() {
         </View>
 
         <View style={styles.featureRow}>
-          <Pressable style={styles.featureCard}>
+          <Pressable
+            style={styles.featureCard}
+            onPress={() => router.push("/(home)/periods/calendar")}
+          >
             <MaterialCommunityIcons name="calendar" size={28} color="#9b59b6" />
             <Text style={styles.featureText}>Track your cycle on calendar</Text>
           </Pressable>
