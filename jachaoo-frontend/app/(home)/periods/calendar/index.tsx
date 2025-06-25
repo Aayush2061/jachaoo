@@ -1,8 +1,17 @@
 // app/(home)/periods/calendar/index.tsx
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
+import { getCyclePhaseInfo } from "../../../utils/cycleUtils";
+
+type PeriodData = {
+  lastPeriodDate: string;
+  cycleLength: number;
+  duration: number;
+  symptoms?: string[];
+};
 
 // Configure calendar locale
 LocaleConfig.locales["en"] = {
@@ -58,7 +67,38 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [periodDays, setPeriodDays] = useState<string[]>([]);
   const [currentPhase, setCurrentPhase] = useState("Follicular");
+  const [periodData, setPeriodData] = useState<PeriodData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useUser();
+  const { getToken } = useAuth();
+  useEffect(() => {
+    const fetchPeriodData = async () => {
+      try {
+        setLoading(true);
+        if (!user?.id) return;
 
+        const token = await getToken();
+        const periodsDataResponse = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const periodData = await periodsDataResponse.json();
+        // console.log(periodData);
+        setPeriodData(periodData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPeriodData();
+  }, [user?.id]);
   const handleDayPress = (day: { dateString: string }) => {
     setPeriodDays((prev) =>
       prev.includes(day.dateString)
@@ -68,22 +108,57 @@ export default function CalendarScreen() {
   };
 
   const getMarkedDates = () => {
+    if (!periodData) return {};
+
+    const { phases, fertileWindow } = getCyclePhaseInfo({
+      lastPeriodDate: periodData.lastPeriodDate,
+      cycleLength: periodData.cycleLength,
+      duration: periodData.duration,
+      today: new Date(),
+    });
+
     const markedDates: any = {};
 
-    periodDays.forEach((date) => {
-      markedDates[date] = {
-        customStyles: {
-          container: {
-            backgroundColor: "#FFEEEE",
-            borderRadius: 16,
+    const phaseColors = {
+      Menstrual: "#FF6B6B",
+      Follicular: "#51CF66",
+      Ovulatory: "#3498DB",
+      Luteal: "#FCC419",
+    };
+
+    Object.entries(phases).forEach(([phase, dates]) => {
+      dates.forEach((date) => {
+        markedDates[date] = {
+          customStyles: {
+            container: {
+              backgroundColor: phaseColors[phase as keyof typeof phaseColors],
+              borderRadius: 16,
+            },
+            text: {
+              color: "#fff",
+              fontWeight: "bold",
+            },
           },
-          text: {
-            color: "#D0021B",
-            fontWeight: "bold",
-          },
-        },
-      };
+        };
+      });
     });
+
+    // Mark fertile window (override with border or dot)
+    fertileWindow
+      .filter((date) => new Date(date).getMonth() === selectedDate.getMonth())
+      .forEach((date) => {
+        markedDates[date] = {
+          ...(markedDates[date] || {}),
+          customStyles: {
+            ...(markedDates[date]?.customStyles || {}),
+            container: {
+              ...(markedDates[date]?.customStyles?.container || {}),
+              borderWidth: 2,
+              borderColor: "#8e44ad",
+            },
+          },
+        };
+      });
 
     return markedDates;
   };
