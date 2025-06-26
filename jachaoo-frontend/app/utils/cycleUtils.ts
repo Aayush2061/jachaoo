@@ -1,4 +1,4 @@
-interface CyclePhaseInfo {
+export interface CyclePhaseInfo {
   currentDay: number;
   phase: string;
   nextPeriod: Date;

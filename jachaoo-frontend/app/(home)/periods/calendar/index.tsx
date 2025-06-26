@@ -4,8 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
-import { getCyclePhaseInfo } from "../../../utils/cycleUtils";
-
+import { CyclePhaseInfo, getCyclePhaseInfo } from "../../../utils/cycleUtils";
 type PeriodData = {
   lastPeriodDate: string;
   cycleLength: number;
@@ -68,6 +67,7 @@ export default function CalendarScreen() {
   const [periodDays, setPeriodDays] = useState<string[]>([]);
   const [currentPhase, setCurrentPhase] = useState("Follicular");
   const [periodData, setPeriodData] = useState<PeriodData | null>(null);
+  const [phaseInfo, setPhaseInfo] = useState<CyclePhaseInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -99,6 +99,24 @@ export default function CalendarScreen() {
 
     fetchPeriodData();
   }, [user?.id]);
+
+  useEffect(() => {
+    if (periodData) {
+      try {
+        const info = getCyclePhaseInfo({
+          lastPeriodDate: periodData.lastPeriodDate,
+          cycleLength: periodData.cycleLength,
+          duration: periodData.duration,
+          today: new Date(),
+        });
+        setPhaseInfo(info);
+      } catch (error) {
+        console.error("Error calculating cycle phase:", error);
+        setPhaseInfo(null);
+      }
+    }
+  }, [periodData]);
+
   const handleDayPress = (day: { dateString: string }) => {
     setPeriodDays((prev) =>
       prev.includes(day.dateString)
@@ -124,6 +142,39 @@ export default function CalendarScreen() {
       Follicular: "#51CF66",
       Ovulatory: "#3498DB",
       Luteal: "#FCC419",
+    };
+
+    const getPhaseDayCount = () => {
+      if (!phaseInfo || !periodData) return { current: 0, total: 0 };
+
+      const currentPhase = phaseInfo.phase.split(" ")[0]; // "Menstrual", "Follicular", etc.
+
+      // Get total days for the current phase
+      const phaseDays =
+        {
+          Menstrual: periodData.duration,
+          Follicular: phaseInfo.phases.Follicular.length,
+          Ovulatory: phaseInfo.phases.Ovulatory.length,
+          Luteal: phaseInfo.phases.Luteal.length,
+        }[currentPhase] || 0;
+
+      // Calculate current day within phase
+      const currentDayInPhase =
+        phaseInfo.currentDay -
+        (currentPhase === "Follicular"
+          ? periodData.duration
+          : currentPhase === "Ovulatory"
+          ? periodData.duration + phaseInfo.phases.Follicular.length
+          : currentPhase === "Luteal"
+          ? periodData.duration +
+            phaseInfo.phases.Follicular.length +
+            phaseInfo.phases.Ovulatory.length
+          : 0);
+
+      return {
+        current: currentDayInPhase,
+        total: phaseDays,
+      };
     };
 
     Object.entries(phases).forEach(([phase, dates]) => {
@@ -185,12 +236,26 @@ export default function CalendarScreen() {
     return markedDates;
   };
 
+  const formatPhaseName = (phase: string | undefined) => {
+    if (!phase) return "Cycle data not available";
+    return phase.replace(" Phase", "");
+  };
+
   return (
     <View style={styles.container}>
-      {/* Phase Display - Updated with 2x2 Grid */}
       <View style={styles.headerContainer}>
-        <Text style={styles.headerCycleDay}>Cycle Day - 0</Text>
-        <Text style={styles.headerPhaseText}>Follicle Phase - Day 4 of 15</Text>
+        <Text style={styles.headerCycleDay}>
+          {loading
+            ? "Loading..."
+            : `Cycle Day - ${phaseInfo?.currentDay || "N/A"}`}
+        </Text>
+        <Text style={styles.headerPhaseText}>
+          {loading
+            ? "Loading cycle data..."
+            : phaseInfo
+            ? `${formatPhaseName(phaseInfo.phase)} Phase `
+            : "Cycle data not available"}
+        </Text>
 
         <View style={styles.legendRow}>
           {Object.entries(PHASE_COLORS).map(([phase, color]) => (
@@ -199,6 +264,11 @@ export default function CalendarScreen() {
               <Text style={styles.legendLabel}>{phase}</Text>
             </View>
           ))}
+
+          <View style={styles.legendItem}>
+            <View style={styles.fertileCircle}></View>
+            <Text style={styles.legendLabel}>Fertile Days</Text>
+          </View>
         </View>
       </View>
 
@@ -359,5 +429,16 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 14,
     color: "#2C3E50",
+  },
+  fertileCircle: {
+    width: 16,
+    height: 16,
+    borderRadius: 8, // Makes it circular
+    borderWidth: 2,
+    borderColor: "#8e44ad",
+    borderStyle: "dotted",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 6,
   },
 });
