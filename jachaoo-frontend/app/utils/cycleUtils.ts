@@ -17,7 +17,7 @@ export function getCyclePhaseInfo({
   cycleLength,
   duration,
   today = new Date(),
-  numberOfCycles = 4, // 👈 Add this
+  numberOfCycles = 4,
 }: {
   lastPeriodDate: string | Date;
   cycleLength: number;
@@ -29,11 +29,7 @@ export function getCyclePhaseInfo({
   const start = new Date(lastPeriodDate);
   if (isNaN(start.getTime())) throw new Error("Invalid lastPeriodDate");
 
-  const totalDays = cycleLength * numberOfCycles; // 👈 support multiple cycles
-  const daysSinceLast = Math.floor(
-    (today.getTime() - start.getTime()) / msPerDay
-  );
-  const currentDay = daysSinceLast % cycleLength;
+  const totalDays = cycleLength * numberOfCycles;
   const ovulationDay = cycleLength - 14;
 
   const menstrualDays: string[] = [];
@@ -41,6 +37,9 @@ export function getCyclePhaseInfo({
   const ovulatoryDays: string[] = [];
   const lutealDays: string[] = [];
   const fertileWindow: string[] = [];
+
+  let phase = "";
+  let currentDay = 0;
 
   for (let i = 0; i < totalDays; i++) {
     const cycleDay = i % cycleLength;
@@ -60,22 +59,40 @@ export function getCyclePhaseInfo({
     if (cycleDay >= ovulationDay - 5 && cycleDay <= ovulationDay + 1) {
       fertileWindow.push(dateString);
     }
+
+    // ✅ Determine phase for today
+    const todayStr = today.toISOString().split("T")[0];
+    if (dateString === todayStr) {
+      currentDay = cycleDay + 1;
+
+      if (cycleDay < duration) {
+        phase = "Menstrual Phase";
+      } else if (cycleDay < ovulationDay - 1) {
+        phase = "Follicular Phase";
+      } else if (cycleDay <= ovulationDay + 1) {
+        phase = "Ovulation Phase";
+      } else {
+        phase = "Luteal Phase";
+      }
+    }
   }
 
-  const nextPeriod = new Date(start.getTime() + cycleLength * msPerDay);
+  // Next period date (after N full cycles)
+  const cyclesPassed = Math.floor(
+    (today.getTime() - start.getTime()) / (cycleLength * msPerDay)
+  );
+  const nextPeriod = new Date(
+    start.getTime() + (cyclesPassed + 1) * cycleLength * msPerDay
+  );
+  const ovulationDate = new Date(
+    start.getTime() + (cyclesPassed * cycleLength + ovulationDay) * msPerDay
+  );
 
   return {
-    currentDay: currentDay + 1,
-    phase:
-      currentDay < duration
-        ? "Menstrual Phase"
-        : currentDay < ovulationDay
-        ? "Follicular Phase"
-        : currentDay === ovulationDay
-        ? "Ovulation Phase"
-        : "Luteal Phase",
+    currentDay,
+    phase,
     nextPeriod,
-    ovulationDate: new Date(start.getTime() + ovulationDay * msPerDay),
+    ovulationDate,
     phases: {
       Menstrual: menstrualDays,
       Follicular: follicularDays,

@@ -155,10 +155,32 @@ export default function CalendarScreen() {
               ...(markedDates[date]?.customStyles?.container || {}),
               borderWidth: 2,
               borderColor: "#8e44ad",
+              borderStyle: "dotted",
+            },
+            text: {
+              ...(markedDates[date]?.customStyles?.text || {}),
+              fontWeight: "bold",
             },
           },
         };
       });
+
+    // Mark today's date
+    // const todayString = new Date().toISOString().split("T")[0];
+
+    const todayString = new Date().toISOString().split("T")[0];
+
+    markedDates[todayString] = {
+      ...(markedDates[todayString] || {}),
+      customStyles: {
+        ...(markedDates[todayString]?.customStyles || {}),
+        text: {
+          ...(markedDates[todayString]?.customStyles?.text || {}),
+          color: "#000000", // white text for better visibility
+          fontWeight: "bold",
+        },
+      },
+    };
 
     return markedDates;
   };
@@ -187,7 +209,8 @@ export default function CalendarScreen() {
         onMonthChange={(date) => setSelectedDate(new Date(date.dateString))}
         markedDates={getMarkedDates()}
         markingType="custom"
-        hideExtraDays={false}
+        hideExtraDays={true}
+        disableMonthChange={false}
         theme={{
           backgroundColor: "#FFFFFF",
           calendarBackground: "#FFFFFF",

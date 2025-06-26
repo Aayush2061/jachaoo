@@ -81,7 +81,7 @@ export default function PeriodDashboard() {
   };
   // Get the phase info
   const phaseInfo = getCurrentPhaseInfo();
-
+  // console.log(phaseInfo);
   const currentSymptoms = periodData?.symptoms || [];
   // 👇 Show loading indicator while data is being fetched
   if (loading) {
