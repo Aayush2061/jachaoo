@@ -2,9 +2,13 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
-import { CyclePhaseInfo, getCyclePhaseInfo } from "../../../utils/cycleUtils";
+import {
+  CyclePhaseInfo,
+  getCyclePhaseInfo,
+  isPeriodIrregular,
+} from "../../../utils/cycleUtils";
 type PeriodData = {
   lastPeriodDate: string;
   cycleLength: number;
@@ -65,20 +69,25 @@ const PHASE_COLORS = {
 export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [periodDays, setPeriodDays] = useState<string[]>([]);
-  const [currentPhase, setCurrentPhase] = useState("Follicular");
   const [periodData, setPeriodData] = useState<PeriodData | null>(null);
   const [phaseInfo, setPhaseInfo] = useState<CyclePhaseInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const { getToken } = useAuth();
+
   useEffect(() => {
     const fetchPeriodData = async () => {
       try {
         setLoading(true);
-        if (!user?.id) return;
+        setError(null);
+
+        if (!user?.id) {
+          throw new Error("User not authenticated");
+        }
 
         const token = await getToken();
-        const periodsDataResponse = await fetch(
+        const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
           {
             headers: {
@@ -87,11 +96,26 @@ export default function CalendarScreen() {
           }
         );
 
-        const periodData = await periodsDataResponse.json();
-        // console.log(periodData);
-        setPeriodData(periodData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (
+          !data ||
+          !data.lastPeriodDate ||
+          !data.cycleLength ||
+          !data.duration
+        ) {
+          throw new Error("Invalid data format received");
+        }
+
+        setPeriodData(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError(err.message || "Failed to load period data");
+        setPeriodData(null);
       } finally {
         setLoading(false);
       }
@@ -128,133 +152,159 @@ export default function CalendarScreen() {
   const getMarkedDates = () => {
     if (!periodData) return {};
 
-    const { phases, fertileWindow } = getCyclePhaseInfo({
-      lastPeriodDate: periodData.lastPeriodDate,
-      cycleLength: periodData.cycleLength,
-      duration: periodData.duration,
-      today: new Date(),
-    });
-
-    const markedDates: any = {};
-
-    const phaseColors = {
-      Menstrual: "#FF6B6B",
-      Follicular: "#51CF66",
-      Ovulatory: "#3498DB",
-      Luteal: "#FCC419",
-    };
-
-    const getPhaseDayCount = () => {
-      if (!phaseInfo || !periodData) return { current: 0, total: 0 };
-
-      const currentPhase = phaseInfo.phase.split(" ")[0]; // "Menstrual", "Follicular", etc.
-
-      // Get total days for the current phase
-      const phaseDays =
-        {
-          Menstrual: periodData.duration,
-          Follicular: phaseInfo.phases.Follicular.length,
-          Ovulatory: phaseInfo.phases.Ovulatory.length,
-          Luteal: phaseInfo.phases.Luteal.length,
-        }[currentPhase] || 0;
-
-      // Calculate current day within phase
-      const currentDayInPhase =
-        phaseInfo.currentDay -
-        (currentPhase === "Follicular"
-          ? periodData.duration
-          : currentPhase === "Ovulatory"
-          ? periodData.duration + phaseInfo.phases.Follicular.length
-          : currentPhase === "Luteal"
-          ? periodData.duration +
-            phaseInfo.phases.Follicular.length +
-            phaseInfo.phases.Ovulatory.length
-          : 0);
-
-      return {
-        current: currentDayInPhase,
-        total: phaseDays,
-      };
-    };
-
-    Object.entries(phases).forEach(([phase, dates]) => {
-      dates.forEach((date) => {
-        markedDates[date] = {
-          customStyles: {
-            container: {
-              backgroundColor: phaseColors[phase as keyof typeof phaseColors],
-              borderRadius: 16,
-            },
-            text: {
-              color: "#fff",
-              fontWeight: "bold",
-            },
-          },
-        };
+    try {
+      const { phases, fertileWindow } = getCyclePhaseInfo({
+        lastPeriodDate: periodData.lastPeriodDate,
+        cycleLength: periodData.cycleLength,
+        duration: periodData.duration,
+        today: new Date(),
       });
-    });
 
-    // Mark fertile window (override with border or dot)
-    fertileWindow
-      .filter((date) => new Date(date).getMonth() === selectedDate.getMonth())
-      .forEach((date) => {
+      const markedDates: any = {};
+      const phaseColors = {
+        Menstrual: "#FF6B6B",
+        Follicular: "#51CF66",
+        Ovulatory: "#3498DB",
+        Luteal: "#FCC419",
+      };
+
+      Object.entries(phases).forEach(([phase, dates]) => {
+        dates.forEach((date) => {
+          markedDates[date] = {
+            customStyles: {
+              container: {
+                backgroundColor: phaseColors[phase as keyof typeof phaseColors],
+                borderRadius: 16,
+              },
+              text: {
+                color: "#fff",
+                fontWeight: "bold",
+              },
+            },
+          };
+        });
+      });
+
+      fertileWindow.forEach((date) => {
         markedDates[date] = {
-          ...(markedDates[date] || {}),
+          ...markedDates[date],
           customStyles: {
-            ...(markedDates[date]?.customStyles || {}),
+            ...markedDates[date]?.customStyles,
             container: {
-              ...(markedDates[date]?.customStyles?.container || {}),
+              ...markedDates[date]?.customStyles?.container,
               borderWidth: 2,
               borderColor: "#8e44ad",
               borderStyle: "dotted",
             },
-            text: {
-              ...(markedDates[date]?.customStyles?.text || {}),
-              fontWeight: "bold",
-            },
           },
         };
       });
 
-    // Mark today's date
-    // const todayString = new Date().toISOString().split("T")[0];
-
-    const todayString = new Date().toISOString().split("T")[0];
-
-    markedDates[todayString] = {
-      ...(markedDates[todayString] || {}),
-      customStyles: {
-        ...(markedDates[todayString]?.customStyles || {}),
-        text: {
-          ...(markedDates[todayString]?.customStyles?.text || {}),
-          color: "#000000", // white text for better visibility
-          fontWeight: "bold",
+      const todayString = new Date().toISOString().split("T")[0];
+      markedDates[todayString] = {
+        ...markedDates[todayString],
+        customStyles: {
+          ...markedDates[todayString]?.customStyles,
+          text: {
+            color: "#000000",
+            fontWeight: "bold",
+          },
         },
-      },
-    };
+      };
 
-    return markedDates;
+      return markedDates;
+    } catch (error) {
+      console.error("Error marking dates:", error);
+      return {};
+    }
   };
 
   const formatPhaseName = (phase: string | undefined) => {
-    if (!phase) return "Cycle data not available";
-    return phase.replace(" Phase", "");
+    return phase?.replace(" Phase", "") || "Cycle data not available";
   };
 
+  // const isPeriodIrregular = (data: PeriodData | null) => {
+  //   if (!data) return false;
+  //   const NORMAL_RANGE = { min: 25, max: 35 };
+  //   return (
+  //     data.cycleLength < NORMAL_RANGE.min || data.cycleLength > NORMAL_RANGE.max
+  //   );
+  // };
+
+  // Loading state
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#9B59B6" />
+      </View>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error Loading Data</Text>
+        <Text style={styles.errorSubtext}>{error}</Text>
+      </View>
+    );
+  }
+
+  // No data state
+  if (!periodData) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>No Period Data Available</Text>
+        <Text style={styles.errorSubtext}>
+          Please set up your period information first
+        </Text>
+      </View>
+    );
+  }
+
+  // Irregular period state
+  if (isPeriodIrregular(periodData)) {
+    return (
+      <View style={styles.warningOuterContainer}>
+        <View style={styles.warningContainer}>
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={24}
+            style={styles.warningIcon}
+          />
+
+          <View style={styles.warningTextContainer}>
+            <Text style={styles.warningTitle}>Irregular Cycle Detected</Text>
+            <Text style={styles.warningText}>
+              Calendar predictions work best for regular cycles between 25-35
+              days. Consider tracking symptoms manually for more accurate
+              insights.
+            </Text>
+
+            {/* <TouchableOpacity 
+            onPress={() => navigation.navigate('TrackingTips')}
+          >
+            <Text style={styles.warningActionText}>
+              Learn about tracking irregular cycles →
+            </Text>
+          </TouchableOpacity> */}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Main calendar view
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerCycleDay}>
-          {loading
-            ? "Loading..."
-            : `Cycle Day - ${phaseInfo?.currentDay || "N/A"}`}
+          {`Cycle Day - ${phaseInfo?.currentDay || "N/A"}`}
         </Text>
         <Text style={styles.headerPhaseText}>
-          {loading
-            ? "Loading cycle data..."
-            : phaseInfo
-            ? `${formatPhaseName(phaseInfo.phase)} Phase `
-            : "Cycle data not available"}
+          {phaseInfo
+            ? `${formatPhaseName(phaseInfo.phase)}`
+            : "Loading cycle data..."}
         </Text>
 
         <View style={styles.legendRow}>
@@ -264,23 +314,19 @@ export default function CalendarScreen() {
               <Text style={styles.legendLabel}>{phase}</Text>
             </View>
           ))}
-
           <View style={styles.legendItem}>
-            <View style={styles.fertileCircle}></View>
+            <View style={styles.fertileCircle} />
             <Text style={styles.legendLabel}>Fertile Days</Text>
           </View>
         </View>
       </View>
 
-      {/* Calendar */}
       <Calendar
         current={selectedDate.toISOString().split("T")[0]}
         onDayPress={handleDayPress}
-        onMonthChange={(date) => setSelectedDate(new Date(date.dateString))}
         markedDates={getMarkedDates()}
         markingType="custom"
         hideExtraDays={true}
-        disableMonthChange={false}
         theme={{
           backgroundColor: "#FFFFFF",
           calendarBackground: "#FFFFFF",
@@ -294,16 +340,6 @@ export default function CalendarScreen() {
           textDayFontWeight: "500",
           textMonthFontWeight: "bold",
           textDayHeaderFontWeight: "500",
-          "stylesheet.calendar.header": {
-            header: {
-              flexDirection: "row",
-              justifyContent: "space-between",
-              paddingBottom: 10,
-              paddingHorizontal: 0,
-              marginBottom: 0,
-              alignItems: "center",
-            },
-          },
         }}
         renderHeader={(date) => (
           <View style={styles.calendarHeader}>
@@ -440,5 +476,70 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 6,
+  },
+  warningOuterContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  warningContainer: {
+    backgroundColor: "#FFF4F4",
+    borderRadius: 12, // More rounded corners
+    padding: 20,
+    width: "90%",
+    maxWidth: 350,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FFD6D6", // Lighter border
+  },
+  warningIcon: {
+    color: "#FF6B6B",
+    marginBottom: 12,
+  },
+  warningTextContainer: {
+    alignItems: "center",
+  },
+  warningTitle: {
+    fontSize: 18, // Slightly larger
+    fontWeight: "600",
+    color: "#D32F2F",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  warningText: {
+    fontSize: 14,
+    color: "#5D5D5D", // Dark gray for body
+    lineHeight: 20,
+  },
+  warningActionText: {
+    color: "#9B59B6", // Your app's purple
+    fontWeight: "500",
+    marginTop: 8,
+  },
+
+  // Error container (add this if you want a dedicated container)
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+
+  // Error text styles
+  errorText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#D32F2F", // Dark red for emphasis
+    marginBottom: 8,
+    textAlign: "center",
+  },
+
+  errorSubtext: {
+    fontSize: 14,
+    color: "#5D5D5D", // Dark gray for secondary text
+    textAlign: "center",
+    lineHeight: 20,
+    maxWidth: "80%",
   },
 });

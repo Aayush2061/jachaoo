@@ -10,7 +10,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { getCyclePhaseInfo } from "../../../utils/cycleUtils";
+import {
+  getCyclePhaseInfo,
+  isPeriodIrregular,
+} from "../../../utils/cycleUtils";
 import SymptomsSection from "./components/SymptomsSection";
 export default function PeriodDashboard() {
   const { user } = useUser();
@@ -102,7 +105,9 @@ export default function PeriodDashboard() {
           </Text>
           <Text style={styles.phaseText}>
             {phaseInfo
-              ? `${phaseInfo.phase} - Day ${phaseInfo.currentDay}`
+              ? isPeriodIrregular(periodData)
+                ? `Irregular cycle`
+                : `${phaseInfo.phase} - Day ${phaseInfo.currentDay}`
               : "Cycle data not available"}
           </Text>
         </View>

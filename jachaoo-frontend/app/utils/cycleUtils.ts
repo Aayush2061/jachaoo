@@ -12,6 +12,23 @@ export interface CyclePhaseInfo {
   fertileWindow: string[];
 }
 
+export interface PeriodData {
+  lastPeriodDate: string;
+  cycleLength: number;
+  duration: number;
+  symptoms?: string[];
+}
+
+export function isPeriodIrregular(periodsData: PeriodData | null): boolean {
+  if (!periodsData) return false;
+
+  const NORMAL_CYCLE_RANGE = { min: 25, max: 35 };
+  return (
+    periodsData.cycleLength < NORMAL_CYCLE_RANGE.min ||
+    periodsData.cycleLength > NORMAL_CYCLE_RANGE.max
+  );
+}
+
 export function getCyclePhaseInfo({
   lastPeriodDate,
   cycleLength,
