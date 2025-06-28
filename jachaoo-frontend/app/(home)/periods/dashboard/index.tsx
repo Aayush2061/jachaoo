@@ -187,7 +187,10 @@ export default function PeriodDashboard() {
             <Text style={styles.featureText}>Track your cycle on calendar</Text>
           </Pressable>
 
-          <Pressable style={styles.featureCard}>
+          <Pressable
+            style={styles.featureCard}
+            onPress={() => router.push("/(home)/periods/chat")}
+          >
             <Ionicons name="chatbubbles" size={28} color="#9b59b6" />
             <Text style={styles.featureText}>Start Chat</Text>
           </Pressable>
