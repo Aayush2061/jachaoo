@@ -1,7 +1,14 @@
 import requests
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+# Load variables from .env file
+load_dotenv()
 
-GEMINI_API_KEY = "AIzaSyDSjB1Sr8RrFCu7h3qCyEHStKWG1N0_RB0"
+# Get the API key from the environment
+api_key = os.getenv("GENAI_API_KEY2")
+
+GEMINI_API_KEY = api_key
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def detect_cycle_phase(first_day: str, cycle_length: int, duration_of_period: int):
