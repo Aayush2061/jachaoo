@@ -1,8 +1,8 @@
 // app/(home)/periods/chat.tsx
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -28,6 +28,8 @@ export default function PeriodChat() {
   const router = useRouter();
   const { user } = useUser();
   const { getToken } = useAuth();
+  const [periodData, setPeriodData] = useState<any>(null);
+  const [isFetchingData, setIsFetchingData] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -41,6 +43,36 @@ export default function PeriodChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchPeriodData = async () => {
+        try {
+          setIsFetchingData(true);
+          if (!user?.id) return;
+
+          const token = await getToken();
+          const response = await fetch(
+            `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const data = await response.json();
+          setPeriodData(data);
+          // console.log(data);
+        } catch (error) {
+          console.error("Error fetching period data:", error);
+        } finally {
+          setIsFetchingData(false);
+        }
+      };
+
+      fetchPeriodData();
+    }, [user?.id])
+  );
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", (e) => {
@@ -57,7 +89,7 @@ export default function PeriodChat() {
   }, []);
 
   const handleSend = async () => {
-    if (inputText.trim() === "") return;
+    if (inputText.trim() === "" || isFetchingData || !periodData) return;
 
     // Add user message
     const userMessage: Message = {
@@ -69,6 +101,16 @@ export default function PeriodChat() {
     setMessages((prev) => [...prev, userMessage]);
     setInputText("");
     setIsLoading(true);
+
+    console.log("Sending user context:", {
+      user_id: user?.id,
+      duration_of_period: periodData.duration.toString(),
+      cycle_length: periodData.cycleLength.toString(),
+      previous_conditions: periodData.conditions.join(", "),
+      trying_to_conceive: periodData.tryingToConceive !== "No",
+      on_hormonal_contraceptive: periodData.contraceptive !== "No",
+      first_day_of_last_period: periodData.lastPeriodDate.split("T")[0],
+    });
 
     try {
       const token = await getToken();
@@ -84,11 +126,13 @@ export default function PeriodChat() {
             message: inputText,
             chat_history: chatHistory,
             user_context: {
-              // Add actual user data from your app state or user profile
               user_id: user?.id,
-              duration_of_period: "5", // Replace with actual user data
-              cycle_length: "28", // Replace with actual user data
-              first_day_of_last_period: new Date().toISOString().split("T")[0], // Replace with actual user data
+              duration_of_period: periodData.duration.toString(),
+              cycle_length: periodData.cycleLength.toString(),
+              previous_conditions: periodData.conditions.join(", "),
+              trying_to_conceive: periodData.tryingToConceive !== "No",
+              on_hormonal_contraceptive: periodData.contraceptive !== "No",
+              first_day_of_last_period: periodData.lastPeriodDate.split("T")[0],
             },
           }),
         }
@@ -133,6 +177,14 @@ export default function PeriodChat() {
       scrollViewRef.current.scrollToEnd({ animated: true });
     }
   }, [messages, keyboardHeight]);
+
+  if (isFetchingData) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#9b59b6" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>

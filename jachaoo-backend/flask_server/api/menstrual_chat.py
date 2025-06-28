@@ -27,8 +27,13 @@ def send_message():
         chat_history = data.get('chat_history', [])
         user_context = data.get('user_context', {})
 
+        # print("Received request data:", data) 
+        # print("User context received:", user_context)
+
         if not message:
             return jsonify({'success': False, 'error': 'Message is required'}), 400
+        if not user_context:
+            return jsonify({'success': False, 'error': 'User context is required'}), 400
 
         # Add user message to history
         chat_history.append({
@@ -55,6 +60,11 @@ def send_message():
             'chat_history': chat_history
         })
 
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
     except Exception as e:
         return jsonify({
             'success': False,
