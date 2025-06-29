@@ -1,8 +1,10 @@
-import { useUser } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +17,7 @@ import {
 export default function SymptomTracker() {
   const { user } = useUser();
   const router = useRouter();
+  const { getToken } = useAuth();
 
   // State for symptoms
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
@@ -28,6 +31,68 @@ export default function SymptomTracker() {
   const [flow, setFlow] = useState<string>("");
   const [moods, setMoods] = useState<string[]>([]);
   const [dailyNotes, setDailyNotes] = useState<string>("");
+  const [periodData, setPeriodData] = useState<any>(null);
+  const [isFetchingData, setIsFetchingData] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     const fetchPeriodData = async () => {
+  //       try {
+  //         setIsFetchingData(true);
+  //         if (!user?.id) return;
+
+  //         const token = await getToken();
+  //         const response = await fetch(
+  //           `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
+  //           {
+  //             headers: {
+  //               Authorization: `Bearer ${token}`,
+  //             },
+  //           }
+  //         );
+  //         const data = await response.json();
+  //         setPeriodData(data);
+  //         // console.log(data);
+  //       } catch (error) {
+  //         console.error("Error fetching period data:", error);
+  //       } finally {
+  //         setIsFetchingData(false);
+  //       }
+  //     };
+
+  //     fetchPeriodData();
+  //   }, [user?.id])
+  // );
+
+  useEffect(() => {
+    const fetchPeriodData = async () => {
+      try {
+        setIsFetchingData(true);
+        if (!user?.id) return;
+
+        const token = await getToken();
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        setPeriodData(data);
+        // console.log(data);
+      } catch (error) {
+        console.error("Error fetching period data:", error);
+      } finally {
+        setIsFetchingData(false);
+      }
+    };
+
+    fetchPeriodData();
+  }, [user?.id]);
 
   const symptomsList = [
     "Backache",
@@ -73,23 +138,74 @@ export default function SymptomTracker() {
     }
   };
 
-  const handleSubmit = () => {
-    // Here you would typically send the data to your backend
-    console.log({
-      userId: user?.id,
-      symptoms: selectedSymptoms,
-      bodyTemperature: bodyTemp,
-      hadSex,
-      caffeineEmptyStomach,
-      qualitySleep,
-      toiletHabit,
-      flow,
-      moods,
-      dailyNotes,
-    });
+  const handleSubmit = async () => {
+    if (!periodData) {
+      setError("Please wait while we load your period data");
+      return;
+    }
 
-    // Navigate back or show success message
-    router.back();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = await getToken();
+
+      // Prepare the data to send
+      const requestData = {
+        permanent_data: {
+          cycleLength: periodData.cycleLength,
+          duration: periodData.duration,
+          lastPeriodDate: periodData.lastPeriodDate.split("T")[0], // Just the date part
+          conditions: periodData.conditions,
+          contraceptive: periodData.contraceptive,
+          tryingToConceive: periodData.tryingToConceive,
+          mainConcern: periodData.mainConcern,
+          appearance: periodData.appearance,
+        },
+        daily_data: {
+          bodyTemp,
+          hadSex,
+          symptoms: selectedSymptoms,
+          caffeineEmptyStomach,
+          qualitySleep,
+          toiletHabit,
+          flow,
+          moods,
+          dailyNote: dailyNotes,
+          date: new Date().toISOString().split("T")[0], // Today's date
+        },
+      };
+
+      // Send to Flask backend for analysis
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/daily-analysis`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Analysis failed");
+      }
+
+      const result = await response.json();
+
+      // Navigate to results page with the analysis
+      router.push({
+        pathname: "/(home)/periods/daily-result",
+        params: { analysis: JSON.stringify(result) },
+      });
+    } catch (err) {
+      console.error("Error during analysis:", err);
+      setError("Failed to generate analysis. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -102,7 +218,6 @@ export default function SymptomTracker() {
         <Text style={styles.title}>Track Your Symptoms</Text>
         <View style={{ width: 24 }} />
       </View>
-
       {/* Symptoms Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
@@ -131,7 +246,6 @@ export default function SymptomTracker() {
           ))}
         </View>
       </View>
-
       {/* Health Metrics Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Health Metrics</Text>
@@ -189,7 +303,6 @@ export default function SymptomTracker() {
           </View>
         </View>
       </View>
-
       {/* Lifestyle Factors Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Lifestyle Factors</Text>
@@ -315,7 +428,6 @@ export default function SymptomTracker() {
           </View>
         </View>
       </View>
-
       {/* Flow Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Flow</Text>
@@ -342,7 +454,6 @@ export default function SymptomTracker() {
           ))}
         </View>
       </View>
-
       {/* Moods Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Moods</Text>
@@ -369,7 +480,6 @@ export default function SymptomTracker() {
           ))}
         </View>
       </View>
-
       {/* Daily Notes */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Daily Notes</Text>
@@ -384,11 +494,23 @@ export default function SymptomTracker() {
           />
         </View>
       </View>
-
       {/* Submit Button */}
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitText}>Save Daily Data</Text>
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleSubmit}
+        disabled={loading || isFetchingData}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitText}>Get Daily Analysis</Text>
+        )}
       </TouchableOpacity>
+      {error && (
+        <Text style={{ color: "red", textAlign: "center", marginTop: 10 }}>
+          {error}
+        </Text>
+      )}
     </ScrollView>
   );
 }

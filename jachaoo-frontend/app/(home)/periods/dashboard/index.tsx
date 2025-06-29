@@ -168,7 +168,10 @@ export default function PeriodDashboard() {
             </Text>
           </Pressable>
 
-          <Pressable style={styles.featureCard}>
+          <Pressable
+            style={styles.featureCard}
+            onPress={() => router.push("/(home)/periods/daily-result")}
+          >
             <MaterialCommunityIcons
               name="chart-line"
               size={28}

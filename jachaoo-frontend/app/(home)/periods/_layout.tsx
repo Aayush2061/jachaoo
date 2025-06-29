@@ -30,6 +30,10 @@ export default function PeriodLayout() {
         name="symptoms"
         options={{ title: "Track Symptoms" }} // Add this for your symptoms screen
       />
+      <Stack.Screen
+        name="daily-result"
+        options={{ title: "Daily Test Result" }} // Add this for your symptoms screen
+      />
     </Stack>
   );
 }
