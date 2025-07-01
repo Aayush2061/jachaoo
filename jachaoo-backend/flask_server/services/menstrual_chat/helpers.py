@@ -8,6 +8,9 @@ load_dotenv()
 # Get the API key from the environment
 api_key = os.getenv("GENAI_API_KEY2")
 
+# if not api_key:
+#     raise ValueError("GENAI_API_KEY2 environment variable not set")
+
 GEMINI_API_KEY = api_key
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
@@ -41,8 +44,12 @@ def detect_cycle_phase(first_day: str, cycle_length: int, duration_of_period: in
 
 def build_system_prompt(duration_of_period, cycle_length, previous_conditions, 
                        trying_to_conceive, on_hormonal_contraceptive, first_day_of_last_period):
-    phase = detect_cycle_phase(first_day_of_last_period, int(cycle_length), int(duration_of_period))
-    
+    # Fix: Pass all three required parameters to detect_cycle_phase
+    phase = detect_cycle_phase(
+        first_day=first_day_of_last_period,
+        cycle_length=int(cycle_length),
+        duration_of_period=int(duration_of_period)
+    )
     return f"""
 You are a supportive, emotionally intelligent chatbot that helps users with menstrual health concerns.
 
@@ -129,17 +136,33 @@ Keep responses short, kind, emotionally present, and practical.
 """
 
 def menstrual_chatbot(user_query: str, chat_history: list, **context):
-    if not user_query.strip():
-        return "Could you tell me a bit more so I can help better? 💗"
+    try:
+        if not user_query.strip():
+            return "Could you tell me a bit more so I can help better? 💗"
 
-    response = requests.post(GEMINI_ENDPOINT, json={"contents": chat_history})
+        print("=== CHATBOT DEBUG ===")
+        print("Chat History:", chat_history)
+        print("Context:", context)
 
-    if response.status_code == 200:
-        try:
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.post(
+            GEMINI_ENDPOINT,
+            json={"contents": chat_history},
+            headers=headers,
+            timeout=10
+        )
+        
+        print("Gemini Response:", response.status_code, response.text)
+        
+        if response.status_code == 200:
             return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception:
-            return "Sorry, I couldn't understand that fully, but I'm here for you. Please try again."
-    elif response.status_code == 429:
-        return "Sorry! I'm getting a bit overloaded. Please try again in a moment."
-    else:
-        return f"Error {response.status_code}: {response.text}"
+        else:
+            print("Gemini API Error:", response.text)
+            return f"Sorry, I'm having trouble responding. (API Error: {response.status_code})"
+            
+    except Exception as e:
+        print("Chatbot Error:", str(e))
+        return "Sorry, I encountered an error. Please try again."

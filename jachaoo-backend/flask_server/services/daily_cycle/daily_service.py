@@ -1,9 +1,18 @@
 import google.generativeai as genai
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+# Load variables from .env file
+load_dotenv()
+
+# Get the API key from the environment
+api_key = os.getenv("GENAI_API_KEY2")
+
+API_KEY = api_key
 
 class DailyCycleService:
     def __init__(self):
-        genai.configure(api_key="AIzaSyDSjB1Sr8RrFCu7h3qCyEHStKWG1N0_RB0")  # Use your key
+        genai.configure(api_key=API_KEY)  # Use your key
         self.model = genai.GenerativeModel("gemini-1.5-flash")
 
     def analyze(self, permanent_data, daily_data):
