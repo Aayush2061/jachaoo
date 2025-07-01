@@ -149,6 +149,7 @@ export default function SymptomTracker() {
 
     try {
       const token = await getToken();
+      const today = new Date().toISOString().split("T")[0];
 
       // Prepare the data to send
       const requestData = {
@@ -172,7 +173,7 @@ export default function SymptomTracker() {
           flow,
           moods,
           dailyNote: dailyNotes,
-          date: new Date().toISOString().split("T")[0], // Today's date
+          date: today, // Today's date
         },
       };
 
@@ -198,7 +199,12 @@ export default function SymptomTracker() {
       // Navigate to results page with the analysis
       router.push({
         pathname: "/(home)/periods/daily-result",
-        params: { analysis: JSON.stringify(result) },
+        params: {
+          analysis: JSON.stringify({
+            ...result,
+            date: today,
+          }),
+        },
       });
     } catch (err) {
       console.error("Error during analysis:", err);
