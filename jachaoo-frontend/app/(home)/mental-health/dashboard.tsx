@@ -1,17 +1,24 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Dimensions,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-// Add this interface at the top of your file
+const { width } = Dimensions.get("window");
+
 interface MentalHealthData {
   diagnosed: string;
   support?: string;
   frequency: string;
   goals: string[];
-  userId?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 export default function MentalHealthDashboard() {
@@ -47,42 +54,191 @@ export default function MentalHealthDashboard() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2980b9" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Mental Health Dashboard</Text>
-      {data && (
-        <View style={styles.dataContainer}>
-          <Text>Diagnosed: {data.diagnosed}</Text>
-          {data.support && <Text>Current Support: {data.support}</Text>}
-          <Text>Frequency of thoughts: {data.frequency}</Text>
-          <Text>Goals: {data.goals.join(", ")}</Text>
-        </View>
-      )}
-    </View>
+    <ImageBackground
+      source={require("@/assets/images/mental-health-background.jpg")}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <ScrollView contentContainerStyle={styles.container}>
+          {/* Greeting Section */}
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greetingText}>Hi, {user?.firstName}</Text>
+          </View>
+
+          {/* Main Feature Buttons - 2 columns */}
+          <View style={styles.featuresContainer}>
+            {/* Row 1 */}
+            <View style={styles.featureRow}>
+              <Pressable
+                style={styles.featureButton}
+                // onPress={() => router.push("/(home)/mental-health/track")}
+              >
+                <ImageBackground
+                  source={require("@/assets/images/track-bg.jpg")}
+                  style={styles.featureBackground}
+                  imageStyle={styles.featureBackgroundImage}
+                >
+                  <Text style={styles.featureButtonText}>Track my mood</Text>
+                </ImageBackground>
+              </Pressable>
+
+              <Pressable
+                style={styles.featureButton}
+                // onPress={() => router.push("/(home)/mental-health/breathe")}
+              >
+                <ImageBackground
+                  source={require("@/assets/images/breathe-bg.jpg")}
+                  style={styles.featureBackground}
+                  imageStyle={styles.featureBackgroundImage}
+                >
+                  <Text style={styles.featureButtonText}>Breathe & Calm</Text>
+                </ImageBackground>
+              </Pressable>
+            </View>
+
+            {/* Row 2 */}
+            <View style={styles.featureRow}>
+              <Pressable
+                style={styles.featureButton}
+                // onPress={() => router.push("/(home)/mental-health/listen")}
+              >
+                <ImageBackground
+                  source={require("@/assets/images/listen-bg.jpg")}
+                  style={styles.featureBackground}
+                  imageStyle={styles.featureBackgroundImage}
+                >
+                  <Text style={styles.featureButtonText}>Listen & Heal</Text>
+                </ImageBackground>
+              </Pressable>
+
+              <Pressable
+                style={styles.featureButton}
+                // onPress={() => router.push("/(home)/mental-health/sleep")}
+              >
+                <ImageBackground
+                  source={require("@/assets/images/sleepwell-bg.jpg")}
+                  style={styles.featureBackground}
+                  imageStyle={styles.featureBackgroundImage}
+                >
+                  <Text style={styles.featureButtonText}>Sleepwell</Text>
+                </ImageBackground>
+              </Pressable>
+            </View>
+
+            {/* Row 3 */}
+            <View style={styles.featureRow}>
+              <Pressable
+                style={styles.featureButton}
+                // onPress={() => router.push("/(home)/mental-health/talk")}
+              >
+                <ImageBackground
+                  source={require("@/assets/images/track-bg.jpg")}
+                  style={styles.featureBackground}
+                  imageStyle={styles.featureBackgroundImage}
+                >
+                  <Text style={styles.featureButtonText}>Talk to someone</Text>
+                </ImageBackground>
+              </Pressable>
+
+              <Pressable
+                style={styles.featureButton}
+                // onPress={() => router.push("/(home)/mental-health/goals")}
+              >
+                <ImageBackground
+                  source={require("@/assets/images/daily-goal-bg.jpg")}
+                  style={styles.featureBackground}
+                  imageStyle={styles.featureBackgroundImage}
+                >
+                  <Text style={styles.featureButtonText}>Daily Goals</Text>
+                </ImageBackground>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  backgroundImage: {
     flex: 1,
-    padding: 20,
+    width: "100%",
+    height: "100%",
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#fff",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#2980b9",
+  container: {
+    flexGrow: 1,
+    padding: 16,
+    paddingBottom: 40,
   },
-  dataContainer: {
-    backgroundColor: "#f5f5f5",
-    padding: 15,
+  greetingContainer: {
+    marginBottom: 24,
+    marginTop: 16,
+  },
+  greetingText: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#2980b9",
+    textAlign: "center",
+  },
+  featuresContainer: {
+    gap: 25,
+  },
+  featureRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+    marginBottom: 16,
+  },
+  featureButton: {
+    width: "48%", // Slightly less than half to account for gap
+    aspectRatio: 1, // Square buttons
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  featureBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  featureBackgroundImage: {
+    borderRadius: 16,
+  },
+  featureButtonText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
+    textAlign: "center",
+    padding: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     borderRadius: 8,
+    overflow: "hidden",
   },
 });
