@@ -1,5 +1,6 @@
 import { useUser } from "@clerk/clerk-expo";
 import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -103,6 +104,12 @@ export default function HomePage() {
           <Pressable style={styles.serviceButton}>
             <FontAwesome name="calendar" size={24} color="#9b59b6" />
             <Text style={styles.buttonText}>Period Tracker</Text>
+          </Pressable>
+        </Link>
+        <Link href="/(home)/mental-health" asChild>
+          <Pressable style={styles.serviceButton}>
+            <FontAwesome6 name="brain" size={24} color="black" />
+            <Text style={styles.buttonText}>Mental Health</Text>
           </Pressable>
         </Link>
       </View>
