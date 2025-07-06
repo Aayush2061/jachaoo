@@ -27,11 +27,15 @@ export default function PeriodLayout() {
         options={{ title: "Dashboard" }} // Add this
       />
       <Stack.Screen
-        name="symptoms"
+        name="daily-symptoms/index"
         options={{ title: "Track Symptoms" }} // Add this for your symptoms screen
       />
       <Stack.Screen
-        name="daily-result"
+        name="daily-result/index"
+        options={{ title: "Daily Test Result" }} // Add this for your symptoms screen
+      />
+      <Stack.Screen
+        name="cycle-guide/index"
         options={{ title: "Daily Test Result" }} // Add this for your symptoms screen
       />
     </Stack>

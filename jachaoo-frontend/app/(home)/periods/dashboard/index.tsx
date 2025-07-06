@@ -156,7 +156,7 @@ export default function PeriodDashboard() {
         <View style={styles.featureRow}>
           <Pressable
             style={styles.featureCard}
-            onPress={() => router.push("/(home)/periods/symptoms")}
+            onPress={() => router.push("/(home)/periods/daily-symptoms")}
           >
             <MaterialCommunityIcons
               name="clipboard-pulse"
@@ -200,16 +200,32 @@ export default function PeriodDashboard() {
         </View>
       </View>
 
-      {/* Cycle Guide Section */}
-      <View style={styles.guideContainer}>
-        <Text style={styles.sectionTitle}>Cycle Guide</Text>
-        <Pressable style={styles.guideCard}>
-          <Text style={styles.guideTitle}>How to control excessive flow?</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9b59b6" />
-        </Pressable>
-        <Pressable style={styles.guideCard}>
-          <Text style={styles.guideTitle}>Tips to control the cramps.</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9b59b6" />
+      {/* Cycle Guide Section - Standalone with better styling */}
+      <View style={styles.guideSection}>
+        <Text style={styles.sectionTitle}>Learn About Your Cycle</Text>
+        <Pressable
+          style={styles.guideFeatureCard}
+          onPress={() => router.push("/(home)/periods/cycle-guide")}
+        >
+          <View style={styles.guideContent}>
+            <MaterialCommunityIcons
+              name="book-open-variant"
+              size={32}
+              color="#9b59b6"
+            />
+            <View style={styles.guideTextContainer}>
+              <Text style={styles.guideFeatureTitle}>Cycle Guide</Text>
+              <Text style={styles.guideFeatureSubtitle}>
+                Understand your menstrual cycle phases
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color="#9b59b6"
+              style={styles.chevron}
+            />
+          </View>
         </Pressable>
       </View>
     </ScrollView>
@@ -317,7 +333,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   featuresContainer: {
-    marginBottom: 30,
+    marginBottom: 15,
   },
   featureRow: {
     flexDirection: "row",
@@ -354,5 +370,38 @@ const styles = StyleSheet.create({
     color: "#2c3e50",
     fontWeight: "500",
     fontSize: 16,
+  },
+  emptyCard: {
+    width: "48%",
+    backgroundColor: "transparent",
+  },
+  guideSection: {
+    marginBottom: 25,
+  },
+  guideFeatureCard: {
+    backgroundColor: "#f9f5ff",
+    borderRadius: 12,
+    padding: 16,
+  },
+  guideContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  guideTextContainer: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  guideFeatureTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginBottom: 4,
+  },
+  guideFeatureSubtitle: {
+    fontSize: 14,
+    color: "#7f8c8d",
+  },
+  chevron: {
+    marginLeft: 10,
   },
 });

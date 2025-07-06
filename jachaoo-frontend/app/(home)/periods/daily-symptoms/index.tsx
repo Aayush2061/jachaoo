@@ -262,7 +262,7 @@ export default function SymptomTracker() {
           <View style={styles.textInput}>
             <TextInput
               style={styles.input}
-              placeholder="e.g. 98.6°F"
+              placeholder="e.g. 37°C"
               keyboardType="decimal-pad"
               value={bodyTemp}
               onChangeText={setBodyTemp}
