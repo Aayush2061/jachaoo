@@ -1,7 +1,8 @@
-import { useUser } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -12,6 +13,7 @@ import {
 
 export default function MentalHealthOnboarding() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const router = useRouter();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({
@@ -128,30 +130,31 @@ export default function MentalHealthOnboarding() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     console.log("Submitted answers:", answers);
+    const token = await getToken(); // 🔐 Get auth token
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/mental-health`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: user?.id,
+            answers,
+          }),
+        }
+      );
 
-    // try {
-    //   const response = await fetch(
-    //     `${process.env.EXPO_PUBLIC_API_URL}/mental-health/onboarding`,
-    //     {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify({
-    //         userId: user?.id,
-    //         answers,
-    //       }),
-    //     }
-    //   );
-
-    //   if (!response.ok) throw new Error("Failed to save mental health data");
-    router.replace("/(home)/mental-health/dashboard");
-    // } catch (error) {
-    //   console.error("Error saving mental health data:", error);
-    //   Alert.alert("Error", "Failed to save your information");
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+      if (!response.ok) throw new Error("Failed to save mental health data");
+      router.replace("/(home)/mental-health/dashboard");
+    } catch (error) {
+      console.error("Error saving mental health data:", error);
+      Alert.alert("Error", "Failed to save your information");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isAnswered =

@@ -24,10 +24,12 @@ mongoose.connect(process.env.MONGODB_URI)
 const healthDataRouter = require('./routes/healthData');
 const reportsRouter = require('./routes/reports');
 const periodDataRouter = require('./routes/periodData');
+const mentalHealthRouter = require('./routes/mentalHealth');
 
 app.use('/api/health', healthDataRouter);
 app.use('/api/reports', clerkMiddleware, reportsRouter);
 app.use('/api/periods', clerkMiddleware, periodDataRouter);
+app.use('/api/mental-health', clerkMiddleware, mentalHealthRouter);
 // app.use('/api/periods', periodDataRouter);
 
 const PORT = process.env.PORT || 5000;
