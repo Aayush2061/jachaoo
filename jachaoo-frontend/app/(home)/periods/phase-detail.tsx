@@ -43,6 +43,45 @@ const renderBoldText = (text: string) => {
   );
 };
 
+const renderFoodContent = (foodData) => {
+  return (
+    <View style={styles.foodContainer}>
+      {foodData.categories.map((category, index) => (
+        <View key={`cat-${index}`} style={styles.foodCategory}>
+          <Text style={styles.foodCategoryName}>{category.name}</Text>
+          <Text style={styles.foodCategoryDesc}>{category.description}</Text>
+
+          <View style={styles.foodItemsContainer}>
+            {category.items.map((item, itemIndex) => (
+              <View key={`item-${itemIndex}`} style={styles.foodItem}>
+                <View style={styles.foodItemBullet} />
+                <Text style={styles.foodItemText}>{item}</Text>
+              </View>
+            ))}
+          </View>
+
+          {category.tip && (
+            <View style={styles.foodTipContainer}>
+              <Text style={styles.foodTipText}>{category.tip}</Text>
+            </View>
+          )}
+        </View>
+      ))}
+
+      {foodData.generalTips && (
+        <View style={styles.generalTipsContainer}>
+          <Text style={styles.generalTipsHeader}>General Tips</Text>
+          {foodData.generalTips.map((tip, tipIndex) => (
+            <View key={`tip-${tipIndex}`} style={styles.generalTipItem}>
+              <Text style={styles.generalTipText}>• {tip}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
+
 export default function PhaseDetail() {
   const params = useLocalSearchParams();
   const phase = JSON.parse(params.phase as string);
@@ -50,88 +89,98 @@ export default function PhaseDetail() {
   const content = phaseData[phase.name][action];
 
   const renderContent = () => {
-    return content.map((item, index) => {
-      // ===== Structured Exercise Data =====
-      if (typeof item === "object" && item.type) {
-        if (item.type === "exercise") {
-          return (
-            <View key={`ex-${index}`} style={styles.exerciseContainer}>
-              <Text style={styles.exerciseName}>{item.name}</Text>
-              {item.image && (
-                <View style={styles.imageContainer}>
-                  <Image source={item.image} style={styles.exerciseImage} />
-                </View>
-              )}
+    // Handle Food section first
+    if (action === "Food" && content && content.categories) {
+      return renderFoodContent(content);
+    }
 
-              {item.steps && (
-                <>
-                  <Text style={styles.sectionSubheader}>Steps:</Text>
-                  {item.steps.map((step, i) => (
-                    <Text key={`step-${i}`} style={styles.stepText}>
-                      {renderBoldText(step)}
-                    </Text>
-                  ))}
-                </>
-              )}
+    // Handle array content (other sections)
+    if (Array.isArray(content)) {
+      return content.map((item, index) => {
+        // ===== Structured Exercise Data =====
+        if (typeof item === "object" && item.type) {
+          if (item.type === "exercise") {
+            return (
+              <View key={`ex-${index}`} style={styles.exerciseContainer}>
+                <Text style={styles.exerciseName}>{item.name}</Text>
+                {item.image && (
+                  <View style={styles.imageContainer}>
+                    <Image source={item.image} style={styles.exerciseImage} />
+                  </View>
+                )}
 
-              {item.benefits && (
-                <>
-                  <Text style={styles.sectionSubheader}>Benefits:</Text>
-                  {item.benefits.map((benefit, index) => (
-                    <Text key={`benefit-${index}`} style={styles.benefitText}>
-                      • {renderBoldText(benefit)}
-                    </Text>
-                  ))}
-                </>
-              )}
-            </View>
-          );
+                {item.steps && (
+                  <>
+                    <Text style={styles.sectionSubheader}>Steps:</Text>
+                    {item.steps.map((step, i) => (
+                      <Text key={`step-${i}`} style={styles.stepText}>
+                        {renderBoldText(step)}
+                      </Text>
+                    ))}
+                  </>
+                )}
+
+                {item.benefits && (
+                  <>
+                    <Text style={styles.sectionSubheader}>Benefits:</Text>
+                    {item.benefits.map((benefit, index) => (
+                      <Text key={`benefit-${index}`} style={styles.benefitText}>
+                        • {renderBoldText(benefit)}
+                      </Text>
+                    ))}
+                  </>
+                )}
+              </View>
+            );
+          }
+
+          if (item.type === "header") {
+            return (
+              <Text key={`hdr-${index}`} style={styles.sectionHeader}>
+                {renderBoldText(item.text)}
+              </Text>
+            );
+          }
+
+          if (item.type === "text") {
+            return (
+              <Text key={`txt-${index}`} style={styles.contentText}>
+                {renderBoldText(item.content)}
+              </Text>
+            );
+          }
         }
 
-        if (item.type === "header") {
-          return (
-            <Text key={`hdr-${index}`} style={styles.sectionHeader}>
-              {renderBoldText(item.text)}
-            </Text>
-          );
-        }
+        // ===== Legacy Text Formatting =====
+        if (typeof item === "string") {
+          if (item.match(/^[A-Z][a-zA-Z ]+$/) && !item.match(/[0-9]\./)) {
+            return (
+              <Text key={`hdr-${index}`} style={styles.sectionHeader}>
+                {renderBoldText(item)}
+              </Text>
+            );
+          }
 
-        if (item.type === "text") {
-          return (
-            <Text key={`txt-${index}`} style={styles.contentText}>
-              {renderBoldText(item.content)}
-            </Text>
-          );
-        }
-      }
+          if (item.startsWith("Tip") || item.startsWith("Note")) {
+            return (
+              <View key={`tip-${index}`} style={styles.tipContainer}>
+                <Text style={styles.tipText}>{renderBoldText(item)}</Text>
+              </View>
+            );
+          }
 
-      // ===== Legacy Text Formatting =====
-      if (typeof item === "string") {
-        if (item.match(/^[A-Z][a-zA-Z ]+$/) && !item.match(/[0-9]\./)) {
           return (
-            <Text key={`hdr-${index}`} style={styles.sectionHeader}>
+            <Text key={`item-${index}`} style={styles.contentText}>
               {renderBoldText(item)}
             </Text>
           );
         }
 
-        if (item.startsWith("Tip") || item.startsWith("Note")) {
-          return (
-            <View key={`tip-${index}`} style={styles.tipContainer}>
-              <Text style={styles.tipText}>{renderBoldText(item)}</Text>
-            </View>
-          );
-        }
+        return null;
+      });
+    }
 
-        return (
-          <Text key={`item-${index}`} style={styles.contentText}>
-            {renderBoldText(item)}
-          </Text>
-        );
-      }
-
-      return null;
-    });
+    return <Text>Content format not recognized</Text>;
   };
 
   return (
@@ -251,5 +300,80 @@ const styles = StyleSheet.create({
   boldText: {
     fontWeight: "bold",
     color: "#2c3e50",
+  },
+  // Food Section Styles
+  foodContainer: {
+    marginBottom: 20,
+  },
+  foodCategory: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  foodCategoryName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginBottom: 5,
+  },
+  foodCategoryDesc: {
+    fontSize: 15,
+    color: "#34495e",
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  foodItemsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 10,
+  },
+  foodItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "50%",
+    marginBottom: 8,
+  },
+  foodItemBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#9b59b6",
+    marginRight: 8,
+  },
+  foodItemText: {
+    fontSize: 15,
+    color: "#2c3e50",
+  },
+  foodTipContainer: {
+    backgroundColor: "#e8f4f8",
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+  },
+  foodTipText: {
+    fontSize: 14,
+    color: "#2980b9",
+    fontStyle: "italic",
+  },
+  generalTipsContainer: {
+    backgroundColor: "#fff5f5",
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 10,
+  },
+  generalTipsHeader: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#e74c3c",
+    marginBottom: 10,
+  },
+  generalTipItem: {
+    marginBottom: 5,
+  },
+  generalTipText: {
+    fontSize: 15,
+    color: "#c0392b",
+    lineHeight: 22,
   },
 });

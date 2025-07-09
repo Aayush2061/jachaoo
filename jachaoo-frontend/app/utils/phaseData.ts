@@ -1,49 +1,86 @@
 const bullet = "•";
 export const phaseData = {
   "Menstrual Phase": {
-    Food: [
-      "Iron Rich Foods",
-      "- Especially focuses on maintaining the iron lost due to bleeding and prevents anemia.",
-      "  1. Spinach                  2. Lentils",
-      "  3. Beets                    4. Egg yolks",
-      "  5. Liver                    6. Gundruk",
-      "  7. Black chana              8. Niuro",
-      "  9. Mutton                  10. Bhatmas",
-      "  * Pair foods with tomatoes or oranges for better iron absorption.",
-
-      "Warm Foods",
-      "- Boost low energy and reduce cravings.",
-      "  1. Khichadi (Mung dal + rice)        2. Chicken or Bone soups",
-      "  3. Ginger tea                        4. Turmeric milk",
-      "  5. Milk + rice                       6. Vegetable soup",
-      "  * Food cooked in small amounts of ghee.",
-
-      "Anti-Inflammatory Foods",
-      "- Reduces cramps and bloating.",
-      "  1. Ginger                            2. Turmeric",
-      "  3. Cumin (Jeera)                    4. Fish",
-      "  5. Berries (Strawberries or Blueberries)",
-
-      "Hydrating Foods",
-      "- Maintain water and blood volume.",
-      "- Dehydration worsens cramps and fatigue.",
-      "  1. Cucumber                          2. Lemon water",
-      "  3. Watermelon                        4. Oranges",
-      "  5. Coconut water                     6. Soups",
-      "  7. Fruits (High in water + fiber)",
-
-      "Mood Boosting Foods",
-      "- Support good moods.",
-      "  1. Banana                            2. Dark chocolate",
-      "  3. Milk + turmeric                   4. Nuts (almonds, walnuts)",
-      "  5. Pumpkin seeds",
-
-      "Tips",
-      "- Avoid salty, processed, fried foods.",
-      "- Cut down on caffeine.",
-      "- Reduce sugary sweets; opt for warm water or herbal teas.",
-      "- Avoid cold drinks and ice creams—they worsen cramps.",
-    ],
+    Food: {
+      categories: [
+        {
+          name: "Iron Rich Foods",
+          description:
+            "Especially focuses on maintaining the iron lost due to bleeding and prevents anemia.",
+          items: [
+            "Spinach",
+            "Lentils",
+            "Beets",
+            "Egg yolks",
+            "Liver",
+            "Gundruk",
+            "Black chana",
+            "Niuro",
+            "Mutton",
+            "Bhatmas",
+          ],
+          tip: "Pair foods with tomatoes or oranges for better iron absorption.",
+        },
+        {
+          name: "Warm Foods",
+          description: "Boost low energy and reduce cravings.",
+          items: [
+            "Khichadi (Mung dal + rice)",
+            "Chicken or Bone soups",
+            "Ginger tea",
+            "Turmeric milk",
+            "Milk + rice",
+            "Vegetable soup",
+          ],
+          tip: "Food cooked in small amounts of ghee.",
+        },
+        {
+          name: "Anti-Inflammatory Foods",
+          description: "Reduces cramps and bloating.",
+          items: [
+            "Ginger",
+            "Turmeric",
+            "Cumin (Jeera)",
+            "Fish",
+            "Berries (Strawberries or Blueberries)",
+          ],
+          tip: null,
+        },
+        {
+          name: "Hydrating Foods",
+          description:
+            "Maintain water and blood volume. Dehydration worsens cramps and fatigue.",
+          items: [
+            "Cucumber",
+            "Lemon water",
+            "Watermelon",
+            "Oranges",
+            "Coconut water",
+            "Soups",
+            "Fruits (High in water + fiber)",
+          ],
+          tip: null,
+        },
+        {
+          name: "Mood Boosting Foods",
+          description: "Support good moods.",
+          items: [
+            "Banana",
+            "Dark chocolate",
+            "Milk + turmeric",
+            "Nuts (almonds, walnuts)",
+            "Pumpkin seeds",
+          ],
+          tip: null,
+        },
+      ],
+      generalTips: [
+        "Avoid salty, processed, fried foods.",
+        "Cut down on caffeine.",
+        "Reduce sugary sweets; opt for warm water or herbal teas.",
+        "Avoid cold drinks and ice creams—they worsen cramps.",
+      ],
+    },
     Exercise: [
       // ==================== YOGA POSES ====================
       { type: "header", text: "Yoga Poses" },
@@ -239,33 +276,60 @@ export const phaseData = {
     ],
   },
   "Follicular Phase": {
-    Food: [
-      "Brain-Boosting & Energy Foods",
-      "- Supports brain focus and stable blood sugar.",
-      "  1. Eggs                            2. Avocado",
-      "  3. Oats + nuts                    4. Grains (millet, brown rice, barley)",
-      "  5. Banana                         6. Spinach",
-      "  7. Pumpkin seeds                 8. Peanut Butter",
-
-      "Hormone Supporting Foods",
-      "- Helps rising estrogen level naturally and balances rising energy.",
-      "  1. Chana                          2. Sprouted lentils (soaked dal)",
-      "  3. Moong dal                      4. Gundruk",
-      "  5. Yogurt (Dahi)                  6. Cauliflower, Cabbage, Broccoli",
-      "  7. Fish                            8. Apples, Papaya",
-      "  9. Berries (Strawberry)",
-
-      "Hydrating Foods",
-      "- Body feels fresher and more energetic.",
-      "  1. Lemon + honey water            2. Cucumber",
-      "  3. Mint                           4. Coconut water",
-      "  5. Citrus fruits                  6. Fruits (Apples, Oranges, Pears)",
-
-      "Tips",
-      "- Continue warm teas with herbs like ginger, tulsi, mint.",
-      "- Avoid oily and fried foods.",
-      "- Have fruits daily or frequently.",
-    ],
+    Food: {
+      categories: [
+        {
+          name: "Brain-Boosting & Energy Foods",
+          description: "Supports brain focus and stable blood sugar.",
+          items: [
+            "Eggs",
+            "Avocado",
+            "Oats + nuts",
+            "Grains (millet, brown rice, barley)",
+            "Banana",
+            "Spinach",
+            "Pumpkin seeds",
+            "Peanut Butter",
+          ],
+          tip: null,
+        },
+        {
+          name: "Hormone Supporting Foods",
+          description:
+            "Helps rising estrogen level naturally and balances rising energy.",
+          items: [
+            "Chana",
+            "Sprouted lentils (soaked dal)",
+            "Moong dal",
+            "Gundruk",
+            "Yogurt (Dahi)",
+            "Cauliflower, Cabbage, Broccoli",
+            "Fish",
+            "Apples, Papaya",
+            "Berries (Strawberry)",
+          ],
+          tip: null,
+        },
+        {
+          name: "Hydrating Foods",
+          description: "Body feels fresher and more energetic.",
+          items: [
+            "Lemon + honey water",
+            "Cucumber",
+            "Mint",
+            "Coconut water",
+            "Citrus fruits",
+            "Fruits (Apples, Oranges, Pears)",
+          ],
+          tip: null,
+        },
+      ],
+      generalTips: [
+        "Continue warm teas with herbs like ginger, tulsi, mint.",
+        "Avoid oily and fried foods.",
+        "Have fruits daily or frequently.",
+      ],
+    },
     Exercise: [
       // ==================== YOGA POSES ====================
       { type: "header", text: "Yoga Poses" },
@@ -418,31 +482,62 @@ export const phaseData = {
     ],
   },
   "Ovulatory Phase": {
-    Food: [
-      "Cooling & Anti-Inflammatory Foods",
-      "  1. Cucumber                      2. Watermelon",
-      "  3. Yogurt / Curd                4. Lemon water",
-      "  5. Mint (Pudina)                6. Citrus fruit (Oranges)",
-      "  7. Amala juice                  8. Fenugreek water (Methi pani)",
-
-      "Fertility Boosting Foods",
-      "  1. Eggs                         2. Pumpkin seeds",
-      "  3. Pomegranate                  4. Cauliflower / Cabbage",
-      "  5. Green leafy vegetables       6. Avocado",
-      "  7. Chicken                      8. Gundruk",
-      "  9. Mushrooms                   10. Dal (Mung dal / Musuro dal)",
-
-      "Higher Fiber Foods",
-      "  1. Apple                        2. Pear (Nashpati)",
-      "  3. Lentils (Rahar / Musuro dal) 4. Millet",
-      "  5. Barley / Brown rice          6. Corn flour",
-
-      "Tips",
-      "- Stay hydrated with herbal teas (tulsi + ginger), lemon or mint water.",
-      "- Avoid deep-fried and spicy foods.",
-      "- Include foods like gundruk and yogurt.",
-      "- Avoid sugary drinks and excess tea/coffee.",
-    ],
+    Food: {
+      categories: [
+        {
+          name: "Cooling & Anti-Inflammatory Foods",
+          description:
+            "Helps regulate body temperature and reduce inflammation during ovulation.",
+          items: [
+            "Cucumber",
+            "Watermelon",
+            "Yogurt / Curd",
+            "Lemon water",
+            "Mint (Pudina)",
+            "Citrus fruit (Oranges)",
+            "Amala juice",
+            "Fenugreek water (Methi pani)",
+          ],
+          tip: null,
+        },
+        {
+          name: "Fertility Boosting Foods",
+          description: "Supports reproductive health and hormone balance.",
+          items: [
+            "Eggs",
+            "Pumpkin seeds",
+            "Pomegranate",
+            "Cauliflower / Cabbage",
+            "Green leafy vegetables",
+            "Avocado",
+            "Chicken",
+            "Gundruk",
+            "Mushrooms",
+            "Dal (Mung dal / Musuro dal)",
+          ],
+          tip: null,
+        },
+        {
+          name: "Higher Fiber Foods",
+          description: "Supports digestion and helps regulate estrogen levels.",
+          items: [
+            "Apple",
+            "Pear (Nashpati)",
+            "Lentils (Rahar / Musuro dal)",
+            "Millet",
+            "Barley / Brown rice",
+            "Corn flour",
+          ],
+          tip: null,
+        },
+      ],
+      generalTips: [
+        "Stay hydrated with herbal teas (tulsi + ginger), lemon or mint water.",
+        "Avoid deep-fried and spicy foods.",
+        "Include foods like gundruk and yogurt.",
+        "Avoid sugary drinks and excess tea/coffee.",
+      ],
+    },
     Exercise: [
       // ==================== YOGA POSES ====================
       { type: "header", text: "Yoga Poses" },
@@ -610,35 +705,64 @@ export const phaseData = {
     ],
   },
   "Luteal Phase": {
-    Food: [
-      "Warming & Comforting Foods",
-      "- Relax the nervous system, improve digestion and make you calm.",
-      "  1. Warm Soups (Dal soup, Bone soup)     2. Sweet Potato",
-      "  3. Turmeric milk                       4. Banana",
-      "  5. Ginger tea                          6. Brown rice",
-      "  7. Vegetables with ghee (carrots, beans)  8. Cumin water (Jeera pani)",
-
-      "Hormone Supporting Foods",
-      "- Help produce progesterone, balance mood swings and energy.",
-      "  1. Eggs                                2. Fatty Fish",
-      "  3. Chicken                             4. Avocado",
-      "  5. Sesame seeds (Til)                 6. Paneer",
-      "  7. Millet (Kodo)                      8. Barley (Jau)",
-      "  9. Almonds and Walnuts",
-
-      "Cramp & Bloating Relief Foods",
-      "- Helps to reduce cramps, bloating and indigestion.",
-      "  1. Papaya                              2. Yogurt",
-      "  3. Cucumber                            4. Pineapple",
-      "  5. Beetroot (Chukandar)               6. Warm lemon water",
-      "  7. Coriander seed water (Dhaniya pani) 8. Spinach / Green leafy vegetables",
-
-      "Tips",
-      "- Reduce excess salt and sugar.",
-      "- Limit caffeine and alcohol.",
-      "- Stay hydrated.",
-      "- Avoid cold foods and drinks.",
-    ],
+    Food: {
+      categories: [
+        {
+          name: "Warming & Comforting Foods",
+          description:
+            "Relax the nervous system, improve digestion and make you calm.",
+          items: [
+            "Warm Soups (Dal soup, Bone soup)",
+            "Sweet Potato",
+            "Turmeric milk",
+            "Banana",
+            "Ginger tea",
+            "Brown rice",
+            "Vegetables with ghee (carrots, beans)",
+            "Cumin water (Jeera pani)",
+          ],
+          tip: null,
+        },
+        {
+          name: "Hormone Supporting Foods",
+          description:
+            "Help produce progesterone, balance mood swings and energy.",
+          items: [
+            "Eggs",
+            "Fatty Fish",
+            "Chicken",
+            "Avocado",
+            "Sesame seeds (Til)",
+            "Paneer",
+            "Millet (Kodo)",
+            "Barley (Jau)",
+            "Almonds and Walnuts",
+          ],
+          tip: null,
+        },
+        {
+          name: "Cramp & Bloating Relief Foods",
+          description: "Helps to reduce cramps, bloating and indigestion.",
+          items: [
+            "Papaya",
+            "Yogurt",
+            "Cucumber",
+            "Pineapple",
+            "Beetroot (Chukandar)",
+            "Warm lemon water",
+            "Coriander seed water (Dhaniya pani)",
+            "Spinach / Green leafy vegetables",
+          ],
+          tip: null,
+        },
+      ],
+      generalTips: [
+        "Reduce excess salt and sugar.",
+        "Limit caffeine and alcohol.",
+        "Stay hydrated.",
+        "Avoid cold foods and drinks.",
+      ],
+    },
     Exercise: [
       // ==================== YOGA POSES ====================
       { type: "header", text: "Yoga Poses" },
