@@ -82,6 +82,39 @@ const renderFoodContent = (foodData) => {
   );
 };
 
+const renderFocusLoveContent = (data) => {
+  return (
+    <View style={styles.focusLoveContainer}>
+      {/* Render Categories */}
+      {data.categories.map((category, index) => (
+        <View key={`cat-${index}`} style={styles.focusLoveCategory}>
+          <Text style={styles.focusLoveCategoryName}>{category.name}</Text>
+          <View style={styles.focusLoveItemsContainer}>
+            {category.items.map((item, itemIndex) => (
+              <View key={`item-${itemIndex}`} style={styles.focusLoveItem}>
+                <View style={styles.focusLoveBullet} />
+                <Text style={styles.focusLoveItemText}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
+
+      {/* Render Tips */}
+      {data.tips && data.tips.length > 0 && (
+        <View style={styles.focusLoveTipsContainer}>
+          <Text style={styles.focusLoveTipsHeader}>Tips</Text>
+          {data.tips.map((tip, tipIndex) => (
+            <View key={`tip-${tipIndex}`} style={styles.focusLoveTipItem}>
+              <Text style={styles.focusLoveTipText}>• {tip}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
+
 export default function PhaseDetail() {
   const params = useLocalSearchParams();
   const phase = JSON.parse(params.phase as string);
@@ -92,6 +125,15 @@ export default function PhaseDetail() {
     // Handle Food section first
     if (action === "Food" && content && content.categories) {
       return renderFoodContent(content);
+    }
+
+    // Handle Focus/Love sections
+    if (
+      (action === "Focus" || action === "Love") &&
+      content &&
+      content.categories
+    ) {
+      return renderFocusLoveContent(content);
     }
 
     // Handle array content (other sections)
@@ -374,6 +416,63 @@ const styles = StyleSheet.create({
   generalTipText: {
     fontSize: 15,
     color: "#c0392b",
+    lineHeight: 22,
+  },
+  focusLoveContainer: {
+    marginBottom: 20,
+  },
+  focusLoveCategory: {
+    backgroundColor: "#f5f7fa",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  focusLoveCategoryName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4a6fa5",
+    marginBottom: 10,
+  },
+  focusLoveItemsContainer: {
+    marginLeft: 10,
+  },
+  focusLoveItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  focusLoveBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#4a6fa5",
+    marginRight: 10,
+    marginTop: 7,
+  },
+  focusLoveItemText: {
+    fontSize: 15,
+    color: "#2c3e50",
+    lineHeight: 22,
+    flex: 1,
+  },
+  focusLoveTipsContainer: {
+    backgroundColor: "#fff0f0",
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 10,
+  },
+  focusLoveTipsHeader: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#d45555",
+    marginBottom: 8,
+  },
+  focusLoveTipItem: {
+    marginBottom: 5,
+  },
+  focusLoveTipText: {
+    fontSize: 15,
+    color: "#d45555",
     lineHeight: 22,
   },
 });

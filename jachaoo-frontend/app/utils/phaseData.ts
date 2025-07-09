@@ -246,34 +246,54 @@ export const phaseData = {
         content: "- Massage",
       },
     ],
-    Focus: [
-      "Living",
-      "- This is your natural “winter”. Sleep more, take short naps, reduce social obligations.",
-      "- Don’t overthink anything that’s not working for you — let it go.",
-      "- Make fewer decisions and enjoy personal time.",
-      "- Create a calm vibe: use quiet spaces, soft lighting, and slow music.",
-      "- Restore self-confidence. Do tasks that make you feel joy and comfort.",
-
-      "Working",
-      "- Do tasks that require less collaboration and more deep thinking.",
-      "- Good time for writing, journaling, and visioning future ideas.",
-      "- Communicate if you need quiet time or personal space.",
-      "- Reflect on past work and refine your plans.",
-      "- Take care of your body; it's okay to say no to invitations.",
-    ],
-    Love: [
-      "Relationships",
-      "- In this phase, you're more sensitive and emotionally raw.",
-      "- You might not feel like texting or going out — let friends/partner know you're recharging.",
-      "- If in a romantic relationship, small gestures like a hug or cup of tea can be deeply nourishing.",
-      "- You may feel more emotionally intense — give yourself space before reacting.",
-      "- Reflect on whether your relationships make you feel strong and supported.",
-
-      "Sex Status",
-      "- It's your time — if you don’t feel like engaging in sex (solo or with a partner), take a break.",
-      "- Low sex drive is normal due to cramps or fatigue.",
-      "- To stay close without intercourse, try cuddling, massage, or holding hands in a warm space.",
-    ],
+    Focus: {
+      categories: [
+        {
+          name: "Living",
+          items: [
+            "This is your natural 'winter'. Sleep more, take short naps, reduce social obligations",
+            "Don't overthink anything that's not working for you — let it go",
+            "Make fewer decisions and enjoy personal time",
+            "Create a calm vibe: use quiet spaces, soft lighting, and slow music",
+            "Restore self-confidence. Do tasks that make you feel joy and comfort",
+          ],
+        },
+        {
+          name: "Working",
+          items: [
+            "Do tasks that require less collaboration and more deep thinking",
+            "Good time for writing, journaling, and visioning future ideas",
+            "Communicate if you need quiet time or personal space",
+            "Reflect on past work and refine your plans",
+            "Take care of your body; it's okay to say no to invitations",
+          ],
+        },
+      ],
+      tips: [], // No additional tips in this section
+    },
+    Love: {
+      categories: [
+        {
+          name: "Relationships",
+          items: [
+            "In this phase, you're more sensitive and emotionally raw",
+            "You might not feel like texting or going out — let friends/partner know you're recharging",
+            "If in a romantic relationship, small gestures like a hug or cup of tea can be deeply nourishing",
+            "You may feel more emotionally intense — give yourself space before reacting",
+            "Reflect on whether your relationships make you feel strong and supported",
+          ],
+        },
+        {
+          name: "Sex Status",
+          items: [
+            "It's your time — if you don't feel like engaging in sex (solo or with a partner), take a break",
+            "Low sex drive is normal due to cramps or fatigue",
+            "To stay close without intercourse, try cuddling, massage, or holding hands in a warm space",
+          ],
+        },
+      ],
+      tips: [], // No additional tips in this section
+    },
   },
   "Follicular Phase": {
     Food: {
@@ -451,35 +471,55 @@ export const phaseData = {
         ],
       },
     ],
-    Focus: [
-      "Living",
-      "- Your energy starts to rise—it's time to rejoin life with creativity and motivation.",
-      "- Try something new: a hobby, skill, or event.",
-      "- Best time to plan dreams and create strategies.",
-      "- Explore new things, say yes to new opportunities.",
-      "- Your brain craves freshness—do cleaning or reset your space.",
-
-      "Working",
-      "- You’re mentally alert and energetic—perfect for work and creative thinking.",
-      "- Continue deep work with boosted energy.",
-      "- Communication is strong—engage in teamwork.",
-      "- Great time for interviews, meetings, workshops.",
-      "- Start new projects, pitch ideas, experiment freely.",
-    ],
-    Love: [
-      "Relationships",
-      "- At this phase, you are more playful , laughing , meeting new people and being more social.",
-      "- Reconnect with friends, go on dates, plan group events.",
-      "- This is the great time to resolve the issues as you are mentally calm and emotionally balanced.",
-      "- As your self confidence rises , letting people love you recharge you emotionally.",
-      "- If single, it’s a great time to meet new people or go on dates.",
-
-      "Sex Status",
-      "- Your sex drive is increasing during this phase.",
-      "- your skin glows , energy returns and feel more attractive and you want to feel bolder.",
-      "- Try new things in relationship , communicate with your partner.",
-      "- Express yourself . Go for walk , teasing , cuddling deepens closeness with your partner.",
-    ],
+    Focus: {
+      categories: [
+        {
+          name: "Living",
+          items: [
+            "Your energy starts to rise—it's time to rejoin life with creativity and motivation",
+            "Try something new: a hobby, skill, or event",
+            "Best time to plan dreams and create strategies",
+            "Explore new things, say yes to new opportunities",
+            "Your brain craves freshness—do cleaning or reset your space",
+          ],
+        },
+        {
+          name: "Working",
+          items: [
+            "You're mentally alert and energetic—perfect for work and creative thinking",
+            "Continue deep work with boosted energy",
+            "Communication is strong—engage in teamwork",
+            "Great time for interviews, meetings, workshops",
+            "Start new projects, pitch ideas, experiment freely",
+          ],
+        },
+      ],
+      tips: [], // No general tips in this example
+    },
+    Love: {
+      categories: [
+        {
+          name: "Relationships",
+          items: [
+            "At this phase, you are more playful, laughing, meeting new people and being more social",
+            "Reconnect with friends, go on dates, plan group events",
+            "This is the great time to resolve the issues as you are mentally calm and emotionally balanced",
+            "As your self confidence rises, letting people love you recharge you emotionally",
+            "If single, it's a great time to meet new people or go on dates",
+          ],
+        },
+        {
+          name: "Sex Status",
+          items: [
+            "Your sex drive is increasing during this phase",
+            "Your skin glows, energy returns and feel more attractive and you want to feel bolder",
+            "Try new things in relationship, communicate with your partner",
+            "Express yourself. Go for walk, teasing, cuddling deepens closeness with your partner",
+          ],
+        },
+      ],
+      tips: [], // No general tips in this example
+    },
   },
   "Ovulatory Phase": {
     Food: {
@@ -671,38 +711,57 @@ export const phaseData = {
         content: "- You can go for group classes like Dance and Zumba",
       },
     ],
-    Focus: [
-      "Living",
-      "- This is the time when you are glowing, sociable and very confident.",
-      "- Go out, host events, meet new people.",
-      "- Try new things: dancing , hosting , speaking and expanding network.",
-      "- Dress up in ways where you boost your self image.",
-      "- Your skin glows up and posture improve.",
-
-      "Working",
-      "- You are at your peak mental sharpness and social fluency.",
-      "- Ideal time for leadership, public speaking, and collaboration.",
-      "- Great time for critical work and showing you real ability.",
-      "- Best phase for brainstorming ideas and initiating projects.",
-      "- In this phase your brain wants interaction rather than silent focus.",
-      "- This is your superwoman work phase",
-      "Tips: Avoid solo deep work like heavy research now.",
-    ],
-    Love: [
-      "Relationships",
-      "- In this phase , hormones increase confidence, affection and emotional openness.",
-      "- Go out talk to people , organize gatherings.",
-      "- Its great time to resolve past issues calmly with partner , friends, family.",
-      "- In this phase you are more open and flirty so you can express feelings or take the lead in romance.",
-      "- Perfect time for dating, meetups and explore new social circles.",
-
-      "Sex Status",
-      "- Hormones works together in this phase increasing the sex drive.",
-      "- You can plan a romantic evening or weekend.",
-      "- Show slow and emotional affection towards the partner.",
-      "- Its great time to have open communication like sharing your preferences with your partner.",
-      "- This is the phase to explore the pleasure for yourself.",
-    ],
+    Focus: {
+      categories: [
+        {
+          name: "Living",
+          items: [
+            "This is the time when you are glowing, sociable and very confident",
+            "Go out, host events, meet new people",
+            "Try new things: dancing, hosting, speaking and expanding network",
+            "Dress up in ways where you boost your self image",
+            "Your skin glows up and posture improve",
+          ],
+        },
+        {
+          name: "Working",
+          items: [
+            "You are at your peak mental sharpness and social fluency",
+            "Ideal time for leadership, public speaking, and collaboration",
+            "Great time for critical work and showing your real ability",
+            "Best phase for brainstorming ideas and initiating projects",
+            "In this phase your brain wants interaction rather than silent focus",
+            "This is your superwoman work phase",
+          ],
+        },
+      ],
+      tips: ["Avoid solo deep work like heavy research now"],
+    },
+    Love: {
+      categories: [
+        {
+          name: "Relationships",
+          items: [
+            "In this phase, hormones increase confidence, affection and emotional openness",
+            "Go out talk to people, organize gatherings",
+            "Its great time to resolve past issues calmly with partner, friends, family",
+            "In this phase you are more open and flirty so you can express feelings or take the lead in romance",
+            "Perfect time for dating, meetups and explore new social circles",
+          ],
+        },
+        {
+          name: "Sex Status",
+          items: [
+            "Hormones work together in this phase increasing the sex drive",
+            "You can plan a romantic evening or weekend",
+            "Show slow and emotional affection towards the partner",
+            "Its great time to have open communication like sharing your preferences with your partner",
+            "This is the phase to explore the pleasure for yourself",
+          ],
+        },
+      ],
+      tips: [], // No general tips in this example
+    },
   },
   "Luteal Phase": {
     Food: {
@@ -903,59 +962,76 @@ export const phaseData = {
       { type: "header", text: "Tips" },
       {
         type: "text",
-        content: "Don't go for high strength training",
+        content: "1.Don't go for high strength training",
       },
       {
         type: "text",
-        content: "Go for normal walk for 20-30 minutes, try nature or parks",
+        content: "2.Go for normal walk for 20-30 minutes, try nature or parks",
       },
       {
         type: "text",
-        content: "Can do dance also",
+        content: "3.Can do dance also",
       },
       {
         type: "text",
-        content: "Avoid competitive sports",
+        content: "4.Avoid competitive sports",
       },
     ],
-    Focus: [
-      "Living",
-      "- You may feel more emotional and sensitive , that’s normal.",
-      "- Don't force yourself to socialize.",
-      "- Surround yourself with calming things: soft lighting , clean spaces , herbal teas etc.",
-      "- If you need time alone let the close ones know.",
-      "- Choose peace over pleasure.",
-      "- Try to take break from social media before an hour before bed time.",
+    Focus: {
+      categories: [
+        {
+          name: "Living",
+          items: [
+            "You may feel more emotional and sensitive, that's normal",
+            "Don't force yourself to socialize",
+            "Surround yourself with calming things: soft lighting, clean spaces, herbal teas etc.",
+            "If you need time alone let the close ones know",
+            "Choose peace over pleasure",
+            "Try to take break from social media before an hour before bed time",
+          ],
+        },
+        {
+          name: "Working",
+          items: [
+            "Don't go for highly stressing works",
+            "Not ideal time for public speaking or networking",
+            "Avoid roles that demands intense energy like leadership roles",
+            "Go for quiet space and creative works",
+            "You can have good productivity but slow pace",
+            "Take more breaks than usual, if you feel emotionally more reactive",
+          ],
+        },
+      ],
+      tips: ["Don't force yourself into high output"],
+    },
 
-      "Working",
-      "- Don’t go for highly stressing works .",
-      "- Not ideal time for public speaking or networking.",
-      "- Avoid roles that demands intense energy like leadership roles.",
-      "- Go for quiet space and creative works.",
-      "- You can have good productivity but slow pace.",
-      "- Take more breaks than usual , if you feel emotionally more reactive.",
-
-      "Tip",
-      "- Don’t force yourself into high output.",
-    ],
-    Love: [
-      "Relationships",
-      "- You feel more easily hurt and emotional. Small issues might feel big, give yourself space",
-      "- Don’t force yourself into conversations or social plans, its okay to say no",
-      "- Try to stay away from arguments, cause in this phase arguments can lead worse",
-      "- Its common to overthink in this phase, instead of overthinking do simple things like watch movie , spend time with someone calm",
-
-      "Sex Status",
-      "- You may not fell sexy cause your body wants comfort than pressure",
-      "- Focus on cuddling, massage or lying close together",
-      "- Go for slow and emotional intimacy, if you are in good mood",
-      "- Don’t be afraid to say what you want clearly to your partner",
-      "- If you are single, give time to yourself",
-
-      "Tips:",
-      "- Avoid unnecessary conflicts",
-      "- Focus on self- love",
-      "- Prioritize yourself before anything",
-    ],
+    Love: {
+      categories: [
+        {
+          name: "Relationships",
+          items: [
+            "You feel more easily hurt and emotional. Small issues might feel big, give yourself space",
+            "Don't force yourself into conversations or social plans, its okay to say no",
+            "Try to stay away from arguments, cause in this phase arguments can lead worse",
+            "Its common to overthink in this phase, instead of overthinking do simple things like watch movie, spend time with someone calm",
+          ],
+        },
+        {
+          name: "Sex Status",
+          items: [
+            "You may not fell sexy cause your body wants comfort than pressure",
+            "Focus on cuddling, massage or lying close together",
+            "Go for slow and emotional intimacy, if you are in good mood",
+            "Don't be afraid to say what you want clearly to your partner",
+            "If you are single, give time to yourself",
+          ],
+        },
+      ],
+      tips: [
+        "Avoid unnecessary conflicts",
+        "Focus on self-love",
+        "Prioritize yourself before anything",
+      ],
+    },
   },
 };
