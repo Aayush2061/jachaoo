@@ -1,41 +1,132 @@
 // app/(home)/periods/phase-detail.tsx
 import { useLocalSearchParams } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { phaseData } from "../../utils/phaseData";
+
+// Correct bold text renderer (no duplicates)
+const renderBoldText = (text: string) => {
+  const segments = [];
+  let remainingText = text;
+  let boldStart, boldEnd;
+
+  while ((boldStart = remainingText.indexOf("**")) !== -1) {
+    // Add text before bold
+    segments.push(remainingText.substring(0, boldStart));
+    remainingText = remainingText.substring(boldStart + 2);
+
+    // Find end of bold
+    boldEnd = remainingText.indexOf("**");
+    if (boldEnd === -1) break;
+
+    // Add bold text
+    segments.push(
+      <Text key={`bold-${segments.length}`} style={styles.boldText}>
+        {remainingText.substring(0, boldEnd)}
+      </Text>
+    );
+    remainingText = remainingText.substring(boldEnd + 2);
+  }
+
+  // Add remaining text
+  segments.push(remainingText);
+
+  return (
+    <Text style={styles.inlineTextContainer}>
+      {segments.map((segment, index) =>
+        typeof segment === "string" ? (
+          <Text key={`text-${index}`}>{segment}</Text>
+        ) : (
+          segment
+        )
+      )}
+    </Text>
+  );
+};
 
 export default function PhaseDetail() {
   const params = useLocalSearchParams();
   const phase = JSON.parse(params.phase as string);
   const action = params.action as string;
-
-  // Get the content for this phase and action
   const content = phaseData[phase.name][action];
 
-  // Function to render content with proper formatting
   const renderContent = () => {
     return content.map((item, index) => {
-      // Check if the item is a heading (no bullet point)
-      if (item.match(/^[A-Z][a-zA-Z ]+$/) && !item.match(/[0-9]\./)) {
+      // ===== Structured Exercise Data =====
+      if (typeof item === "object" && item.type) {
+        if (item.type === "exercise") {
+          return (
+            <View key={`ex-${index}`} style={styles.exerciseContainer}>
+              {item.image && (
+                <Image source={item.image} style={styles.exerciseImage} />
+              )}
+              <Text style={styles.exerciseName}>{item.name}</Text>
+
+              {item.steps && (
+                <>
+                  <Text style={styles.sectionSubheader}>Steps:</Text>
+                  {item.steps.map((step, i) => (
+                    <Text key={`step-${i}`} style={styles.stepText}>
+                      {renderBoldText(step)}
+                    </Text>
+                  ))}
+                </>
+              )}
+
+              {item.benefits && (
+                <>
+                  <Text style={styles.sectionSubheader}>Benefits:</Text>
+                  <Text style={styles.benefitText}>
+                    {renderBoldText(item.benefits)}
+                  </Text>
+                </>
+              )}
+            </View>
+          );
+        }
+
+        if (item.type === "header") {
+          return (
+            <Text key={`hdr-${index}`} style={styles.sectionHeader}>
+              {renderBoldText(item.text)}
+            </Text>
+          );
+        }
+
+        if (item.type === "text") {
+          return (
+            <Text key={`txt-${index}`} style={styles.contentText}>
+              {renderBoldText(item.content)}
+            </Text>
+          );
+        }
+      }
+
+      // ===== Legacy Text Formatting =====
+      if (typeof item === "string") {
+        if (item.match(/^[A-Z][a-zA-Z ]+$/) && !item.match(/[0-9]\./)) {
+          return (
+            <Text key={`hdr-${index}`} style={styles.sectionHeader}>
+              {renderBoldText(item)}
+            </Text>
+          );
+        }
+
+        if (item.startsWith("Tip") || item.startsWith("Note")) {
+          return (
+            <View key={`tip-${index}`} style={styles.tipContainer}>
+              <Text style={styles.tipText}>{renderBoldText(item)}</Text>
+            </View>
+          );
+        }
+
         return (
-          <Text key={index} style={styles.sectionHeader}>
-            {item}
+          <Text key={`item-${index}`} style={styles.contentText}>
+            {renderBoldText(item)}
           </Text>
         );
       }
-      // Check if the item is a tip or note
-      if (item.startsWith("Tip") || item.startsWith("Note")) {
-        return (
-          <View key={index} style={styles.tipContainer}>
-            <Text style={styles.tipText}>{item}</Text>
-          </View>
-        );
-      }
-      // Regular list item
-      return (
-        <Text key={index} style={styles.contentText}>
-          {item}
-        </Text>
-      );
+
+      return null;
     });
   };
 
@@ -75,12 +166,23 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 20,
   },
+  inlineTextContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
   sectionHeader: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#2c3e50",
     marginTop: 20,
     marginBottom: 10,
+  },
+  sectionSubheader: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginTop: 12,
+    marginBottom: 6,
   },
   contentText: {
     fontSize: 16,
@@ -98,5 +200,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#9b59b6",
     fontStyle: "italic",
+  },
+  exerciseContainer: {
+    marginBottom: 25,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 10,
+    padding: 15,
+  },
+  exerciseImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  exerciseName: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginBottom: 8,
+  },
+  stepText: {
+    fontSize: 14,
+    color: "#34495e",
+    marginLeft: 8,
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  benefitText: {
+    fontSize: 14,
+    color: "#27ae60",
+    fontStyle: "italic",
+  },
+  boldText: {
+    fontWeight: "bold",
+    color: "#2c3e50",
   },
 });

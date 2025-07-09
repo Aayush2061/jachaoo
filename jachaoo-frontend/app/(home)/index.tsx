@@ -23,7 +23,7 @@ export default function HomePage() {
     const checkHealthData = async () => {
       try {
         if (!user?.id) return;
-
+        setLoading(true);
         const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
         );

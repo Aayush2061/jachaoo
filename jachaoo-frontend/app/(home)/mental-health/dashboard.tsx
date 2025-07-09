@@ -77,7 +77,7 @@ export default function MentalHealthDashboard() {
           <View style={styles.featuresContainer}>
             {/* Row 1 */}
             <View style={styles.featureRow}>
-              <Pressable
+              {/* <Pressable
                 style={styles.featureButton}
                 // onPress={() => router.push("/(home)/mental-health/track")}
               >
@@ -87,6 +87,18 @@ export default function MentalHealthDashboard() {
                   imageStyle={styles.featureBackgroundImage}
                 >
                   <Text style={styles.featureButtonText}>Track my mood</Text>
+                </ImageBackground>
+              </Pressable> */}
+              <Pressable
+                style={styles.featureButton}
+                // onPress={() => router.push("/(home)/mental-health/talk")}
+              >
+                <ImageBackground
+                  source={require("@/assets/images/track-bg.jpg")}
+                  style={styles.featureBackground}
+                  imageStyle={styles.featureBackgroundImage}
+                >
+                  <Text style={styles.featureButtonText}>Talk to someone</Text>
                 </ImageBackground>
               </Pressable>
 
@@ -135,7 +147,7 @@ export default function MentalHealthDashboard() {
 
             {/* Row 3 */}
             <View style={styles.featureRow}>
-              <Pressable
+              {/* <Pressable
                 style={styles.featureButton}
                 // onPress={() => router.push("/(home)/mental-health/talk")}
               >
@@ -146,7 +158,7 @@ export default function MentalHealthDashboard() {
                 >
                   <Text style={styles.featureButtonText}>Talk to someone</Text>
                 </ImageBackground>
-              </Pressable>
+              </Pressable> */}
 
               <Pressable
                 style={styles.featureButton}

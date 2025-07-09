@@ -1,3 +1,4 @@
+const bullet = "•";
 export const phaseData = {
   "Menstrual Phase": {
     Food: [
@@ -44,27 +45,169 @@ export const phaseData = {
       "- Avoid cold drinks and ice creams—they worsen cramps.",
     ],
     Exercise: [
-      "Yoga Poses",
-      "- Balasana: Relieves lower back pain, calms mind",
-      "- Cat-Cow Stretch (Marjaryasana Bitilasana): Stretches spine gently and improves flow",
-      "- Viparita Karani: Reduces fatigue, improves circulation",
-      "- Supta Baddha Konasana: Reduces cramps",
-      "- Apanasana (Knee to Chest Pose): Aids digestion, eases bloating",
+      // ==================== YOGA POSES ====================
+      { type: "header", text: "Yoga Poses" },
 
-      "Meditation & Breathing",
-      "- Anulom Vilom: Balances hormones, calms mood",
-      "- Deep Belly Breathing: Calms nervous system, relieves cramps",
-      "- Womb Meditation: Promotes physical, emotional, and spiritual healing",
+      {
+        type: "exercise",
+        category: "yoga",
+        name: "Balasana",
+        image: require("../../assets/images/periods-exercise/Balasana.png"),
+        steps: [
+          "1. Sit on your knees, feet together",
+          "2. Bend forward slowly, chest between thighs",
+          "3. Stretch hands forward or keep near feet",
+          "4. Forehead on floor, breathe slowly",
+          "5. Hold for 2-3 minutes",
+        ],
+        benefits: "Relieves lower back pain, calms mind",
+      },
+      {
+        type: "exercise",
+        category: "yoga",
+        name: "Cat-Cow Stretch",
+        image: require("../../assets/images/periods-exercise/cat-cow.png"),
+        steps: [
+          "1. Get on the pose",
+          `${bullet}  Cow Pose`,
+          "       Take a breath in, lift your head up, and let your \t\t\t\tbelly drop down",
+          `${bullet}  Cat Pose`,
+          "       Breathe out, round your back up like a scared \t\t\tcat, and look at your belly",
+          "2. Do this slowly 5–10 times, breathing with each move.",
+        ],
+        benefits: "Stretches spine gently and improves flow",
+      },
+      {
+        type: "exercise",
+        category: "yoga",
+        name: "Viparita Karani",
+        image: require("../../assets/images/periods-exercise/vparita-karani.png"),
+        steps: [
+          "1. Sit near a wall.",
+          "2. Lie down and lift your legs up, placing them straight on the wall.",
+          "3. Let your hands rest by your side.",
+          "4. Close your eyes and relax.",
+          "5. Stay like this for 5–10 minutes.",
+        ],
+        benefits: "Reduces fatigue, improves circulation",
+      },
+      {
+        type: "exercise",
+        category: "yoga",
+        name: "Supta Baddha Konasana",
+        image: require("../../assets/images/periods-exercise/supta-buddha-konasana.png"),
+        steps: [
+          "1. Lie down on your back.",
+          "2. Join your feet together, and let your knees fall open like butterfly wings.",
+          "3. Put your hands on your belly or sides.",
+          "4. Breathe gently and relax for 5–10 minutes.",
+        ],
+        benefits: "Reduces cramps",
+      },
+      {
+        type: "exercise",
+        category: "yoga",
+        name: "Apanasana",
+        image: require("../../assets/images/periods-exercise/apanasana.png"),
+        steps: [
+          "1. Lie down on your back.",
+          "2. Bring one knee close to your chest and hold it with both hands.",
+          "3. Breathe slowly for about 5 -10 breaths. Then switch legs.",
+          "4. You can also bring both knees together to your chest.",
+        ],
+        benefits: "Aids digestion, eases bloating",
+      },
 
-      "Resting",
-      "- Use warm water bottle on abdomen or back",
-      "- Listen to calming music, mantras, or guided meditations",
-      "- For relaxation, practice Shavasana",
+      // ============= MEDITATION & BREATHING =============
+      { type: "header", text: "Meditation & Breathing" },
 
-      "Light Exercises",
-      "- Slow walking",
-      "- Gentle stretching",
-      "- Massage",
+      {
+        type: "exercise",
+        category: "meditation",
+        name: "Anulom Vilom",
+        // image: require("@assets/images/period-exercise/anulom_vilom.jpg"),
+        steps: [
+          "1. Sit comfortably with your back straight.",
+          "2. Close your eyes and relax your face.",
+          "3. Use your **right thumb** to **close** your right nostril.",
+          "4. Breathe in slowly through your left nostril.",
+          "5. Now close your left nostril with your ring finger.",
+          "6. Open your right nostril and breathe out slowly.",
+          "7. Now breathe in from the right nostril",
+          "8. Close it, and breathe out from the left nostril.",
+          "9. This is one full round.",
+          "10. Repeat slowly for 10-15 rounds, focusing on your breath.",
+        ],
+        benefits: "Balances hormones, calms mood",
+      },
+      {
+        type: "exercise",
+        category: "meditation",
+        name: "Deep Belly Breathing",
+        // image: require("@assets/images/period-exercise/belly_breathing.jpg"),
+        steps: [
+          "1. Sit or lie down comfortably.",
+          "2. Place one hand on your belly and one on your chest.",
+          "3. Breathe in slowly through your nose.",
+          "    – Feel your belly rise like a balloon.",
+          "4. Breathe out slowly through your mouth.",
+          "    – Feel your belly fall.",
+          "5. Keep your shoulders relaxed.",
+          "6. Do this slowly for 5–10 minutes.",
+          "    – Focus only on the belly moving, not the chest.",
+        ],
+        benefits: "Calms nervous system, relieves cramps",
+      },
+      {
+        type: "exercise",
+        category: "meditation",
+        name: "Womb Meditation",
+        // image: require("@assets/images/period-exercise/womb_meditation.jpg"),
+        steps: [
+          "1. Sit or lie down in a quiet place.",
+          "2. Place both hands on your womb (below the belly button).",
+          "3. Keep your hands there the whole time.",
+          "4. Close your eyes and take a few deep breaths.",
+          "5. Focus on the warmth of your hands on your womb.",
+          "6. Imagine a soft, glowing light in that space.",
+          "7. Silently say kind words, like:",
+          "    “I am safe. I am healing. I am whole.”",
+          "8  Stay in this feeling for 5–10 minutes or longer.",
+          "9  End by slowly opening your eyes and taking a deep breath.",
+        ],
+        benefits: "Promotes physical, emotional and spiritual healing",
+      },
+
+      // ==================== RESTING ====================
+      { type: "header", text: "Resting" },
+      {
+        type: "text",
+        content: "- Use warm water bottle on abdomen or back",
+      },
+      {
+        type: "text",
+        content:
+          "- Listen to calming music, mantra, or guided sleep meditations",
+      },
+      {
+        type: "text",
+        content: "- For relaxation, practice Shavasana",
+      },
+
+      // ============== LIGHT EXERCISES ==============
+      { type: "header", text: "Light Exercises" },
+      {
+        type: "text",
+        content: "- Slow walking",
+      },
+      {
+        type: "text",
+        content: "- Gentle stretching",
+      },
+      {
+        type: "text",
+        content: "- Massage",
+      },
     ],
     Focus: [
       "Living",
