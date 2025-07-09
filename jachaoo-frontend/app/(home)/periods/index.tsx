@@ -57,7 +57,7 @@ export default function PeriodTrackerGetStarted() {
 
   return (
     <ImageBackground
-      source={require("@/assets/images/period-tracker.png")}
+      source={require("@/assets/images/period-tracker1.png")}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.5)", // Semi-transparent white overlay
+    backgroundColor: "rgba(255, 255, 255, 0.1)", // Semi-transparent white overlay
     // justifyContent: "center",
   },
   contentContainer: {

@@ -162,7 +162,7 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Womb Meditation",
-        // image: require("@assets/images/period-exercise/womb_meditation.jpg"),
+        image: require("../../assets/images/periods-exercise/womb-meditation.png"),
         steps: [
           "1. Sit or lie down in a quiet place.",
           "2. Place both hands on your womb (below the belly button).",
