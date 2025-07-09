@@ -56,10 +56,12 @@ export default function PhaseDetail() {
         if (item.type === "exercise") {
           return (
             <View key={`ex-${index}`} style={styles.exerciseContainer}>
-              {item.image && (
-                <Image source={item.image} style={styles.exerciseImage} />
-              )}
               <Text style={styles.exerciseName}>{item.name}</Text>
+              {item.image && (
+                <View style={styles.imageContainer}>
+                  <Image source={item.image} style={styles.exerciseImage} />
+                </View>
+              )}
 
               {item.steps && (
                 <>
@@ -75,9 +77,11 @@ export default function PhaseDetail() {
               {item.benefits && (
                 <>
                   <Text style={styles.sectionSubheader}>Benefits:</Text>
-                  <Text style={styles.benefitText}>
-                    {renderBoldText(item.benefits)}
-                  </Text>
+                  {item.benefits.map((benefit, index) => (
+                    <Text key={`benefit-${index}`} style={styles.benefitText}>
+                      • {renderBoldText(benefit)}
+                    </Text>
+                  ))}
                 </>
               )}
             </View>
@@ -212,6 +216,16 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 8,
     marginBottom: 12,
+    resizeMode: "contain",
+  },
+  imageContainer: {
+    // Add this container for better control
+    width: "100%",
+    height: 200,
+    marginBottom: 12,
+    borderRadius: 8,
+    overflow: "hidden", // Ensures borderRadius works
+    backgroundColor: "#f8f9fa", // Optional: shows while loading
   },
   exerciseName: {
     fontSize: 17,
@@ -230,6 +244,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#27ae60",
     fontStyle: "italic",
+    marginLeft: 8, // Add indentation for bullet points
+    marginBottom: 4, // Space between benefit items
+    lineHeight: 20, // Proper line spacing
   },
   boldText: {
     fontWeight: "bold",
