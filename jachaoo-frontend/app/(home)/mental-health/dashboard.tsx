@@ -79,7 +79,7 @@ export default function MentalHealthDashboard() {
             <View style={styles.featureRow}>
               <Pressable
                 style={styles.featureButton}
-                // onPress={() => router.push("/(home)/mental-health/track")}
+                onPress={() => router.push("/(home)/mental-health/track")}
               >
                 <ImageBackground
                   source={require("@/assets/images/track-bg.jpg")}
@@ -121,7 +121,7 @@ export default function MentalHealthDashboard() {
 
               <Pressable
                 style={styles.featureButton}
-                // onPress={() => router.push("/(home)/mental-health/sleep")}
+                onPress={() => router.push("/(home)/mental-health/sleepwell")}
               >
                 <ImageBackground
                   source={require("@/assets/images/sleepwell-bg.jpg")}

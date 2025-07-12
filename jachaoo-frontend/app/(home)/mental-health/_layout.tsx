@@ -22,6 +22,14 @@ export default function PeriodLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="track"
+        options={{
+          title: "Mood Tracker Page",
+          headerBackTitle: "Back",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
