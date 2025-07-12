@@ -1,7 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import Markdown from "react-native-markdown-display";
 
 export default function DailyResult() {
   const params = useLocalSearchParams();
@@ -11,16 +18,13 @@ export default function DailyResult() {
   useEffect(() => {
     const loadAnalysis = async () => {
       try {
-        // First check if we have new data from navigation params
         if (params.analysis) {
           const newAnalysis = JSON.parse(params.analysis as string);
-          // Store the new analysis with current date
           await storeAnalysis(newAnalysis);
           setAnalysis(newAnalysis);
           return;
         }
 
-        // If no new data, try to load from storage
         const storedAnalysis = await getStoredAnalysis();
         if (storedAnalysis) {
           setAnalysis(storedAnalysis);
@@ -39,7 +43,7 @@ export default function DailyResult() {
     try {
       const dataToStore = {
         ...analysisData,
-        storedDate: new Date().toISOString().split("T")[0], // Store today's date
+        storedDate: new Date().toISOString().split("T")[0],
       };
       await AsyncStorage.setItem("dailyAnalysis", JSON.stringify(dataToStore));
     } catch (error) {
@@ -55,7 +59,6 @@ export default function DailyResult() {
       const parsedData = JSON.parse(storedData);
       const today = new Date().toISOString().split("T")[0];
 
-      // Only return if the data is from today
       if (parsedData.storedDate === today) {
         return parsedData;
       }
@@ -66,10 +69,20 @@ export default function DailyResult() {
     }
   };
 
+  const formatAnalysisText = (rawText: string) => {
+    return rawText.replace(/Moods Logged: \[(.*?)\]/, (_, moods) => {
+      const items = moods
+        .split(",")
+        .map((m) => `- ${m.trim().replace(/['"]+/g, "")}`);
+      return `**Moods Logged:**\n${items.join("\n")}`;
+    });
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <ActivityIndicator size="large" color="#7e5bef" />
+        <Text style={{ marginTop: 10 }}>Loading analysis...</Text>
       </View>
     );
   }
@@ -89,13 +102,16 @@ export default function DailyResult() {
       </View>
     );
   }
-
+  // console.log(analysis);
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Your Daily Cycle Analysis</Text>
       <Text style={styles.date}>{analysis.date || analysis.storedDate}</Text>
+
       <View style={styles.resultContainer}>
-        <Text style={styles.resultText}>{analysis.result}</Text>
+        <Markdown style={markdownStyles}>
+          {formatAnalysisText(analysis.result)}
+        </Markdown>
       </View>
     </ScrollView>
   );
@@ -108,25 +124,22 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
-    color: "#2c3e50",
-    marginBottom: 10,
+    color: "#7e5bef",
+    marginBottom: 6,
   },
   date: {
     fontSize: 16,
-    color: "#7f8c8d",
+    color: "#888",
     marginBottom: 20,
   },
   resultContainer: {
-    backgroundColor: "#f9f5ff",
-    borderRadius: 10,
-    padding: 15,
-  },
-  resultText: {
-    fontSize: 16,
-    color: "#2c3e50",
-    lineHeight: 24,
+    backgroundColor: "#f8f4ff",
+    borderRadius: 12,
+    padding: 18,
+    borderColor: "#ddd",
+    borderWidth: 1,
   },
   errorText: {
     color: "red",
@@ -135,3 +148,37 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
+const markdownStyles = {
+  body: {
+    fontSize: 16,
+    color: "#2d2d2d",
+    lineHeight: 26,
+  },
+  heading1: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#4a148c",
+    marginBottom: 10,
+  },
+  heading2: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#5e35b1",
+    marginTop: 10,
+  },
+  strong: {
+    fontWeight: "bold",
+    color: "#000",
+  },
+  bullet_list: {
+    paddingLeft: 18,
+    marginBottom: 10,
+  },
+  list_item: {
+    marginBottom: 5,
+  },
+  paragraph: {
+    marginBottom: 10,
+  },
+};

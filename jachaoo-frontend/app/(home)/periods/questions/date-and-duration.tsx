@@ -79,6 +79,7 @@ export default function DateAndDurationQuestion({
           placeholder="e.g. 5"
           value={duration}
           onChangeText={handleDurationChange}
+          placeholderTextColor="#999"
         />
         <Text style={styles.unit}>days</Text>
       </View>
@@ -92,6 +93,7 @@ export default function DateAndDurationQuestion({
           placeholder="e.g. 28"
           value={cycleLength}
           onChangeText={handleCycleLengthChange}
+          placeholderTextColor="#999"
         />
         <Text style={styles.unit}>days</Text>
       </View>
@@ -101,9 +103,9 @@ export default function DateAndDurationQuestion({
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 30,
+    marginBottom: 25,
     color: "#2c3e50",
     textAlign: "center",
   },
@@ -111,18 +113,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#2c3e50",
-    marginBottom: 10,
-    marginTop: 20,
+    marginBottom: 12,
+    marginTop: 15,
   },
   dateButton: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
-    padding: 20,
+    padding: 18,
     marginBottom: 10,
+    backgroundColor: "white",
   },
   dateText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#2c3e50",
   },
@@ -139,10 +142,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     height: 50,
+    backgroundColor: "white",
+    marginBottom: 15,
   },
   input: {
     flex: 1,
     fontSize: 16,
+    color: "#2c3e50",
   },
   unit: {
     color: "#7f8c8d",

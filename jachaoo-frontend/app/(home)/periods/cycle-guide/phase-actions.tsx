@@ -50,7 +50,7 @@ export default function PhaseActions() {
             ]}
             onPress={() =>
               router.push({
-                pathname: "/(home)/periods/phase-detail",
+                pathname: "/(home)/periods/cycle-guide/phase-detail",
                 params: {
                   phase: JSON.stringify(phase),
                   action: action.name,

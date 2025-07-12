@@ -3,12 +3,12 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import BackgroundWrapper from "./BackgroundWrapper";
 
 export default function PeriodTrackerGetStarted() {
   const router = useRouter();
@@ -56,11 +56,7 @@ export default function PeriodTrackerGetStarted() {
   }
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/period-tracker1.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
+    <BackgroundWrapper>
       <View style={styles.overlay}>
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Balance & Care</Text>
@@ -76,7 +72,7 @@ export default function PeriodTrackerGetStarted() {
           </Pressable>
         </View>
       </View>
-    </ImageBackground>
+    </BackgroundWrapper>
   );
 }
 

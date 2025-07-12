@@ -3,12 +3,16 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import BackgroundWrapper from "./BackgroundWrapper";
 import AppearanceQuestion from "./questions/appearance";
 import ConcernQuestion from "./questions/concern";
 import ConditionsQuestion from "./questions/conditions";
@@ -32,6 +36,7 @@ export default function PeriodOnboarding() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const router = useRouter();
+
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
     lastPeriodDate: null,
@@ -45,8 +50,54 @@ export default function PeriodOnboarding() {
     mainConcern: null,
   });
 
+  const updateFormData = (field: keyof FormData, value: any) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  const steps = [
+    <DateAndDurationQuestion data={formData} updateData={updateFormData} />,
+    <SymptomsQuestion
+      data={formData}
+      updateData={(v) => updateFormData("symptoms", v)}
+    />,
+    <AppearanceQuestion
+      data={formData}
+      updateData={(v) => updateFormData("appearance", v)}
+    />,
+    <ConditionsQuestion
+      data={formData}
+      updateData={(v) => updateFormData("conditions", v)}
+    />,
+    <ContraceptiveQuestion data={formData} updateData={updateFormData} />,
+    <ConcernQuestion
+      data={formData}
+      updateData={(v) => updateFormData("mainConcern", v)}
+    />,
+  ];
+
+  const isStepValid = () => {
+    switch (step) {
+      case 0:
+        return (
+          formData.lastPeriodDate && formData.duration && formData.cycleLength
+        );
+      case 1:
+        return formData.symptoms.length > 0;
+      case 2:
+        return !!formData.appearance;
+      case 3:
+        return formData.conditions.length > 0;
+      case 4:
+        return formData.contraceptive && formData.tryingToConceive;
+      case 5:
+        return !!formData.mainConcern;
+      default:
+        return false;
+    }
+  };
+
   const submitData = async () => {
-    const token = await getToken(); // 🔐 Get auth token
+    const token = await getToken();
     try {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/periods`,
@@ -56,25 +107,10 @@ export default function PeriodOnboarding() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            userId: user?.id,
-            lastPeriodDate: formData.lastPeriodDate,
-            duration: formData.duration,
-            cycleLength: formData.cycleLength,
-            symptoms: formData.symptoms,
-            appearance: formData.appearance,
-            conditions: formData.conditions,
-            contraceptive: formData.contraceptive,
-            tryingToConceive: formData.tryingToConceive,
-            mainConcern: formData.mainConcern,
-          }),
+          body: JSON.stringify({ userId: user?.id, ...formData }),
         }
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to save period data");
-      }
-
+      if (!response.ok) throw new Error("Failed to save period data");
       router.replace("/(home)/periods/dashboard");
     } catch (error) {
       console.error("Error saving period data:", error);
@@ -82,135 +118,106 @@ export default function PeriodOnboarding() {
     }
   };
 
-  const nextStep = () => {
-    if (step < 5) {
-      setStep(step + 1);
-    } else {
-      // Submit data and navigate to main period tracker
-      console.log("Form data:", formData);
-      submitData();
-    }
-  };
-
-  const prevStep = () => {
-    if (step > 0) {
-      setStep(step - 1);
-    }
-  };
-
-  const updateFormData = (field: keyof FormData, value: any) => {
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
-  };
-
-  const steps = [
-    <DateAndDurationQuestion
-      data={formData}
-      updateData={(field, value) => updateFormData(field, value)}
-    />,
-    <SymptomsQuestion
-      data={formData}
-      updateData={(value) => updateFormData("symptoms", value)}
-    />,
-    <AppearanceQuestion
-      data={formData}
-      updateData={(value) => updateFormData("appearance", value)}
-    />,
-    <ConditionsQuestion
-      data={formData}
-      updateData={(value) => updateFormData("conditions", value)}
-    />,
-    <ContraceptiveQuestion
-      data={formData}
-      updateData={(field, value) => updateFormData(field, value)}
-    />,
-    <ConcernQuestion
-      data={formData}
-      updateData={(value) => updateFormData("mainConcern", value)}
-    />,
-  ];
-
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.progressText}>Step {step + 1} of 6</Text>
-        {steps[step]}
-      </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        {step > 0 && (
-          <Pressable style={styles.backButton} onPress={prevStep}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        )}
-
-        <Pressable
-          style={styles.nextButton}
-          onPress={nextStep}
-          disabled={
-            (step === 0 && !formData.lastPeriodDate) ||
-            !formData.duration ||
-            !formData.cycleLength ||
-            (step === 2 && !formData.appearance) ||
-            (step === 4 &&
-              (!formData.contraceptive || !formData.tryingToConceive)) ||
-            (step === 5 && !formData.mainConcern)
-          }
+    <BackgroundWrapper>
+      <SafeAreaView style={styles.safe}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{ flex: 1 }}
         >
-          <Text style={styles.nextButtonText}>
-            {step === 5 ? "Finish" : "Continue"}
-          </Text>
-        </Pressable>
-      </View>
-    </View>
+          <View style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scroll}>
+              <Text style={styles.stepText}>Step {step + 1} of 6</Text>
+              {steps[step]}
+            </ScrollView>
+
+            <View style={styles.buttonContainer}>
+              {step > 0 && (
+                <Pressable
+                  style={styles.backButton}
+                  onPress={() => setStep(step - 1)}
+                >
+                  <Text style={styles.backButtonText}>Back</Text>
+                </Pressable>
+              )}
+
+              <Pressable
+                style={[
+                  styles.nextButton,
+                  !isStepValid() && styles.disabledButton,
+                ]}
+                onPress={() =>
+                  step === steps.length - 1 ? submitData() : setStep(step + 1)
+                }
+                disabled={!isStepValid()}
+              >
+                <Text style={styles.nextButtonText}>
+                  {step === steps.length - 1 ? "Finish" : "Continue"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </BackgroundWrapper>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    justifyContent: "space-between",
   },
-  scrollContainer: {
-    padding: 20,
-    paddingBottom: 100,
+  scroll: {
+    paddingVertical: 20,
   },
-  progressText: {
-    fontSize: 16,
-    color: "#9b59b6",
-    marginBottom: 20,
+  stepText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#6a1b9a",
+    backgroundColor: "rgba(255,255,255,0.4)",
     textAlign: "center",
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 20,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
+    // paddingTop: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    borderRadius: 16,
+    padding: 10,
   },
   backButton: {
-    padding: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#9b59b6",
     flex: 1,
-    marginRight: 10,
+    marginRight: 8,
+    borderRadius: 24,
+    borderColor: "#6a1b9a",
+    borderWidth: 1,
+    paddingVertical: 14,
     alignItems: "center",
+    backgroundColor: "#fff",
   },
   backButtonText: {
-    color: "#9b59b6",
+    color: "#6a1b9a",
     fontSize: 16,
     fontWeight: "600",
   },
   nextButton: {
-    backgroundColor: "#9b59b6",
-    padding: 15,
-    borderRadius: 8,
     flex: 1,
+    backgroundColor: "#6a1b9a",
+    borderRadius: 24,
+    paddingVertical: 14,
     alignItems: "center",
+  },
+  disabledButton: {
+    backgroundColor: "#b29ac1",
   },
   nextButtonText: {
     color: "#fff",

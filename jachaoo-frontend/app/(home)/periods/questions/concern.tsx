@@ -55,10 +55,25 @@ export default function ConcernQuestion({
 }
 
 const styles = StyleSheet.create({
+  questionCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 15,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 30,
+    marginBottom: 20,
     color: "#2c3e50",
   },
   concernsContainer: {
@@ -66,11 +81,14 @@ const styles = StyleSheet.create({
   },
   concernButton: {
     padding: 15,
-    borderRadius: 8,
-    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   selectedConcern: {
     backgroundColor: "#9b59b6",
+    borderColor: "#9b59b6",
   },
   concernText: {
     fontSize: 16,

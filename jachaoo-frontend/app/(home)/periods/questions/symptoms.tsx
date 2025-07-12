@@ -67,15 +67,15 @@ export default function SymptomsQuestion({
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
     color: "#2c3e50",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#7f8c8d",
-    marginBottom: 30,
+    marginBottom: 20,
   },
   symptomsContainer: {
     flexDirection: "row",
@@ -84,14 +84,18 @@ const styles = StyleSheet.create({
   },
   symptomButton: {
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   selectedSymptom: {
     backgroundColor: "#9b59b6",
+    borderColor: "#9b59b6",
   },
   symptomText: {
     color: "#2c3e50",
+    fontSize: 14,
   },
   selectedSymptomText: {
     color: "white",

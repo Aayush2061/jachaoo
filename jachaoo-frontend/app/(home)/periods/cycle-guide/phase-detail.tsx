@@ -1,7 +1,7 @@
 // app/(home)/periods/phase-detail.tsx
 import { useLocalSearchParams } from "expo-router";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import { phaseData } from "../../utils/phaseData";
+import { phaseData } from "../../../utils/phaseData";
 
 // Correct bold text renderer (no duplicates)
 const renderBoldText = (text: string) => {

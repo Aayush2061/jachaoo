@@ -81,31 +81,32 @@ export default function AppearanceQuestion({
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
     color: "#2c3e50",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#7f8c8d",
-    marginBottom: 30,
+    marginBottom: 20,
   },
   appearancesContainer: {
     gap: 12,
   },
   appearanceButton: {
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ddd",
+    backgroundColor: "white",
   },
   selectedAppearance: {
     backgroundColor: "#9b59b6",
     borderColor: "#9b59b6",
   },
   appearanceTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#2c3e50",
     marginBottom: 5,

@@ -61,7 +61,7 @@ export default function CycleGuide() {
 
   const navigateToPhaseDetail = (phase: (typeof phaseData)[0]) => {
     router.push({
-      pathname: "/(home)/periods/phase-actions",
+      pathname: "/(home)/periods/cycle-guide/phase-actions",
       params: {
         phase: JSON.stringify(phase),
       },
