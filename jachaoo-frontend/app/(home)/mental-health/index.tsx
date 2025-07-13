@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-
+import MentalHealthBackground from "./MentalHealthBackground";
 export default function PeriodTrackerGetStarted() {
   const router = useRouter();
   const { user } = useUser();
@@ -57,48 +56,46 @@ export default function PeriodTrackerGetStarted() {
   }
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/mental-health-background.jpg")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <View style={styles.overlay}>
-        <View style={styles.contentContainer}>
-          <Text style={styles.title}>Own Your Peace</Text>
+    <MentalHealthBackground>
+      {/* <View style={styles.overlay}> */}
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>Own Your Peace</Text>
 
-          {/* Centered Butterfly Image */}
-          <Image
-            source={require("@/assets/images/butterfly1.png")}
-            style={styles.butterflyImage}
-            resizeMode="contain"
-          />
+        {/* Centered Butterfly Image */}
+        <Image
+          source={require("@/assets/images/butterfly1.png")}
+          style={styles.butterflyImage}
+          resizeMode="contain"
+        />
 
-          <Pressable
-            style={styles.button}
-            onPress={() => router.push("/(home)/mental-health/onboarding")}
-          >
-            <Text style={styles.buttonText}>Get Started</Text>
-          </Pressable>
-        </View>
+        <Pressable
+          style={styles.button}
+          onPress={() => router.push("/(home)/mental-health/onboarding")}
+        >
+          <Text style={styles.buttonText}>Get Started</Text>
+        </Pressable>
       </View>
-    </ImageBackground>
+      {/* </View> */}
+    </MentalHealthBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    justifyContent: "center",
-  },
+  // backgroundImage: {
+  //   flex: 1,
+  //   width: "100%",
+  //   height: "100%",
+  // },
+  // overlay: {
+  //   flex: 1,
+  //   backgroundColor: "rgba(255, 255, 255, 0.5)",
+  //   justifyContent: "center",
+  // },
   contentContainer: {
+    flex: 1,
     alignItems: "center",
     padding: 20,
+    justifyContent: "center",
   },
   title: {
     fontSize: 36,

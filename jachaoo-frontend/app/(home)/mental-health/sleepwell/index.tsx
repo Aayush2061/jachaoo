@@ -6,7 +6,7 @@ import {
 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-
+import MentalHealthBackground from "../MentalHealthBackground";
 export default function SleepwellScreen() {
   const router = useRouter();
 
@@ -38,28 +38,30 @@ export default function SleepwellScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Sleepwell</Text>
-      <Text style={styles.subheader}>Choose what helps you sleep better</Text>
+    <MentalHealthBackground>
+      <View style={styles.container}>
+        <Text style={styles.header}>Sleepwell</Text>
+        <Text style={styles.subheader}>Choose what helps you sleep better</Text>
 
-      <View style={styles.featuresContainer}>
-        {features.map((feature, index) => (
-          <Pressable
-            key={index}
-            style={({ pressed }) => [
-              styles.featureButton,
-              { backgroundColor: feature.bgColor },
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={() => router.push(feature.route)}
-          >
-            <View style={styles.iconContainer}>{feature.icon}</View>
-            <Text style={styles.featureText}>{feature.title}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#64748b" />
-          </Pressable>
-        ))}
+        <View style={styles.featuresContainer}>
+          {features.map((feature, index) => (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.featureButton,
+                { backgroundColor: feature.bgColor },
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={() => router.push(feature.route)}
+            >
+              <View style={styles.iconContainer}>{feature.icon}</View>
+              <Text style={styles.featureText}>{feature.title}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#64748b" />
+            </Pressable>
+          ))}
+        </View>
       </View>
-    </View>
+    </MentalHealthBackground>
   );
 }
 
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: "#f8fafc",
+    // backgroundColor: "rgba(255,255,255,0.1)",
   },
   header: {
     fontSize: 28,

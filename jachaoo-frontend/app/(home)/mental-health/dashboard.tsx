@@ -11,6 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
+import MentalHealthBackground from "./MentalHealthBackground";
 
 const { width } = Dimensions.get("window");
 
@@ -61,133 +62,130 @@ export default function MentalHealthDashboard() {
   }
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/mental-health-background.jpg")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <View style={styles.overlay}>
-        <ScrollView contentContainerStyle={styles.container}>
-          {/* Greeting Section */}
-          <View style={styles.greetingContainer}>
-            <Text style={styles.greetingText}>Hi, {user?.firstName}</Text>
+    <MentalHealthBackground>
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Greeting Section */}
+        <View style={styles.greetingContainer}>
+          <Text style={styles.greetingText}>Hi, {user?.firstName}</Text>
+        </View>
+
+        {/* Main Feature Buttons - 2 columns */}
+        <View style={styles.featuresContainer}>
+          {/* Row 1 */}
+          <View style={styles.featureRow}>
+            <Pressable
+              style={styles.featureButton}
+              onPress={() => router.push("/(home)/mental-health/track")}
+            >
+              <ImageBackground
+                source={require("@/assets/images/track-bg.jpg")}
+                style={styles.featureBackground}
+                imageStyle={styles.featureBackgroundImage}
+              >
+                <Text style={styles.featureButtonText}>Track my mood</Text>
+              </ImageBackground>
+            </Pressable>
+
+            <Pressable
+              style={styles.featureButton}
+              // onPress={() => router.push("/(home)/mental-health/breathe")}
+            >
+              <ImageBackground
+                source={require("@/assets/images/breathe-bg.jpg")}
+                style={styles.featureBackground}
+                imageStyle={styles.featureBackgroundImage}
+              >
+                <Text style={styles.featureButtonText}>Breathe & Calm</Text>
+              </ImageBackground>
+            </Pressable>
           </View>
 
-          {/* Main Feature Buttons - 2 columns */}
-          <View style={styles.featuresContainer}>
-            {/* Row 1 */}
-            <View style={styles.featureRow}>
-              <Pressable
-                style={styles.featureButton}
-                onPress={() => router.push("/(home)/mental-health/track")}
+          {/* Row 2 */}
+          <View style={styles.featureRow}>
+            <Pressable
+              style={styles.featureButton}
+              // onPress={() => router.push("/(home)/mental-health/listen")}
+            >
+              <ImageBackground
+                source={require("@/assets/images/listen-bg.jpg")}
+                style={styles.featureBackground}
+                imageStyle={styles.featureBackgroundImage}
               >
-                <ImageBackground
-                  source={require("@/assets/images/track-bg.jpg")}
-                  style={styles.featureBackground}
-                  imageStyle={styles.featureBackgroundImage}
-                >
-                  <Text style={styles.featureButtonText}>Track my mood</Text>
-                </ImageBackground>
-              </Pressable>
+                <Text style={styles.featureButtonText}>Listen & Heal</Text>
+              </ImageBackground>
+            </Pressable>
 
-              <Pressable
-                style={styles.featureButton}
-                // onPress={() => router.push("/(home)/mental-health/breathe")}
+            <Pressable
+              style={styles.featureButton}
+              onPress={() => router.push("/(home)/mental-health/sleepwell")}
+            >
+              <ImageBackground
+                source={require("@/assets/images/sleepwell-bg.jpg")}
+                style={styles.featureBackground}
+                imageStyle={styles.featureBackgroundImage}
               >
-                <ImageBackground
-                  source={require("@/assets/images/breathe-bg.jpg")}
-                  style={styles.featureBackground}
-                  imageStyle={styles.featureBackgroundImage}
-                >
-                  <Text style={styles.featureButtonText}>Breathe & Calm</Text>
-                </ImageBackground>
-              </Pressable>
-            </View>
-
-            {/* Row 2 */}
-            <View style={styles.featureRow}>
-              <Pressable
-                style={styles.featureButton}
-                // onPress={() => router.push("/(home)/mental-health/listen")}
-              >
-                <ImageBackground
-                  source={require("@/assets/images/listen-bg.jpg")}
-                  style={styles.featureBackground}
-                  imageStyle={styles.featureBackgroundImage}
-                >
-                  <Text style={styles.featureButtonText}>Listen & Heal</Text>
-                </ImageBackground>
-              </Pressable>
-
-              <Pressable
-                style={styles.featureButton}
-                onPress={() => router.push("/(home)/mental-health/sleepwell")}
-              >
-                <ImageBackground
-                  source={require("@/assets/images/sleepwell-bg.jpg")}
-                  style={styles.featureBackground}
-                  imageStyle={styles.featureBackgroundImage}
-                >
-                  <Text style={styles.featureButtonText}>Sleepwell</Text>
-                </ImageBackground>
-              </Pressable>
-            </View>
-
-            {/* Row 3 */}
-            <View style={styles.featureRow}>
-              <Pressable
-                style={styles.featureButton}
-                // onPress={() => router.push("/(home)/mental-health/talk")}
-              >
-                <ImageBackground
-                  source={require("../../../assets/images/talk.jpg")}
-                  style={styles.featureBackground}
-                  imageStyle={styles.featureBackgroundImage}
-                >
-                  <Text style={styles.featureButtonText}>Talk to someone</Text>
-                </ImageBackground>
-              </Pressable>
-
-              <Pressable
-                style={styles.featureButton}
-                // onPress={() => router.push("/(home)/mental-health/goals")}
-              >
-                <ImageBackground
-                  source={require("@/assets/images/daily-goal-bg.jpg")}
-                  style={styles.featureBackground}
-                  imageStyle={styles.featureBackgroundImage}
-                >
-                  <Text style={styles.featureButtonText}>Daily Goals</Text>
-                </ImageBackground>
-              </Pressable>
-            </View>
+                <Text style={styles.featureButtonText}>Sleepwell</Text>
+              </ImageBackground>
+            </Pressable>
           </View>
-        </ScrollView>
-      </View>
-    </ImageBackground>
+
+          {/* Row 3 */}
+          <View style={styles.featureRow}>
+            <Pressable
+              style={styles.featureButton}
+              // onPress={() => router.push("/(home)/mental-health/talk")}
+            >
+              <ImageBackground
+                source={require("../../../assets/images/talk.jpg")}
+                style={styles.featureBackground}
+                imageStyle={styles.featureBackgroundImage}
+              >
+                <Text style={styles.featureButtonText}>Talk to someone</Text>
+              </ImageBackground>
+            </Pressable>
+
+            <Pressable
+              style={styles.featureButton}
+              // onPress={() => router.push("/(home)/mental-health/goals")}
+            >
+              <ImageBackground
+                source={require("@/assets/images/daily-goal-bg.jpg")}
+                style={styles.featureBackground}
+                imageStyle={styles.featureBackgroundImage}
+              >
+                <Text style={styles.featureButtonText}>Daily Goals</Text>
+              </ImageBackground>
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
+    </MentalHealthBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
+  // backgroundImage: {
+  //   flex: 1,
+  //   width: "100%",
+  //   height: "100%",
+  // },
+  // overlay: {
+  //   flex: 1,
+  //   backgroundColor: "rgba(255, 255, 255, 0.1)",
+  // },
+  transparentOverlay: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)", // Your desired opacity
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  container: {
+    flexGrow: 1,
+    padding: 16,
+    paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
-  },
-  container: {
-    flexGrow: 1,
-    padding: 16,
-    paddingBottom: 40,
   },
   greetingContainer: {
     marginBottom: 24,
