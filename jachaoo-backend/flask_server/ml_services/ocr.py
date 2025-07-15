@@ -28,17 +28,17 @@ def ocr_function(model, img_input):
         raise ValueError("img_input must be a file path (str) or PIL.Image")
 
     prompt = """
-    You are a medical OCR assistant. From this lab report image, extract both the patient details, lab test results, and hospital details clearly. Return the result in structured JSON format like this:
-
+    You are a medical OCR assistant. From this lab report image, extract the patient details, lab test results, and hospital details clearly. Return the result in structured JSON format like this:
+    
     {
-    "laboratory": {
-        "name": "Name of the hospital or lab (if present at the top)",
+      "laboratory": {
+        "name": "Name of the hospital or lab (if present)",
         "address": "Hospital or lab address (if visible)",
         "phone": "Phone number (if visible)",
         "website": "Website (if visible)",
-        "email": "Email(if visible)"
-    },
-    "patient_info": {
+        "email": "Email (if visible)"
+      },
+      "patient_info": {
         "name": "Full name (if present)",
         "patient_no": "Patient number (if available)",
         "age": "Age (if available)",
@@ -46,21 +46,44 @@ def ocr_function(model, img_input):
         "date_time": "Date and time (if available)",
         "address": "Patient address (if available)",
         "prescriber": "Name of doctor or prescriber (if mentioned)"
-    },
-    "lab_results": [
+      },
+      "lab_results": [
         {
-        "test": "Test name",
-        "value": "Result value",
-        "unit": "Unit (if any)",
-        "reference_range": "Normal range (if visible)"
+          "test": "Test name",
+          "value": "Result value",
+          "unit": "Unit (if any)",
+          "reference_range": "Normal range (if visible)"
         }
-    ]
+      ]
+    }
+
+    If the image is **not a lab report**, do not attempt extraction. Instead, return the same full JSON format with all values empty and add a `"warning"` key like this:
+
+    {
+      "laboratory": {
+        "name": "",
+        "address": "",
+        "phone": "",
+        "website": "",
+        "email": ""
+      },
+      "patient_info": {
+        "name": "",
+        "patient_no": "",
+        "age": "",
+        "sex": "",
+        "date_time": "",
+        "address": "",
+        "prescriber": ""
+      },
+      "lab_results": [],
+      "warning": "Invalid image. Please provide a lab report."
     }
 
     Rules:
-    - Only include tests that have clearly visible results.
-    - Do not guess or include any data if you are unsure — just skip that item.
-    - Be accurate, clean, and structured. Avoid any text not relevant to medical data.
+    - Do not guess or fill fields unless clearly visible in the image.
+    - Always return structured JSON as shown above, no matter the input.
+    - Keep fields empty if data is not present.
     """
 
     # Generate response

@@ -2,6 +2,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -14,12 +15,44 @@ import {
   View
 } from "react-native";
 
+const AnimatedDots = () => {
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => prev.length >= 3 ? '' : prev + '.');
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <Text style={styles.thinkingText}>Thinking{dots}</Text>;
+};
+
+const formatMessageText = (text: string, isUser: boolean) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <Text style={isUser ? styles.userText : styles.botText}>
+      {parts.map((part, index) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const boldText = part.slice(2, -2);
+          return (
+            <Text key={index} style={[styles.boldText, isUser ? styles.userText : styles.botText]}>
+              {boldText}
+            </Text>
+          );
+        }
+        return part;
+      })}
+    </Text>
+  );
+};
+
 export default function FirstAidScreen() {
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "What is your Problem",
+      text: "Hello! I'm your first aid assistant. What medical help do you need today?",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +77,9 @@ export default function FirstAidScreen() {
 
   useEffect(() => {
     if (scrollViewRef.current) {
-      scrollViewRef.current.scrollToEnd({ animated: true });
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     }
   }, [messages, keyboardHeight]);
 
@@ -69,31 +104,16 @@ export default function FirstAidScreen() {
         body: JSON.stringify({ message: inputText }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Request failed');
-      }
-
-      const data = await response.json();
+      if (!response.ok) throw new Error('Request failed');
       
-      if (data.status !== 'success') {
-        throw new Error(data.error || 'Invalid response');
-      }
+      const data = await response.json();
+      if (data.status !== 'success') throw new Error(data.error || 'Invalid response');
 
-      const newBotMessage = {
-        role: "assistant",
-        text: data.reply,
-      };
-
-      setMessages((prev) => [...prev, newBotMessage]);
+      setMessages((prev) => [...prev, { role: "assistant", text: data.reply }]);
     } catch (error) {
-      console.error("Full error details:", error);
       setMessages((prev) => [
         ...prev,
-        { 
-          role: "assistant", 
-          text: `Error: ${error.message}. Please try again.` 
-        },
+        { role: "assistant", text: `Error: ${error.message}. Please try again.` },
       ]);
     } finally {
       setIsLoading(false);
@@ -105,11 +125,15 @@ export default function FirstAidScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.logoRow}>
-            <Text style={styles.logoText}>Jachaoo</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.logoText}>FirstAid</Text>
+            <Text style={styles.subtitle}>Medical Assistant</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/")}>
-            <Ionicons name="home-outline" size={24} color="black" />
+          <TouchableOpacity 
+            onPress={() => router.push("/")}
+            style={styles.homeButton}
+          >
+            <Ionicons name="home" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -119,36 +143,37 @@ export default function FirstAidScreen() {
           style={styles.chatBox} 
           contentContainerStyle={styles.messagesContainer}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           {messages.map((msg, index) => (
             <View
               key={index}
-              style={
-                msg.role === "user" ? styles.userMessage : styles.botMessage
-              }
+              style={[
+                styles.messageContainer,
+                msg.role === "user" ? styles.userMessage : styles.botMessage,
+              ]}
             >
-              {msg.role === "assistant" ? (
-                <Ionicons name="time" size={20} color="black" />
-              ) : null}
-              <Text style={msg.role === "user" ? styles.userText : styles.botText}>
-                {msg.text}
-              </Text>
-              {msg.role === "user" ? (
-                <MaterialCommunityIcons name="account" size={20} color="black" />
-              ) : null}
+              {msg.role === "assistant" && (
+                <Ionicons name="medical" size={20} color="#fff" style={styles.messageIcon} />
+              )}
+              {formatMessageText(msg.text, msg.role === "user")}
+              {msg.role === "user" && (
+                <MaterialCommunityIcons name="account" size={20} color="#fff" style={styles.messageIcon} />
+              )}
             </View>
           ))}
+          
           {isLoading && (
-            <View style={styles.botMessage}>
-              <Ionicons name="time" size={20} color="black" />
-              <Text style={styles.botText}>Thinking...</Text>
+            <View style={styles.thinkingContainer}>
+              <ActivityIndicator size="small" color="#6e3e3e" />
+              <AnimatedDots />
             </View>
           )}
         </ScrollView>
 
         {/* Input Box */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.select({
             ios: 40,
             android: 25,
@@ -157,23 +182,32 @@ export default function FirstAidScreen() {
             styles.inputWrapper,
             { 
               marginBottom: keyboardHeight > 0 
-                ? keyboardHeight + 25
-                : 0 
+                ? keyboardHeight + 30
+                : 10 
             },
           ]}
         >
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}
-              placeholder="you can text here"
-              placeholderTextColor="#6e3e3e"
+              placeholder="Type your medical question..."
+              placeholderTextColor="#9e9e9e"
               value={inputText}
               onChangeText={setInputText}
               onSubmitEditing={handleSend}
               multiline
+              blurOnSubmit={false}
             />
-            <TouchableOpacity onPress={handleSend}>
-              <Ionicons name="send" size={24} color="black" />
+            <TouchableOpacity 
+              onPress={handleSend}
+              style={styles.sendButton}
+              disabled={!inputText.trim()}
+            >
+              <Ionicons 
+                name="send" 
+                size={22} 
+                color={inputText.trim() ? "#fff" : "#ccc"} 
+              />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -185,83 +219,134 @@ export default function FirstAidScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fef6f7",
+    backgroundColor: "#f8f9fa",
   },
   container: {
     flex: 1,
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingTop: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
-    marginTop: Platform.OS === 'android' ? 10 : 0,
+    marginBottom: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
   },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  headerLeft: {
+    flexDirection: "column",
   },
   logoText: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "700",
     color: "#d04aa6",
-    marginRight: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6e3e3e",
+    marginTop: 2,
+  },
+  homeButton: {
+    backgroundColor: "#d04aa6",
+    padding: 8,
+    borderRadius: 20,
   },
   messagesContainer: {
-    paddingBottom: 15,
+    paddingBottom: 25,
   },
   chatBox: {
     flex: 1,
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  messageContainer: {
+    flexDirection: "row",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 18,
+    maxWidth: "82%",
+    alignItems: "flex-start",
+    gap: 8, 
+  },
+  messageIcon: {
+    marginTop: 2,
   },
   botMessage: {
-    flexDirection: "row",
-    backgroundColor: "#e766b8",
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 20,
+    backgroundColor: "#d04aa6",
     alignSelf: "flex-start",
-    maxWidth: "80%",
-    alignItems: "center",
-    gap: 6,
+    borderBottomLeftRadius: 4,
   },
   botText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontSize: 16,
+    lineHeight: 22,
+    flexShrink: 1,
   },
   userMessage: {
-    flexDirection: "row",
-    backgroundColor: "#786c6c",
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 20,
+    backgroundColor: "#6e3e3e",
     alignSelf: "flex-end",
-    maxWidth: "80%",
-    alignItems: "center",
-    gap: 6,
+    borderBottomRightRadius: 4,
   },
   userText: {
     color: "#fff",
+    fontSize: 16,
+    lineHeight: 22,
+    flexShrink: 1,
+  },
+  boldText: {
+    fontWeight: '700',
   },
   inputWrapper: {
-    paddingHorizontal: 10,
     paddingBottom: Platform.OS === 'ios' ? 25 : 15,
-    backgroundColor: "#fef6f7",
+    backgroundColor: "#f8f9fa",
   },
   inputRow: {
     flexDirection: "row",
-    backgroundColor: "#dedede",
-    paddingHorizontal: 15,
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 24,
     alignItems: "center",
-    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   input: {
     flex: 1,
     fontSize: 16,
+    color: "#333",
+    maxHeight: 120,
+    paddingVertical: 4,
+  },
+  sendButton: {
+    backgroundColor: "#d04aa6",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  thinkingContainer: {
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    backgroundColor: "#f0f0f0",
+  },
+  thinkingText: {
     color: "#6e3e3e",
-    marginRight: 10,
+    fontSize: 15,
+    marginLeft: 8,
+    fontStyle: "italic",
   },
 });

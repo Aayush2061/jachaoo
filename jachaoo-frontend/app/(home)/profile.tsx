@@ -128,8 +128,6 @@ export default function ProfilePage() {
   );
 }
 
-// ... keep your existing styles
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

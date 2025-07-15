@@ -18,7 +18,14 @@ def analyze_report():
         return jsonify({'error': 'Image URL is required'}), 400
     
     try:
-        analysis_result = analyze_medical_report(image_url)
+        # Get health data from request
+        health_data = {
+            'diabetes': data.get('diabetes', "Don't know"),
+            'hypertension': data.get('hypertension', "Don't know"),
+            'smoker': data.get('smoker', "Don't know")
+        }
+        
+        analysis_result = analyze_medical_report(image_url, health_data)
         
         # Add timestamp and report_id if available
         analysis_result['timestamp'] = datetime.datetime.utcnow().isoformat()

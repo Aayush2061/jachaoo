@@ -6,12 +6,12 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def analyze_medical_report(image_url):
+def analyze_medical_report(image_url,health_data=None):
     try:
         logger.info(f"Starting analysis for image: {image_url[:50]}...")
         
         # Call ML service for analysis
-        analysis = lab_report_analysis(image_url)
+        analysis = lab_report_analysis(image_url, health_data)
         
         # Return structured response
         return {

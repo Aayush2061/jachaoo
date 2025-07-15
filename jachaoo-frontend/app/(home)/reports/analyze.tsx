@@ -1,10 +1,10 @@
 // app/(home)/reports/analyze.tsx
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,12 +18,35 @@ import {
 } from "react-native";
 
 export default function ReportAnalysis() {
+  const { user } = useUser();
   const router = useRouter();
   const { userId, getToken } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [reportName, setReportName] = useState("");
   const [labName, setLabName] = useState("");
+  const [healthData, setHealthData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHealthData = async () => {
+      try {
+        if (!user?.id) return;
+
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
+        );
+        const data = await response.json();
+        setHealthData(data);
+      } catch (error) {
+        console.error("Error fetching health data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealthData();
+  }, [user?.id]);
 
   const pickImage = async () => {
     try {
@@ -111,7 +134,14 @@ export default function ReportAnalysis() {
     try {
       const token = await getToken();
 
-      // 1. Get analysis from Flask
+      // Prepare health data to send
+      const healthConditions = {
+        diabetes: healthData?.diabetes || "Don't know",
+        hypertension: healthData?.bloodPressure || "Don't know", // Assuming bloodPressure is hypertension
+        smoker: healthData?.smoker || "Don't know",
+      };
+
+      // 1. Get analysis from Flask with health data
       console.log("Getting analysis from Flask...");
       const analysisResponse = await fetch(
         `${process.env.EXPO_PUBLIC_FLASK_API_URL}/reports/analyze`,
@@ -121,7 +151,10 @@ export default function ReportAnalysis() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ url: imageUrl }),
+          body: JSON.stringify({
+            url: imageUrl,
+            ...healthConditions,
+          }),
         }
       );
 

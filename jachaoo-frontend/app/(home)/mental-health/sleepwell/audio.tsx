@@ -74,10 +74,13 @@ export default function AudioSection() {
     const startTime = Date.now();
 
     Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
       allowsRecordingIOS: false,
-      staysActiveInBackground: false,
+      staysActiveInBackground: true, // Keep audio active when app is backgrounded
+      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true,
       shouldDuckAndroid: true,
+      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+      playThroughEarpieceAndroid: false,
     }).then(() => {
       console.log("[AudioSection] Audio mode set");
     });
