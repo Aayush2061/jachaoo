@@ -1,3 +1,4 @@
+// Your imports stay the same
 import { useAuth } from "@clerk/clerk-expo";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -28,7 +29,6 @@ export default function ReportDetail() {
 
   useEffect(() => {
     if (params.shouldRefresh) {
-      // This forces the gallery to refresh when we come back to it
       router.setParams({ shouldRefresh: undefined });
     }
   }, [params]);
@@ -55,6 +55,101 @@ export default function ReportDetail() {
     fetchReport();
   }, [id]);
 
+  const handleDelete = async () => {
+    Alert.alert(
+      "Delete Report",
+      "Are you sure you want to delete this report? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: deleteReport,
+        },
+      ]
+    );
+  };
+
+  const deleteReport = async () => {
+    try {
+      setDeleting(true);
+      const token = await getToken();
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/reports/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete report");
+      }
+
+      router.replace({
+        pathname: "/(home)/reports",
+        params: { shouldRefresh: "true" },
+      });
+    } catch (error) {
+      console.error("Delete failed:", error);
+      Alert.alert("Error", "Failed to delete report");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const renderAnalysisText = (text: string) => {
+    if (!text)
+      return <Text style={styles.regularText}>No analysis available</Text>;
+
+    return (
+      <View>
+        {text.split("\n").map((line, index) => {
+          if (line.match(/^\d+\.\s/)) {
+            return (
+              <Text key={index} style={styles.sectionHeading}>
+                {line}
+              </Text>
+            );
+          } else if (
+            line.match(/^[A-Z][a-z]+:$/) &&
+            !line.startsWith("Benefits:")
+          ) {
+            return (
+              <Text key={index} style={styles.subHeading}>
+                {line}
+              </Text>
+            );
+          } else if (line.startsWith("- ")) {
+            return (
+              <Text key={index} style={styles.bulletPoint}>
+                {"\u2022"} {line.substring(2)}
+              </Text>
+            );
+          } else if (line.startsWith("Benefits:")) {
+            return (
+              <Text key={index} style={styles.benefitsText}>
+                {line}
+              </Text>
+            );
+          } else if (line.match(/^\d+\)/)) {
+            return (
+              <Text key={index} style={styles.numberedStep}>
+                {line}
+              </Text>
+            );
+          } else {
+            return (
+              <Text key={index} style={styles.regularText}>
+                {line}
+              </Text>
+            );
+          }
+        })}
+      </View>
+    );
+  };
+
   if (loading || !report) {
     return (
       <View style={styles.container}>
@@ -71,54 +166,6 @@ export default function ReportDetail() {
       },
     },
   ];
-
-  const handleDelete = async () => {
-    Alert.alert(
-      "Delete Report",
-      "Are you sure you want to delete this report? This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: deleteReport,
-        },
-      ]
-    );
-  };
-
-  const deleteReport = async () => {
-    try {
-      setDeleting(true);
-      const token = await getToken();
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/reports/${id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete report");
-      }
-
-      // Navigate back to gallery with refresh
-      router.replace({
-        pathname: "/(home)/reports",
-        params: { shouldRefresh: "true" },
-      });
-    } catch (error) {
-      console.error("Delete failed:", error);
-      Alert.alert("Error", "Failed to delete report");
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -143,13 +190,15 @@ export default function ReportDetail() {
             )}
           </TouchableOpacity>
         </View>
-        <Text style={styles.reportName}>{report.reportName}</Text>
-        <Text style={styles.labName}>{report.labName}</Text>
-        <Text style={styles.date}>
-          {new Date(report.createdAt).toLocaleDateString()}
-        </Text>
 
-        {/* Clickable thumbnail that opens zoom viewer */}
+        <View style={styles.reportInfo}>
+          <Text style={styles.reportName}>{report.reportName}</Text>
+          <Text style={styles.labName}>{report.labName}</Text>
+          <Text style={styles.date}>
+            {new Date(report.createdAt).toLocaleDateString()}
+          </Text>
+        </View>
+
         <TouchableOpacity
           onPress={() => setZoomVisible(true)}
           activeOpacity={0.8}
@@ -160,19 +209,16 @@ export default function ReportDetail() {
             resizeMode="contain"
           />
           <View style={styles.zoomHint}>
-            <MaterialIcons name="zoom-in" size={24} color="white" />
+            <MaterialIcons name="zoom-in" size={20} color="white" />
             <Text style={styles.zoomHintText}>Pinch to zoom</Text>
           </View>
         </TouchableOpacity>
 
         <View style={styles.analysisContainer}>
           <Text style={styles.analysisTitle}>Analysis Results</Text>
-          <Text style={styles.analysisText}>
-            {report.analysis || "No analysis available"}
-          </Text>
+          {renderAnalysisText(report.analysis)}
         </View>
 
-        {/* Zoomable image modal */}
         <Modal visible={zoomVisible} transparent={true}>
           <ImageViewer
             imageUrls={images}
@@ -196,29 +242,32 @@ export default function ReportDetail() {
 }
 
 const styles = StyleSheet.create({
-  // container: { flex: 1, padding: 16 },
-  image: {
-    width: "100%",
-    height: undefined, // Let height adjust based on aspect ratio
-    aspectRatio: 1, // Default to square, adjust as needed
+  container: { flex: 1, padding: 16 },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  backButton: {
+    padding: 8,
+    backgroundColor: "#e3f2fd",
     borderRadius: 8,
   },
-  analysisContainer: {
-    marginTop: 20,
+  deleteButton: {
+    padding: 8,
+    backgroundColor: "#ffebee",
+    borderRadius: 8,
+    marginTop: 15,
+  },
+
+  reportInfo: {
+    backgroundColor: "#ffffff",
     padding: 16,
-    backgroundColor: "#f0f8ff",
-    borderRadius: 8,
-  },
-  analysisTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#1e88e5",
-  },
-  analysisText: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: "#333",
+    borderRadius: 12,
+    elevation: 2,
+    marginBottom: 16,
   },
   reportName: {
     fontSize: 20,
@@ -228,26 +277,13 @@ const styles = StyleSheet.create({
   labName: {
     fontSize: 16,
     color: "#555",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   date: {
     fontSize: 14,
     color: "#666",
-    marginBottom: 16,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  container: { flex: 1, padding: 16 },
+
   imageThumbnail: {
     width: "100%",
     height: 300,
@@ -259,7 +295,7 @@ const styles = StyleSheet.create({
     bottom: 10,
     right: 10,
     backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 5,
+    padding: 6,
     borderRadius: 20,
     flexDirection: "row",
     alignItems: "center",
@@ -274,8 +310,68 @@ const styles = StyleSheet.create({
     top: 40,
     right: 20,
     zIndex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 20,
-    padding: 5,
+    backgroundColor: "#000000aa",
+    borderRadius: 30,
+    padding: 8,
+  },
+
+  analysisContainer: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: "#f0f8ff",
+    borderRadius: 8,
+  },
+  analysisTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#1e88e5",
+  },
+  sectionHeading: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1e88e5",
+    marginTop: 20,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#bbdefb",
+    paddingBottom: 4,
+  },
+  subHeading: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2d3748",
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  bulletPoint: {
+    fontSize: 15,
+    lineHeight: 24,
+    marginLeft: 8,
+    marginVertical: 2,
+    color: "#4a5568",
+  },
+  benefitsText: {
+    fontSize: 15,
+    fontStyle: "italic",
+    color: "#2e7d32",
+    backgroundColor: "#e8f5e9",
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  numberedStep: {
+    fontSize: 15,
+    lineHeight: 24,
+    marginLeft: 8,
+    marginVertical: 2,
+    color: "#4a5568",
+  },
+  regularText: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: "#4a5568",
+    marginVertical: 2,
   },
 });
