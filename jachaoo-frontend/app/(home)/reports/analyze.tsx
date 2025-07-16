@@ -6,7 +6,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -33,6 +33,34 @@ export default function ReportAnalysis() {
     null
   );
   const [mediaPermission, setMediaPermission] = useState<boolean | null>(null);
+  const [errors, setErrors] = useState({
+    reportName: false,
+    labName: false,
+  });
+  const reportNameRef = useRef<TextInput>(null);
+  const labNameRef = useRef<TextInput>(null);
+
+  // Add this validation function
+  const validateForm = () => {
+    const newErrors = {
+      reportName: reportName.trim() === "",
+      labName: labName.trim() === "",
+    };
+
+    setErrors(newErrors);
+
+    if (newErrors.reportName || newErrors.labName) {
+      // Focus on the first error field
+      if (newErrors.reportName) {
+        reportNameRef.current?.focus();
+      } else if (newErrors.labName) {
+        labNameRef.current?.focus();
+      }
+      return false;
+    }
+
+    return true;
+  };
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -251,6 +279,15 @@ export default function ReportAnalysis() {
   const handleUploadAndAnalyze = async () => {
     if (!image || !userId) return;
 
+    // Validate form before proceeding
+    if (!validateForm()) {
+      Alert.alert(
+        "Missing Information",
+        "Please fill in all required fields before submitting."
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       const compressedUri = await compressImage(image);
@@ -288,25 +325,39 @@ export default function ReportAnalysis() {
           <Text style={styles.sectionTitle}>Report Details</Text>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Report Type</Text>
+            <Text style={styles.label}>Report Type *</Text>
             <TextInput
-              style={styles.input}
+              ref={reportNameRef}
+              style={[styles.input, errors.reportName && styles.inputError]}
               placeholder="e.g., Blood Test, Thyroid Test"
               value={reportName}
-              onChangeText={setReportName}
+              onChangeText={(text) => {
+                setReportName(text);
+                setErrors((prev) => ({ ...prev, reportName: false }));
+              }}
               placeholderTextColor="#999"
             />
+            {errors.reportName && (
+              <Text style={styles.errorText}>Report type is required</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Lab Name</Text>
+            <Text style={styles.label}>Lab Name *</Text>
             <TextInput
-              style={styles.input}
+              ref={labNameRef}
+              style={[styles.input, errors.labName && styles.inputError]}
               placeholder="e.g., City Lab, Health Diagnostics"
               value={labName}
-              onChangeText={setLabName}
+              onChangeText={(text) => {
+                setLabName(text);
+                setErrors((prev) => ({ ...prev, labName: false }));
+              }}
               placeholderTextColor="#999"
             />
+            {errors.labName && (
+              <Text style={styles.errorText}>Lab name is required</Text>
+            )}
           </View>
 
           <Text style={styles.sectionTitle}>Upload Report</Text>
@@ -496,5 +547,15 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: "#e74c3c",
+    backgroundColor: "#fadbd8",
+  },
+  errorText: {
+    color: "#e74c3c",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
