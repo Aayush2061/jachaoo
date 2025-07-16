@@ -1,19 +1,21 @@
 // app/(home)/reports/analyze.tsx
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Button,
   Image,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -27,6 +29,24 @@ export default function ReportAnalysis() {
   const [labName, setLabName] = useState("");
   const [healthData, setHealthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [cameraPermission, setCameraPermission] = useState<boolean | null>(
+    null
+  );
+  const [mediaPermission, setMediaPermission] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      const { status: cameraStatus } =
+        await ImagePicker.getCameraPermissionsAsync();
+      setCameraPermission(cameraStatus === "granted");
+
+      const { status: mediaStatus } =
+        await ImagePicker.getMediaLibraryPermissionsAsync();
+      setMediaPermission(mediaStatus === "granted");
+    };
+
+    checkPermissions();
+  }, []);
 
   useEffect(() => {
     const fetchHealthData = async () => {
@@ -48,12 +68,50 @@ export default function ReportAnalysis() {
     fetchHealthData();
   }, [user?.id]);
 
+  const requestCameraPermission = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    setCameraPermission(status === "granted");
+    return status === "granted";
+  };
+
+  const requestMediaPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    setMediaPermission(status === "granted");
+    return status === "granted";
+  };
+
+  const takePhoto = async () => {
+    try {
+      const hasPermission =
+        cameraPermission || (await requestCameraPermission());
+      if (!hasPermission) {
+        Alert.alert(
+          "Permission required",
+          "Please enable camera access in settings"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      Alert.alert("Error", "Failed to take photo. Please try again.");
+    }
+  };
+
   const pickImage = async () => {
     try {
-      // Request permissions
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
+      const hasPermission = mediaPermission || (await requestMediaPermission());
+      if (!hasPermission) {
         Alert.alert(
           "Permission required",
           "Please enable photo library access in settings"
@@ -61,21 +119,16 @@ export default function ReportAnalysis() {
         return;
       }
 
-      // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Correct property name
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
-        aspect: [4, 3], // Optional: Set to undefined if you want no aspect ratio constraint
-        quality: 1,
+        aspect: [4, 3],
+        quality: 0.8,
         allowsMultipleSelection: false,
       });
 
-      // Handle the result
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
-        console.log("Selected image URI:", result.assets[0].uri);
-      } else {
-        console.log("Image selection was canceled");
       }
     } catch (error) {
       console.error("Error picking image:", error);
@@ -134,15 +187,12 @@ export default function ReportAnalysis() {
     try {
       const token = await getToken();
 
-      // Prepare health data to send
       const healthConditions = {
         diabetes: healthData?.diabetes || "Don't know",
-        hypertension: healthData?.bloodPressure || "Don't know", // Assuming bloodPressure is hypertension
+        hypertension: healthData?.bloodPressure || "Don't know",
         smoker: healthData?.smoker || "Don't know",
       };
 
-      // 1. Get analysis from Flask with health data
-      console.log("Getting analysis from Flask...");
       const analysisResponse = await fetch(
         `${process.env.EXPO_PUBLIC_FLASK_API_URL}/reports/analyze`,
         {
@@ -158,7 +208,6 @@ export default function ReportAnalysis() {
         }
       );
 
-      // Check Flask response
       if (!analysisResponse.ok) {
         const errorData = await analysisResponse.json();
         console.error("Flask analysis error:", errorData);
@@ -166,10 +215,7 @@ export default function ReportAnalysis() {
       }
 
       const analysisData = await analysisResponse.json();
-      console.log("Analysis received:", analysisData);
 
-      // 2. Save to Node.js backend
-      console.log("Saving to Node.js backend...");
       const saveResponse = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/reports`,
         {
@@ -180,7 +226,7 @@ export default function ReportAnalysis() {
           },
           body: JSON.stringify({
             url: imageUrl,
-            cloudinaryId: cloudinaryId, // Now using the passed parameter
+            cloudinaryId: cloudinaryId,
             analysis: analysisData.analysis,
             reportName,
             labName,
@@ -188,7 +234,6 @@ export default function ReportAnalysis() {
         }
       );
 
-      // Check Node.js response
       if (!saveResponse.ok) {
         const errorData = await saveResponse.json();
         console.error("Node.js save error:", errorData);
@@ -196,7 +241,6 @@ export default function ReportAnalysis() {
       }
 
       const savedReport = await saveResponse.json();
-      console.log("Report saved:", savedReport);
       return savedReport;
     } catch (error: any) {
       console.error("Full error in analyzeAndSaveReport:", error);
@@ -209,27 +253,18 @@ export default function ReportAnalysis() {
 
     setIsLoading(true);
     try {
-      // 1. Compress image
       const compressedUri = await compressImage(image);
-
-      // 2. Upload to Cloudinary
       const cloudinaryData = await uploadToCloudinary(compressedUri);
-
-      // 3. Analyze and save to your database
       const savedReport = await analyzeAndSaveReport(
         cloudinaryData.url,
-        cloudinaryData.cloudinaryId // Add this parameter
+        cloudinaryData.cloudinaryId
       );
 
-      // 4. Redirect to detail view
-      //   router.push(`/(home)/reports/${savedReport._id}`);
-      // Reset navigation stack so back button goes to reports gallery
       router.replace({
         pathname: `/(home)/reports/${savedReport._id}`,
-        params: { shouldRefresh: "true" }, // Force refresh gallery
+        params: { shouldRefresh: "true" },
       });
 
-      // Optional: Show success message
       setTimeout(
         () => Alert.alert("Success", "Report analyzed successfully!"),
         500
@@ -242,90 +277,224 @@ export default function ReportAnalysis() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Medical Report Analysis</Text>
-      <Text style={styles.label}>Report Type</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g., Blood Test, Thyroid Test"
-        value={reportName}
-        onChangeText={setReportName}
-      />
+    <LinearGradient
+      colors={["#f7f9fc", "#eef2f5"]}
+      style={styles.gradientContainer}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Analyze Medical Report</Text>
 
-      <Text style={styles.label}>Lab Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g., City Lab, Health Diagnostics"
-        value={labName}
-        onChangeText={setLabName}
-      />
+        <View style={styles.formContainer}>
+          <Text style={styles.sectionTitle}>Report Details</Text>
 
-      <Button
-        title="Select Report Image"
-        onPress={pickImage}
-        disabled={isLoading}
-      />
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Report Type</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Blood Test, Thyroid Test"
+              value={reportName}
+              onChangeText={setReportName}
+              placeholderTextColor="#999"
+            />
+          </View>
 
-      {image && (
-        <Image
-          source={{ uri: image }}
-          style={styles.imagePreview}
-          resizeMode="contain"
-        />
-      )}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Lab Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., City Lab, Health Diagnostics"
+              value={labName}
+              onChangeText={setLabName}
+              placeholderTextColor="#999"
+            />
+          </View>
 
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
-          <Text>Processing...</Text>
+          <Text style={styles.sectionTitle}>Upload Report</Text>
+          <Text style={styles.subtitle}>
+            Take a photo or select from your gallery
+          </Text>
+
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.cameraButton]}
+              onPress={takePhoto}
+              disabled={isLoading}
+            >
+              <MaterialIcons name="photo-camera" size={24} color="white" />
+              <Text style={styles.buttonText}>Take Photo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.galleryButton]}
+              onPress={pickImage}
+              disabled={isLoading}
+            >
+              <MaterialIcons name="photo-library" size={24} color="white" />
+              <Text style={styles.buttonText}>Choose from Gallery</Text>
+            </TouchableOpacity>
+          </View>
+
+          {image && (
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: image }}
+                style={styles.imagePreview}
+                resizeMode="contain"
+              />
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => setImage(null)}
+              >
+                <MaterialIcons name="close" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#4a90e2" />
+              <Text style={styles.loadingText}>Processing your report...</Text>
+            </View>
+          ) : image ? (
+            <TouchableOpacity
+              style={styles.analyzeButton}
+              onPress={handleUploadAndAnalyze}
+              disabled={isLoading}
+            >
+              <Text style={styles.analyzeButtonText}>
+                <FontAwesome name="magic" size={16} color="white" /> Analyze
+                Report
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
-      )}
-
-      {image && !isLoading && (
-        <Button
-          title="Upload & Analyze"
-          onPress={handleUploadAndAnalyze}
-          color="#28a745"
-        />
-      )}
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientContainer: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: "#f8f9fa",
+    paddingBottom: 40,
+  },
+  formContainer: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 24,
+    color: "#2c3e50",
     textAlign: "center",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginBottom: 12,
+    marginTop: 16,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#7f8c8d",
+    marginBottom: 16,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#34495e",
+    marginBottom: 8,
+  },
+  input: {
+    height: 48,
+    borderColor: "#dfe6e9",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    backgroundColor: "#f8f9fa",
+    fontSize: 15,
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    width: "48%",
+  },
+  cameraButton: {
+    backgroundColor: "#4a90e2",
+  },
+  galleryButton: {
+    backgroundColor: "#00b894",
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  imageContainer: {
+    position: "relative",
+    marginBottom: 20,
   },
   imagePreview: {
     width: "100%",
     height: 300,
-    marginVertical: 20,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#dfe6e9",
+  },
+  removeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingContainer: {
     marginVertical: 20,
     alignItems: "center",
   },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
+  loadingText: {
     marginTop: 12,
-    marginBottom: 4,
+    color: "#7f8c8d",
   },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 10,
-    marginBottom: 12,
+  analyzeButton: {
+    backgroundColor: "#6c5ce7",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  analyzeButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
