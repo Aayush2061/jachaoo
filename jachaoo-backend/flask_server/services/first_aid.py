@@ -1,55 +1,18 @@
-import requests
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
-# Load variables from .env file
+
+# Load environment variables
 load_dotenv()
 
-# Get the API key from the environment
-api_key = os.getenv("GENAI_API_KEY")
+# Configure Gemini API
+API_KEY = os.getenv("GENAI_API_KEY6") 
+genai.configure(api_key=API_KEY)
 
-API_KEY = api_key
-API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-
-def call_gemini_api(prompt: str) -> str:
-    headers = {
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt}]
-            }
-        ]
-    }
-
-    params = {
-        "key": API_KEY
-    }
-
-    response = requests.post(API_ENDPOINT, headers=headers, params=params, json=payload)
-
-    if response.status_code == 200:
-        result = response.json()
-        try:
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-        except (KeyError, IndexError):
-            return "Error: Unexpected API response format."
-    else:
-        print(f"Error: {response.status_code} - {response.text}")
-        return "Sorry, I couldn't process your request."
-
-conversation_history = []
-
-def build_prompt(conversation_history, user_input):
-    conversation_summary = ""
-    for turn in conversation_history:
-        role = "User" if turn['role'] == 'user' else "Assistant"
-        conversation_summary += f"{role}: {turn['content']}\n"
-
-    system_instruction="""
-You are a warm, helpful first aid assistant built specifically for people in Nepal. You help users with calm, kind support — especially in emergencies or health-related worries. Your job is to ask at most 4–5 highly relevant and clear questions to understand the situation. After that, you give the best first aid advice in simple, direct bullet points, avoiding unnecessary info or overexplaining.
+# Initialize the model with system instructions
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction="""You are a warm, helpful first aid assistant built specifically for people in Nepal. You help users with calm, kind support — especially in emergencies or health-related worries. Your job is to ask at most 4–5 highly relevant and clear questions to understand the situation. After that, you give the best first aid advice in simple, direct bullet points, avoiding unnecessary info or overexplaining.
 
 - Always respond in English but understand Romanized Nepali naturally and correctly.
 - Do not ask more than 5 questions, unless the user clearly wants to keep talking.
@@ -61,17 +24,35 @@ You are a warm, helpful first aid assistant built specifically for people in Nep
   "Do you want more details about any  of these steps?"
 - Never shame the user or repeat sympathy phrases. Be gentle, real, and emotionally supportive.
 - Keep responses short, warm, and meaningful — like a close friend who knows first aid well.
--If the user asks anything clearly unrelated to first aid or medical emergencies (such as jokes, general topics, tech help, or small talk), respond politely in the correct language.
--If the user responds with irrelevant emojis or nonsense, remind them politely it is first aid help.
--Ask strictly only one short, relevant medical question at a time, based on what the user said- Also avoid overlapping the questions keep one by one. 
--Do not ask scale level question -user will become confused.
-- If the user asks for more details after first aid tips, and ask emotional and serious questions show some suport and sympathy to the user.
+- If the user asks anything clearly unrelated to first aid or medical emergencies (such as jokes, general topics, tech help, or small talk), respond politely in the correct language.
+- If the user responds with irrelevant emojis or nonsense, remind them politely it is first aid help.
+- Ask strictly only one short, relevant medical question at a time, based on what the user said- Also avoid overlapping the questions keep one by one. 
+- Do not ask scale level question -user will become confused.
+- If the user asks for more details after first aid tips, and ask emotional and serious questions show some support and sympathy to the user.
 - If the user respond with blank or no understanding reply then respond 'Sorry, I didn’t understand that. Could you repeat or clarify?'
 - Analyze the context very deeply and give best of the best questions and answer.
 - After asking the user any question, DO NOT answer it yourself. WAIT for the user's response before giving any first aid instruction or moving to the next step. NEVER assume an answer. Only provide first aid guidance based on the user’s reply.
--Never give unwanted symbols and all information in well format
-- After gathering info, if the person is unconscious and not breathing or has no pulse, explain CPR in simple steps like this:
-CPR INSTRUCTIONS (For Everyone – Trained & Untrained)
+- Never give unwanted symbols and all information in well format
+- DOnot give any medicine suggestion okay gently deny that.
+- When a user reports someone unconscious, do NOT assume CPR is needed immediately.
+- First, ask only one question at a time seperately:
+   1. "Is the person breathing normally?"
+   2. Wait for the user's reply.
+   3. If the person is not breathing normally (no breathing or only gasping), ask: "Do you feel a pulse?"
+   4. Wait for user's reply.
+- Only if the person is unconscious AND not breathing normally OR has no pulse, respond ONLY with:
+  "Start CPR immediately." and nothing else.
+- Do not explain CPR steps here; the system will inject them after you say "Start CPR immediately."
+- Do not include “Call 102” or “Do you want more details…” in the same message as "Start CPR immediately."
+- After CPR is shown, wait for user reply before continuing.
+- If user asks for clarification after CPR, respond calmly without repeating CPR steps unless specifically asked.
+"""
+)
+
+# Global chat session storage (in production, use a proper session management system)
+active_chats = {}
+
+CPR_INSTRUCTIONS = """CPR INSTRUCTIONS (For Everyone – Trained & Untrained)
 
 WHEN TO START CPR:
 - Start CPR if the person is unconscious and not breathing or only gasping.
@@ -131,46 +112,59 @@ IMPORTANT:
 
 Chest compressions keep blood and oxygen flowing to the brain and heart.
 They keep the person alive until medical help arrives.
-
-
 """
-    prompt = system_instruction + conversation_summary + f"User: {user_input}\nAssistant:"
-    return prompt
 
-def chat_step(user_input):
-    global conversation_history
+def initialize_chat_session(session_id):
+    """Initialize a new chat session for a user"""
+    chat = model.start_chat(history=[])
+    active_chats[session_id] = {
+        'chat': chat,
+        'shown_cpr': False
+    }
+    return chat
 
-    prompt = build_prompt(conversation_history, user_input)
-    ai_reply = call_gemini_api(prompt)
+def get_chat_for_session(session_id):
+    """Get or create a chat session for a user"""
+    if session_id not in active_chats:
+        return initialize_chat_session(session_id)
+    return active_chats[session_id]['chat']
 
-    # Add a graceful exit if the user says "no" or "thanks" after receiving first aid
+def chat_step(user_input, session_id="default"):
+    """
+    Process user input and generate a response
+    Args:
+        user_input: The user's message
+        session_id: Unique identifier for the conversation session
+    Returns:
+        str: The assistant's response
+    """
+    # Get or create chat session
+    chat = get_chat_for_session(session_id)
+    session_data = active_chats[session_id]
+    
+    # Handle exit/end conditions
     user_input_lower = user_input.strip().lower()
     if user_input_lower in ["no", "thanks", "thank you", "thx"]:
-        if any("Do you want more details" in turn["content"] for turn in conversation_history if turn["role"] == "assistant"):
-            closing_message = "You're welcome. I’m glad I could help. Stay safe!"
-            conversation_history.append({'role': 'user', 'content': user_input})
-            conversation_history.append({'role': 'assistant', 'content': closing_message})
-            return closing_message + "\n\nThank you for using the First Aid Assistant. Goodbye!"
+        if any("Do you want more details" in msg.parts[0].text for msg in chat.history if msg.role == "model"):
+            return "You're welcome. I'm glad I could help. Stay safe!\n\nThank you for using the First Aid Assistant. Goodbye!"
+    
+    # Send message to Gemini
+    try:
+        response = chat.send_message(user_input)
+        response_text = response.text
+        
+        # Handle CPR case
+        if not session_data['shown_cpr'] and "start cpr immediately" in response_text.lower():
+            session_data['shown_cpr'] = True
+            response_text = f"{response_text}\n\n{CPR_INSTRUCTIONS}\n\nCall 102 for an ambulance in Nepal.\nDo you want more details about any of these steps?"
+        
+        return response_text
+    
+    except Exception as e:
+        return f"Sorry, I encountered an error: {str(e)}. Please try again."
 
-    # Check for [END] token (in case you want to use it for programmatic endings)
-    if "[END]" in ai_reply:
-        ai_reply = ai_reply.replace("[END]", "").strip()
-        conversation_history.append({'role': 'user', 'content': user_input})
-        conversation_history.append({'role': 'assistant', 'content': ai_reply})
-        return ai_reply + "\n\nThank you for using the First Aid Assistant. Stay safe!"
-
-    conversation_history.append({'role': 'user', 'content': user_input})
-    conversation_history.append({'role': 'assistant', 'content': ai_reply})
-
-    return ai_reply
-
-
-
-if __name__ == "__main__":
-    print("First Aid Assistant using Gemini 1.5 Flash API. Type 'exit' to quit.")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "exit":
-            break
-        reply = chat_step(user_input)
-        print("Assistant:", reply)
+def reset_conversation(session_id="default"):
+    """Reset the conversation history for a session"""
+    if session_id in active_chats:
+        del active_chats[session_id]
+    return True

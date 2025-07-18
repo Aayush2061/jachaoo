@@ -1,23 +1,31 @@
 import { useUser } from "@clerk/clerk-expo";
-import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
+  Animated,
+  Dimensions,
+  ImageBackground,
   Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+
+const { width } = Dimensions.get("window");
+const CARD_WIDTH = (width - 48) / 2;
+
 export default function HomePage() {
   const { user } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [hasHealthData, setHasHealthData] = useState(false);
+  const [healthData, setHealthData] = useState<any>(null);
 
   useEffect(() => {
     const checkHealthData = async () => {
@@ -31,6 +39,7 @@ export default function HomePage() {
 
         if (data && data.userId) {
           setHasHealthData(true);
+          setHealthData(data);
         } else {
           router.replace("/(home)/onboarding");
         }
@@ -45,74 +54,165 @@ export default function HomePage() {
     checkHealthData();
   }, [user?.id]);
 
+  const features = [
+    {
+      id: 1,
+      title: "Symptom Checker",
+      icon: "stethoscope",
+      color: "#5E8BFF90", // Added alpha channel for transparency
+      iconLib: FontAwesome5,
+      route: "/symptoms",
+      image: require("../../assets/images/home-page-icons/symptoms.jpg"),
+    },
+    {
+      id: 2,
+      title: "First Aid",
+      icon: "first-aid",
+      color: "#FF6B6B90",
+      iconLib: FontAwesome5,
+      route: "/firstaid",
+      image: require("../../assets/images/home-page-icons/firstaid.avif"),
+    },
+    {
+      id: 3,
+      title: "Lab Report Analysis",
+      icon: "file-alt",
+      color: "#6BD0FF90",
+      iconLib: FontAwesome5,
+      route: "/(home)/reports",
+      image: require("../../assets/images/home-page-icons/reportanalysis.jpg"),
+    },
+    {
+      id: 4,
+      title: "Period Tracker",
+      icon: "heart",
+      color: "#FF8E9E90",
+      iconLib: FontAwesome5,
+      route: "/(home)/periods",
+      image: require("../../assets/images/home-page-icons/periods.jpg"),
+    },
+    {
+      id: 5,
+      title: "Mental Health",
+      icon: "brain",
+      color: "#A78BFA90",
+      iconLib: FontAwesome5,
+      route: "/(home)/mental-health",
+      image: require("../../assets/images/home-page-icons/mental-health.jpg"),
+    },
+  ];
+
+  const scaleValues = features.map(() => new Animated.Value(1));
+
+  const handlePressIn = (index: number) => {
+    Animated.spring(scaleValues[index], {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = (index: number) => {
+    Animated.spring(scaleValues[index], {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#5E8BFF" />
+        <Text style={styles.loadingText}>Loading your health data...</Text>
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>Jachaoo</Text>
-          <Link href="/(home)/profile" asChild>
-            <Pressable style={styles.profileButton}>
-              <Ionicons name="person-circle" size={45} color="#2980b9" />
-            </Pressable>
-          </Link>
-        </View>
-        <Text style={styles.headerSubtitle}>Your Health Companion</Text>
-      </View>
+      <LinearGradient
+        colors={["#F8FAFF", "#ECF2FF"]}
+        style={styles.background}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header Section */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Text style={styles.greeting}>
+                Hello, {healthData?.name || "User"}
+              </Text>
+              <Text style={styles.subtitle}>
+                Your personal health companion
+              </Text>
+            </View>
+            <Link href="/(home)/profile" asChild>
+              <Pressable
+                style={styles.profileButton}
+                android_ripple={{ color: "#E6F0FF", borderless: true }}
+              >
+                <Ionicons name="person-circle" size={44} color="#5E8BFF" />
+              </Pressable>
+            </Link>
+          </View>
 
-      {/* Main Image */}
-      <Image
-        source={{
-          uri: "https://img.freepik.com/free-vector/medical-infographic-template-with-4-elements_23-2148101674.jpg",
-        }}
-        style={styles.mainImage}
-        resizeMode="contain"
-      />
+          {/* Features Grid */}
+          <Text style={styles.sectionTitle}>Health Services</Text>
+          <View style={styles.featuresGrid}>
+            {features.map((feature, index) => (
+              <Animated.View
+                key={feature.id}
+                style={{
+                  transform: [{ scale: scaleValues[index] }],
+                }}
+              >
+                <Pressable
+                  onPress={() => router.push(feature.route)}
+                  onPressIn={() => handlePressIn(index)}
+                  onPressOut={() => handlePressOut(index)}
+                >
+                  <ImageBackground
+                    source={feature.image}
+                    style={[
+                      styles.featureCard,
+                      { backgroundColor: feature.color },
+                    ]}
+                    imageStyle={styles.featureImage}
+                  >
+                    <View style={styles.featureContent}>
+                      <View style={styles.featureIconContainer}>
+                        <feature.iconLib
+                          name={feature.icon}
+                          size={28}
+                          color="white"
+                        />
+                      </View>
+                      <Text style={styles.featureText}>{feature.title}</Text>
+                    </View>
+                  </ImageBackground>
+                </Pressable>
+              </Animated.View>
+            ))}
+          </View>
 
-      {/* Service Buttons */}
-      <View style={styles.buttonContainer}>
-        <Link href="/(home)/reports" asChild>
-          <Pressable style={styles.serviceButton}>
-            <MaterialIcons name="analytics" size={24} color="#2980b9" />
-            <Text style={styles.buttonText}>Analyze My Report</Text>
-          </Pressable>
-        </Link>
-
-        <Link href="/firstaid" asChild>
-          <Pressable style={styles.serviceButton}>
-            <Ionicons name="medkit" size={24} color="#e74c3c" />
-            <Text style={styles.buttonText}>First Aid Services</Text>
-          </Pressable>
-        </Link>
-
-        <Link href="/symptoms" asChild>
-          <Pressable style={styles.serviceButton}>
-            <Ionicons name="medical" size={24} color="#27ae60" />
-            <Text style={styles.buttonText}>Symptom Checker</Text>
-          </Pressable>
-        </Link>
-
-        <Link href="/(home)/periods" asChild>
-          <Pressable style={styles.serviceButton}>
-            <FontAwesome name="calendar" size={24} color="#9b59b6" />
-            <Text style={styles.buttonText}>Period Tracker</Text>
-          </Pressable>
-        </Link>
-        <Link href="/(home)/mental-health" asChild>
-          <Pressable style={styles.serviceButton}>
-            <FontAwesome6 name="brain" size={24} color="black" />
-            <Text style={styles.buttonText}>Mental Health</Text>
-          </Pressable>
-        </Link>
-      </View>
+          {/* Health Tip */}
+          <View style={styles.tipCard}>
+            <View style={styles.tipHeader}>
+              <Ionicons name="sparkles" size={20} color="#FFC107" />
+              <Text style={styles.tipTitle}>Daily Health Tip</Text>
+            </View>
+            <Text style={styles.tipContent}>
+              Drinking at least 8 glasses of water daily helps maintain body
+              fluid balance, supports digestion, and keeps your skin healthy.
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -120,124 +220,143 @@ export default function HomePage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#F8FAFF",
+  },
+  background: {
+    flex: 1,
+    width: "100%",
+  },
+  scrollContainer: {
     padding: 20,
+    paddingBottom: 40,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+  },
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#5E8BFF",
+    marginTop: 16,
   },
   header: {
-    marginBottom: 20,
-  },
-  headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 28,
   },
-  headerTitle: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#2980b9",
-    marginBottom: 5,
+  headerContent: {
+    flex: 1,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "#7f8c8d",
-    marginBottom: 5,
+  greeting: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#1A237E",
+    fontFamily: "Inter_700Bold",
   },
-  welcomeText: {
-    fontSize: 14,
-    color: "#27ae60",
-    fontStyle: "italic",
-    marginTop: 5,
-  },
-  mainImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: 8,
-    marginVertical: 15,
-  },
-  buttonContainer: {
-    gap: 15,
-    marginTop: 20,
-  },
-  serviceButton: {
-    backgroundColor: "#b6d6ff",
-    borderRadius: 10,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    gap: 12,
-  },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#2c3e50",
+  subtitle: {
+    fontSize: 15,
+    color: "#64748B",
+    marginTop: 6,
+    fontFamily: "Inter_400Regular",
   },
   profileButton: {
-    borderRadius: 25,
-    padding: 8,
-    marginTop: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 16,
+    overflow: "hidden",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1A237E",
+    marginBottom: 18,
+    fontFamily: "Inter_600SemiBold",
+  },
+  featuresGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 24,
+    gap: 12,
+  },
+  tipCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    marginTop: 8,
+  },
+  tipHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 8,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A237E",
+    fontFamily: "Inter_600SemiBold",
+  },
+  tipContent: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 22,
+    fontFamily: "Inter_400Regular",
+  },
+  featureCard: {
+    width: CARD_WIDTH,
+    height: CARD_WIDTH * 0.9,
+    borderRadius: 16,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  featureImage: {
+    opacity: 0.8,
+    resizeMode: "cover",
+  },
+  featureContent: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+  featureIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  featureText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    marginTop: 8,
+    textAlign: "center",
   },
 });
-
-// ... keep your existing styles
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     padding: 20,
-//     backgroundColor: "#f5f5f5",
-//   },
-//   avatar: {
-//     width: 100,
-//     height: 100,
-//     borderRadius: 50,
-//     marginBottom: 20,
-//   },
-//   title: {
-//     fontSize: 28,
-//     fontWeight: "bold",
-//     textAlign: "center",
-//     marginBottom: 10,
-//     color: "#333",
-//   },
-//   subtitle: {
-//     fontSize: 18,
-//     textAlign: "center",
-//     marginBottom: 30,
-//     color: "#666",
-//   },
-//   button: {
-//     backgroundColor: "#007AFF",
-//     padding: 15,
-//     borderRadius: 10,
-//     minWidth: 150,
-//   },
-//   buttonText: {
-//     color: "#fff",
-//     textAlign: "center",
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-// });
-
-// <View style={styles.container}>
-//   {user?.imageUrl && (
-//     <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
-//   )}
-
-//   <Text style={styles.title}>Welcome!</Text>
-//   <Text style={styles.subtitle}>
-//     Hello, {user?.firstName || user?.fullName || "User"}
-//   </Text>
-
-//   <Link href="/(home)/profile" asChild>
-//     <TouchableOpacity style={styles.button}>
-//       <Text style={styles.buttonText}>View Profile</Text>
-//     </TouchableOpacity>
-//   </Link>
-// </View>
