@@ -61,7 +61,7 @@ export default function HomePage() {
       icon: "stethoscope",
       color: "#5E8BFF90", // Added alpha channel for transparency
       iconLib: FontAwesome5,
-      route: "/symptoms",
+      route: "/(home)/symptoms",
       image: require("../../assets/images/home-page-icons/symptoms.jpg"),
     },
     {
