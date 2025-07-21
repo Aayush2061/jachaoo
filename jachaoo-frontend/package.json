@@ -58,7 +58,8 @@
     "expo-clipboard": "~7.1.5",
     "react-native-view-shot": "4.0.3",
     "expo-print": "~14.1.4",
-    "expo-sharing": "~13.1.5"
+    "expo-sharing": "~13.1.5",
+    "expo-intent-launcher": "~12.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

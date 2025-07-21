@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/clerk-expo";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -24,11 +24,30 @@ export default function SymptomChecker() {
   const [options, setOptions] = useState<string[]>([]);
   const [userInput, setUserInput] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
+  const [healthData, setHealthData] = useState<any>(null);
   const [stage, setStage] = useState<"start" | "question" | "diagnosis">(
     "start"
   );
-  const [isSharing, setIsSharing] = useState(false);
-  const reportRef = useRef<View>(null);
+
+  useEffect(() => {
+    const fetchHealthData = async () => {
+      try {
+        if (!user?.id) return;
+
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
+        );
+        const data = await response.json();
+        setHealthData(data);
+      } catch (error) {
+        console.error("Error fetching health data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealthData();
+  }, [user?.id]);
 
   const startDiagnosis = async () => {
     try {
@@ -39,9 +58,9 @@ export default function SymptomChecker() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            smoker: "No",
-            diabetes: "No",
-            blood_pressure: "No",
+            smoker: healthData.smoker,
+            diabetes: healthData.diabetes,
+            blood_pressure: healthData.bloodPressure,
           }),
         }
       );
