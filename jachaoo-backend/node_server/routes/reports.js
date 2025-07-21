@@ -2,12 +2,60 @@ const express = require('express');
 const router = express.Router();
 const MedicalReport = require('../models/MedicalReport');
 const { deleteFromCloudinary } = require('../utils/cloudinary')
+const AnalysisLimit = require('../models/AnalysisLimit');
+const MAX_DAILY_ANALYSES = 2;
 
-// Create report record
-// In routes/reports.js - Update the POST endpoint
-// In routes/reports.js
+// Helper function to check and update analysis count
+async function checkAnalysisLimit(userId) {
+    // Get current date at midnight for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let limitRecord = await AnalysisLimit.findOne({ userId });
+
+    // If no record exists or it's a new day, reset the count
+    if (!limitRecord || limitRecord.lastAnalysisDate < today) {
+        limitRecord = await AnalysisLimit.findOneAndUpdate(
+            { userId },
+            {
+                count: 0,
+                lastAnalysisDate: new Date()
+            },
+            {
+                upsert: true,
+                new: true
+            }
+        );
+    }
+
+    // Check if user has exceeded daily limit
+    if (limitRecord.count >= MAX_DAILY_ANALYSES) {
+        return false;
+    }
+
+    // Increment the count
+    await AnalysisLimit.updateOne(
+        { userId },
+        { $inc: { count: 1 } }
+    );
+
+    return true;
+}
+
 router.post('/', async (req, res) => {
     try {
+        // Check analysis limit first
+        const canAnalyze = await checkAnalysisLimit(req.auth.userId);
+
+        if (!canAnalyze) {
+            return res.status(429).json({
+                error: {
+                    message: `You've reached your daily limit of ${MAX_DAILY_ANALYSES} report analyses. Please try again tomorrow.`,
+                    limit: MAX_DAILY_ANALYSES
+                }
+            });
+        }
+
         const { cloudinaryId, url, analysis, reportName, labName } = req.body;
 
         // Validate required fields

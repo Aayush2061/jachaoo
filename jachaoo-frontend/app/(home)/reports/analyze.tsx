@@ -238,8 +238,10 @@ export default function ReportAnalysis() {
 
       if (!analysisResponse.ok) {
         const errorData = await analysisResponse.json();
-        console.error("Flask analysis error:", errorData);
-        throw new Error(errorData.message || "Analysis failed");
+        // Remove console.error for production
+        throw new Error(
+          errorData.message || "Analysis failed. Please try again."
+        );
       }
 
       const analysisData = await analysisResponse.json();
@@ -264,15 +266,15 @@ export default function ReportAnalysis() {
 
       if (!saveResponse.ok) {
         const errorData = await saveResponse.json();
-        console.error("Node.js save error:", errorData);
-        throw new Error(errorData.error || "Failed to save report");
+        if (errorData.error && errorData.error.limit) {
+          throw new Error(`LIMIT_REACHED:${errorData.error.limit}`);
+        }
+        throw new Error(errorData.error?.message || "Failed to save report");
       }
 
-      const savedReport = await saveResponse.json();
-      return savedReport;
+      return await saveResponse.json();
     } catch (error: any) {
-      console.error("Full error in analyzeAndSaveReport:", error);
-      throw new Error(`Analysis failed: ${error.message}`);
+      throw error;
     }
   };
 
@@ -307,12 +309,33 @@ export default function ReportAnalysis() {
         500
       );
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      if (error.message.startsWith("LIMIT_REACHED:")) {
+        const limit = error.message.split(":")[1];
+        Alert.alert(
+          "Analysis Limit Reached",
+          `You've reached your daily limit of ${limit} report analyses. Please try again tomorrow.`
+        );
+      } else if (error.message.includes("Upload failed")) {
+        Alert.alert(
+          "Upload Error",
+          "Couldn't upload your report. Please check your connection and try again."
+        );
+      } else if (error.message.includes("Compression failed")) {
+        Alert.alert(
+          "Image Error",
+          "We couldn't process your image. Please try with a different photo."
+        );
+      } else {
+        // Generic error message for all other cases
+        Alert.alert(
+          "Something Went Wrong",
+          error.message || "Please try again later."
+        );
+      }
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <LinearGradient
       colors={["#f7f9fc", "#eef2f5"]}
