@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -28,6 +28,7 @@ export default function SymptomChecker() {
   const [stage, setStage] = useState<"start" | "question" | "diagnosis">(
     "start"
   );
+  const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchHealthData = async () => {
@@ -52,29 +53,47 @@ export default function SymptomChecker() {
   const startDiagnosis = async () => {
     try {
       setLoading(true);
+      const token = await getToken();
+
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/symptoms/start`,
+        `${process.env.EXPO_PUBLIC_API_URL}/symptoms/start`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
-            smoker: healthData.smoker,
-            diabetes: healthData.diabetes,
-            blood_pressure: healthData.bloodPressure,
+            smoker: healthData?.smoker || "Don't know",
+            diabetes: healthData?.diabetes || "Don't know",
+            blood_pressure: healthData?.bloodPressure || "Don't know",
           }),
         }
       );
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 429) {
+          Alert.alert(
+            "Analysis Limit Reached",
+            errorData.error?.message ||
+              "You've reached your daily symptom analysis limit"
+          );
+          return;
+        }
+        throw new Error(errorData.message || "Failed to start diagnosis");
+      }
+
       const data = await response.json();
-      if (response.ok && data.session_id) {
+      if (data.session_id) {
         setSessionId(data.session_id);
         setCurrentQuestion(data.message);
         setStage("question");
-      } else {
-        throw new Error(data.message || "Failed to start diagnosis");
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to start diagnosis");
+    } catch (error: any) {
+      if (!error.message.includes("daily limit")) {
+        Alert.alert("Error", error.message || "Failed to start diagnosis");
+      }
     } finally {
       setLoading(false);
     }

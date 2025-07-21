@@ -9,7 +9,7 @@ import os
 load_dotenv()
 
 # Configure Gemini API
-API_KEY = os.getenv("GENAI_API_KEY8") 
+API_KEY = os.getenv("GENAI_API_KEY9") 
 # ----------------------------
 # Your Original Full System Instruction (UNCHANGED)
 # ----------------------------

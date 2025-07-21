@@ -5,9 +5,14 @@ const analysisLimitSchema = new mongoose.Schema({
     userId: {
         type: String,
         required: true,
-        unique: true
+        index: true
     },
-    count: {
+    reportAnalysisCount: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    symptomAnalysisCount: {
         type: Number,
         required: true,
         default: 0
