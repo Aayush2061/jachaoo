@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/clerk-expo";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
 export default function SymptomChecker() {
   const { user } = useUser();
@@ -26,17 +27,17 @@ export default function SymptomChecker() {
   const [stage, setStage] = useState<"start" | "question" | "diagnosis">(
     "start"
   );
+  const [isSharing, setIsSharing] = useState(false);
+  const reportRef = useRef<View>(null);
 
   const startDiagnosis = async () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/symptoms/start`, // Verify this URL
+        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/symptoms/start`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             smoker: "No",
             diabetes: "No",
@@ -45,23 +46,15 @@ export default function SymptomChecker() {
         }
       );
 
-      // Add error logging:
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.log("API Error:", errorData);
-        throw new Error(errorData.message || "Failed to start diagnosis");
-      }
-
       const data = await response.json();
-      console.log("API Response:", data); // Log the response
-
-      if (data.session_id) {
+      if (response.ok && data.session_id) {
         setSessionId(data.session_id);
         setCurrentQuestion(data.message);
         setStage("question");
+      } else {
+        throw new Error(data.message || "Failed to start diagnosis");
       }
     } catch (error) {
-      console.error("Full Error:", error); // Detailed error logging
       Alert.alert("Error", "Failed to start diagnosis");
     } finally {
       setLoading(false);
@@ -75,42 +68,23 @@ export default function SymptomChecker() {
         `${process.env.EXPO_PUBLIC_FLASK_API_URL}/symptoms/answer`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            session_id: sessionId,
-            answer: answer,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId, answer }),
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-      console.log("API Response:", data); // Debug log
-
       if (data.session_over) {
         setDiagnosis(data.diagnosis || "No diagnosis provided");
         setStage("diagnosis");
       } else {
-        // Extract question and options properly
-        const questionText = data.question.includes("?")
-          ? data.question
-          : `${data.question}?`;
-
-        setCurrentQuestion(questionText);
+        setCurrentQuestion(
+          data.question.includes("?") ? data.question : `${data.question}?`
+        );
         setOptions(data.options || []);
-
-        // If no options provided, switch to text input mode
-        if (!data.options || data.options.length === 0) {
-          setUserInput("");
-        }
+        if (!data.options) setUserInput("");
       }
     } catch (error) {
-      console.error("Error submitting answer:", error);
       Alert.alert("Error", "Failed to submit answer");
     } finally {
       setLoading(false);
@@ -118,101 +92,158 @@ export default function SymptomChecker() {
   };
 
   const handleOptionSelect = (option: string) => {
-    // Get the index (1-based) of the selected option
     const optionIndex = options.indexOf(option) + 1;
     submitAnswer(optionIndex.toString());
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#5E8BFF" />
-        <Text style={styles.loadingText}>Processing...</Text>
-      </View>
-    );
-  }
+  const renderLoading = () => (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color="#4F7CFF" />
+      <Text style={styles.loadingText}>Processing your response...</Text>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={["#F8FAFF", "#ECF2FF"]}
-        style={styles.background}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {stage === "start" && (
-            <View style={styles.startContainer}>
-              <Text style={styles.title}>Symptom Checker</Text>
+      <LinearGradient colors={["#F8FAFF", "#E3ECFF"]} style={styles.background}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          {loading && renderLoading()}
+
+          {!loading && stage === "start" && (
+            <Animated.View
+              entering={FadeInUp.duration(600)}
+              style={styles.centerContent}
+            >
+              <Text style={styles.title}>🩺 Symptom Checker</Text>
               <Text style={styles.subtitle}>
-                Describe your symptoms and get potential diagnoses
+                Tell us what you're feeling and we'll help you understand it.
               </Text>
               <TouchableOpacity
                 style={styles.startButton}
                 onPress={startDiagnosis}
               >
-                <Text style={styles.buttonText}>Start Diagnosis</Text>
+                <Text style={styles.buttonText}>Begin Diagnosis</Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           )}
 
-          {stage === "question" && (
-            <View style={styles.questionContainer}>
+          {!loading && stage === "question" && (
+            <Animated.View
+              entering={FadeInUp.duration(400)}
+              style={styles.questionSection}
+            >
               <Text style={styles.questionText}>{currentQuestion}</Text>
-
               {options.length > 0 ? (
-                <View style={styles.optionsContainer}>
-                  {options.map((option, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.optionButton}
-                      onPress={() => handleOptionSelect(option)}
-                    >
-                      <Text style={styles.optionText}>{option}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                options.map((option, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={styles.optionButton}
+                    onPress={() => handleOptionSelect(option)}
+                  >
+                    <Text style={styles.optionText}>{option}</Text>
+                  </TouchableOpacity>
+                ))
               ) : (
                 <>
                   <TextInput
                     style={styles.input}
-                    placeholder="Describe your symptom..."
+                    placeholder="Type your answer..."
                     value={userInput}
                     onChangeText={setUserInput}
                     multiline
                   />
                   <TouchableOpacity
-                    style={styles.submitButton}
+                    style={[
+                      styles.submitButton,
+                      !userInput.trim() && { opacity: 0.5 },
+                    ]}
                     onPress={() => submitAnswer(userInput)}
                     disabled={!userInput.trim()}
                   >
-                    <Text style={styles.buttonText}>Submit</Text>
+                    <Text style={styles.buttonText}>Submit Answer</Text>
                   </TouchableOpacity>
                 </>
               )}
-            </View>
+            </Animated.View>
           )}
 
-          {stage === "diagnosis" && (
-            <View style={styles.diagnosisContainer}>
-              <Text style={styles.diagnosisTitle}>Diagnosis Report</Text>
-              <View style={styles.diagnosisBox}>
-                <Text style={styles.diagnosisText}>
-                  {diagnosis.split("\n").map((line, i) => (
-                    <Text key={i}>
+          {!loading && stage === "diagnosis" && (
+            <Animated.View
+              entering={FadeInUp.duration(500)}
+              style={styles.resultContainer}
+            >
+              <View style={styles.headerRow}>
+                <Text style={styles.resultTitle}>📝 Diagnosis Result</Text>
+              </View>
+              <View style={styles.resultBox}>
+                {diagnosis.split("\n").map((line, i) => {
+                  // Skip empty lines
+                  if (!line.trim()) return null;
+
+                  // Style the main header
+                  if (line === "MEDICAL ASSESSMENT REPORT") {
+                    return (
+                      <Text key={i} style={styles.mainHeader}>
+                        {line}
+                      </Text>
+                    );
+                  }
+
+                  // Style numbered section headers (like "1. Three most likely conditions:")
+                  if (line.match(/^\d+\.\s+[A-Z][^:]+:/)) {
+                    return (
+                      <Text key={i} style={styles.sectionHeader}>
+                        {line}
+                      </Text>
+                    );
+                  }
+
+                  // Style conditions with percentages
+                  if (line.match(/^[A-Z][^%(]+\(\d+%\)/)) {
+                    const [condition, ...rest] = line.split("(");
+                    const percentage = rest.join("(");
+                    return (
+                      <View key={i} style={styles.conditionContainer}>
+                        <Text style={styles.conditionText}>
+                          <Text style={styles.conditionName}>{condition}</Text>
+                          <Text style={styles.conditionPercentage}>
+                            ({percentage}
+                          </Text>
+                        </Text>
+                      </View>
+                    );
+                  }
+
+                  // Style red flags with bullet points
+                  if (line.startsWith("* ")) {
+                    return (
+                      <View key={i} style={styles.redFlagItem}>
+                        <Text style={styles.redFlagBullet}>•</Text>
+                        <Text style={styles.redFlagText}>
+                          {line.substring(2)}
+                        </Text>
+                      </View>
+                    );
+                  }
+
+                  // Default text style
+                  return (
+                    <Text key={i} style={styles.resultText}>
                       {line}
-                      {"\n"}
                     </Text>
-                  ))}
-                </Text>
+                  );
+                })}
               </View>
               <TouchableOpacity
                 style={styles.doneButton}
                 onPress={() => router.back()}
               >
-                <Text style={styles.buttonText}>Done</Text>
+                <Text style={styles.buttonText}>Return to Home</Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           )}
         </ScrollView>
       </LinearGradient>
@@ -221,131 +252,162 @@ export default function SymptomChecker() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAFF",
-  },
-  background: {
-    flex: 1,
-    width: "100%",
-  },
-  scrollContainer: {
-    padding: 20,
-    paddingBottom: 40,
-  },
+  container: { flex: 1 },
+  background: { flex: 1 },
+  scrollContainer: { padding: 20 },
+  centerContent: { alignItems: "center", paddingTop: 60 },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingTop: 100,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#5E8BFF",
-  },
-  startContainer: {
-    alignItems: "center",
-    paddingTop: 40,
-  },
+  loadingText: { marginTop: 16, fontSize: 16, color: "#4F7CFF" },
   title: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#1A237E",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: "#64748B",
-    marginBottom: 40,
+    color: "#475569",
     textAlign: "center",
+    marginBottom: 30,
   },
   startButton: {
-    backgroundColor: "#5E8BFF",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 24,
-    marginTop: 20,
+    backgroundColor: "#4F7CFF",
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    elevation: 3,
   },
   buttonText: {
-    color: "white",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
   },
-  questionContainer: {
-    marginTop: 20,
-  },
+  questionSection: { marginTop: 50 },
   questionText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1A237E",
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    minHeight: 120,
+    color: "#1E293B",
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  submitButton: {
-    backgroundColor: "#5E8BFF",
-    paddingVertical: 16,
-    borderRadius: 12,
-  },
-  optionsContainer: {
-    marginTop: 8,
   },
   optionButton: {
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 1,
   },
-  optionText: {
+  optionText: { fontSize: 16, color: "#1E293B" },
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
-    color: "#1A237E",
+    minHeight: 100,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  diagnosisContainer: {
-    marginTop: 20,
+  submitButton: {
+    backgroundColor: "#4F7CFF",
+    paddingVertical: 14,
+    borderRadius: 12,
   },
-  diagnosisTitle: {
+  resultContainer: { marginTop: 30 },
+  resultTitle: {
     fontSize: 22,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#1A237E",
     marginBottom: 16,
     textAlign: "center",
   },
-  diagnosisBox: {
-    backgroundColor: "white",
+  resultBox: {
+    backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
     marginBottom: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  diagnosisText: {
-    fontSize: 15,
-    lineHeight: 24,
+  mainHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1A237E",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1A237E",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  conditionContainer: {
+    marginVertical: 8,
+    paddingLeft: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: "#4F7CFF",
+  },
+  conditionText: {
+    fontSize: 16,
+    lineHeight: 22,
     color: "#334155",
   },
+  conditionName: {
+    fontWeight: "600",
+    color: "#1E293B",
+  },
+  conditionPercentage: {
+    color: "#4F7CFF",
+    fontWeight: "600",
+  },
+  resultText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "#334155",
+    marginBottom: 8,
+  },
+  redFlagItem: {
+    flexDirection: "row",
+    marginVertical: 4,
+    alignItems: "flex-start",
+  },
+  redFlagBullet: {
+    color: "#EF4444",
+    fontSize: 16,
+    marginRight: 8,
+  },
+  redFlagText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "#EF4444",
+    flex: 1,
+  },
   doneButton: {
-    backgroundColor: "#5E8BFF",
+    backgroundColor: "#4F7CFF",
     paddingVertical: 16,
     borderRadius: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingHorizontal: 8,
   },
 });

@@ -380,11 +380,9 @@ High BP = {self.patient_data["basic_info"]["high_blood_pressure"]}
 Symptoms:
 {symptom_block if symptom_block else "No symptom details provided."}
 
-Final Diagnosis:
-
 1. Three most likely conditions:
 - For each condition:
-    • Name + confidence percentage (e.g., 65%)
+    • Name + confidence percentage (e.g., 65%) Example format: Migrane (80%)
     • 2 full lines in simple, everyday language
     • No medical jargon or technical terms
     • Do not use short or one-line explanations
@@ -399,7 +397,6 @@ Final Diagnosis:
 - Use simple phrases (e.g., "trouble breathing", "very high fever")
 
 FORMAT RULES:
-- Output must strictly begin with: “Final Diagnosis:”
 - End immediately after the red flags — do not add any text after that
 - No greetings, disclaimers, notes, or extra messages
 - Use paragraph breaks only (no bullets in explanations)
@@ -425,9 +422,6 @@ REPETITION GUARD (STRICT):
         self.diagnosis_completed = True
 
         return (
-            "==================================\n"
-            "        MEDICAL ASSESSMENT REPORT\n"
-            "==================================\n\n"
+            "MEDICAL ASSESSMENT REPORT\n"
             f"{diagnosis}\n\n"
-            "[End of Report]"
         )  # like now the code is running well but that error should be handled man
