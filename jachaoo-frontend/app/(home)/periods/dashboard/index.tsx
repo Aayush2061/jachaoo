@@ -1,5 +1,7 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { addDays, format, isToday } from "date-fns";
+import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -15,6 +17,7 @@ import {
   isPeriodIrregular,
 } from "../../../utils/cycleUtils";
 import SymptomsSection from "./components/SymptomsSection";
+
 export default function PeriodDashboard() {
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -22,6 +25,28 @@ export default function PeriodDashboard() {
   const [healthData, setHealthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const baseDate = new Date(); // today
+
+  const getCalendarStripDates = () => {
+    // Show [yesterday, today, tomorrow, +2 more]
+    return [-1, 0, 1, 2, 3].map((offset) => addDays(baseDate, offset));
+  };
+
+  const getPhaseColor = (phase?: string) => {
+    switch (phase) {
+      case "Menstrual Phase":
+        return "#FF6B6B";
+      case "Follicular Phase":
+        return "#51CF66";
+      case "Ovulation Phase":
+        return "#3498DB";
+      case "Luteal Phase":
+        return "#FCC419";
+      default:
+        return "#ffffff"; // fallback
+    }
+  };
   useFocusEffect(
     useCallback(() => {
       const fetchPeriodData = async () => {
@@ -33,14 +58,10 @@ export default function PeriodDashboard() {
           const periodsDataResponse = await fetch(
             `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+              headers: { Authorization: `Bearer ${token}` },
             }
           );
-
           const periodData = await periodsDataResponse.json();
-          console.log(periodData);
           setPeriodData(periodData);
 
           const healthDataResponse = await fetch(
@@ -59,7 +80,6 @@ export default function PeriodDashboard() {
     }, [user?.id])
   );
 
-  // Add this function to calculate phase info
   const getCurrentPhaseInfo = () => {
     if (
       !periodData ||
@@ -82,11 +102,10 @@ export default function PeriodDashboard() {
       return null;
     }
   };
-  // Get the phase info
+
   const phaseInfo = getCurrentPhaseInfo();
-  // console.log(phaseInfo);
   const currentSymptoms = periodData?.symptoms || [];
-  // 👇 Show loading indicator while data is being fetched
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -95,147 +114,184 @@ export default function PeriodDashboard() {
     );
   }
 
+  const buttons = [
+    {
+      label: "Log your symptoms to track your cycle health",
+      icon: "plus-circle-outline",
+      route: "/(home)/periods/daily-symptoms",
+      colors: ["#fbc2eb", "#a6c1ee"],
+    },
+    {
+      label: "Get your daily test result",
+      icon: "clipboard-text-outline",
+      route: "/(home)/periods/daily-result",
+      colors: ["#fad0c4", "#ffd1ff"],
+    },
+    {
+      label: "Track your cycle on calendar",
+      icon: "calendar-month-outline",
+      route: "/(home)/periods/calendar",
+      colors: ["#c2e9fb", "#a1c4fd"],
+    },
+    {
+      label: "Start Chat",
+      icon: "chat-processing-outline",
+      route: "/(home)/periods/chat",
+      colors: ["#fddb92", "#d1fdff"],
+    },
+    {
+      label: "Cycle Guide",
+      icon: "flower-outline",
+      route: "/(home)/periods/cycle-guide",
+      colors: ["#fbc2eb", "#fceabb"],
+    },
+  ];
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <View style={styles.dateContainer}>
-          <Text style={styles.monthText}>
-            {new Date().toLocaleString("default", { month: "long" })}
-          </Text>
-          <Text style={styles.phaseText}>
-            {phaseInfo
-              ? isPeriodIrregular(periodData)
-                ? `Irregular cycle`
-                : `${phaseInfo.phase} - Day ${phaseInfo.currentDay}`
-              : "Cycle data not available"}
-          </Text>
-        </View>
-
-        <Pressable
-          style={styles.editButton}
-          onPress={() => router.push("/(home)/periods/edit")}
-        >
-          <Ionicons name="pencil" size={18} color="#9b59b6" />
-          <Text style={styles.editText}>Edit details</Text>
-        </Pressable>
-      </View>
-
-      {/* Calendar Strip */}
-      {/* <View style={styles.calendarStrip}>
-        {["31", "01", "02", "03", "04"].map((day, index) => (
-          <View key={index} style={styles.calendarDay}>
-            <Text style={styles.calendarDayText}>{day}</Text>
-            {index === 1 && <View style={styles.currentDayIndicator} />}
-          </View>
-        ))}
-      </View> */}
-
-      {/* User Profile Section */}
-      {healthData && (
-        <View style={styles.profileSection}>
-          <Text style={styles.userName}>{healthData.name}</Text>
-          <Text style={styles.userAge}>{healthData.age} years</Text>
-        </View>
-      )}
-
-      {/* Symptoms Section */}
-      <SymptomsSection
-        initialSymptoms={currentSymptoms}
-        userId={user?.id}
-        onSymptomsUpdate={(updatedSymptoms) => {
-          // Optional: Update local state if needed
-          setPeriodData({ ...periodData, symptoms: updatedSymptoms });
-        }}
-      />
-
-      {/* Features Section */}
-      <View style={styles.featuresContainer}>
-        <Text style={styles.sectionTitle}>Track Your Cycle</Text>
-
-        <View style={styles.featureRow}>
-          <Pressable
-            style={styles.featureCard}
-            onPress={() => router.push("/(home)/periods/daily-symptoms")}
-          >
-            <MaterialCommunityIcons
-              name="clipboard-pulse"
-              size={28}
-              color="#9b59b6"
-            />
-            <Text style={styles.featureText}>
-              Log your symptoms to track your cycle health
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.monthText}>
+              {new Date().toLocaleString("default", { month: "long" })}
             </Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.featureCard}
-            onPress={() => router.push("/(home)/periods/daily-result")}
-          >
-            <MaterialCommunityIcons
-              name="chart-line"
-              size={28}
-              color="#9b59b6"
-            />
-            <Text style={styles.featureText}>Get your daily test result</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.featureRow}>
-          <Pressable
-            style={styles.featureCard}
-            onPress={() => router.push("/(home)/periods/calendar")}
-          >
-            <MaterialCommunityIcons name="calendar" size={28} color="#9b59b6" />
-            <Text style={styles.featureText}>Track your cycle on calendar</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.featureCard}
-            onPress={() => router.push("/(home)/periods/chat")}
-          >
-            <Ionicons name="chatbubbles" size={28} color="#9b59b6" />
-            <Text style={styles.featureText}>Start Chat</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Cycle Guide Section - Standalone with better styling */}
-      <View style={styles.guideSection}>
-        <Text style={styles.sectionTitle}>Learn About Your Cycle</Text>
-        <Pressable
-          style={styles.guideFeatureCard}
-          onPress={() => router.push("/(home)/periods/cycle-guide")}
-        >
-          <View style={styles.guideContent}>
-            <MaterialCommunityIcons
-              name="book-open-variant"
-              size={32}
-              color="#9b59b6"
-            />
-            <View style={styles.guideTextContainer}>
-              <Text style={styles.guideFeatureTitle}>Cycle Guide</Text>
-              <Text style={styles.guideFeatureSubtitle}>
-                Understand your menstrual cycle phases
-              </Text>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color="#9b59b6"
-              style={styles.chevron}
-            />
+            <Text
+              style={[
+                styles.phaseText,
+                {
+                  color: getPhaseColor(phaseInfo?.phase), // dynamic color
+                },
+              ]}
+            >
+              {phaseInfo
+                ? isPeriodIrregular(periodData)
+                  ? `Irregular cycle`
+                  : `${phaseInfo.phase} - Day ${phaseInfo.currentDay}`
+                : "Cycle data not available"}
+            </Text>
           </View>
-        </Pressable>
-      </View>
-    </ScrollView>
+          {/* <Pressable
+            style={styles.editButton}
+            onPress={() => router.push("/(home)/periods/edit")}
+          >
+            <Ionicons name="pencil" size={18} color="#9b59b6" />
+            <Text style={styles.editText}>Edit details</Text>
+          </Pressable> */}
+        </View>
+
+        {/* Calendar Strip */}
+        <View style={styles.calendarStrip}>
+          {getCalendarStripDates().map((date, index) => {
+            const isCurrent = isToday(date);
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.calendarDay,
+                  isCurrent && styles.currentDayCircle,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.calendarDayText,
+                    isCurrent && styles.currentDayText,
+                  ]}
+                >
+                  {format(date, "dd")}
+                </Text>
+                <Text style={styles.calendarDayLabel}>
+                  {format(date, "EEE")}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Profile Card */}
+        <View style={styles.userCard}>
+          {/* User Info Section */}
+          <View style={styles.userInfoContainer}>
+            <LinearGradient
+              colors={["#9b59b6", "#8e44ad"]}
+              style={styles.avatarContainer}
+            >
+              <MaterialCommunityIcons
+                name="face-woman"
+                size={24}
+                color="#fff"
+              />
+            </LinearGradient>
+            <View style={styles.userTextContainer}>
+              <Text style={styles.userName}>{healthData?.name}</Text>
+              <Text style={styles.userAge}>{healthData?.age} years</Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.editButton,
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+              onPress={() => router.push("/(home)/periods/edit")}
+            >
+              <Ionicons name="pencil" size={18} color="#9b59b6" />
+              <Text style={styles.editText}>Edit details</Text>
+            </Pressable>
+          </View>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Symptoms Section */}
+          <SymptomsSection
+            initialSymptoms={currentSymptoms}
+            userId={user?.id}
+            onSymptomsUpdate={(updatedSymptoms) => {
+              setPeriodData({ ...periodData, symptoms: updatedSymptoms });
+            }}
+            customStyles={{
+              symptomsContainer: styles.symptomsContainerCustom,
+              symptomPill: styles.symptomPillCustom,
+              symptomText: styles.symptomTextCustom,
+              sectionTitle: styles.symptomsTitleCustom,
+              addButton: styles.addButtonCustom,
+              removeButton: styles.removeButtonCustom,
+            }}
+          />
+        </View>
+
+        {/* Feature Buttons */}
+        <View style={styles.grid}>
+          {buttons.map((btn, idx) => (
+            <Pressable
+              key={idx}
+              onPress={() => router.push(btn.route)}
+              style={styles.pressable}
+            >
+              <LinearGradient
+                colors={btn.colors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.card}
+              >
+                <MaterialCommunityIcons
+                  name={btn.icon}
+                  size={28}
+                  color="#333"
+                  style={{ marginBottom: 8 }}
+                />
+                <Text style={styles.cardText}>{btn.label}</Text>
+              </LinearGradient>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  // Layout Styles
   container: {
-    flexGrow: 1,
-    backgroundColor: "#fff",
     padding: 20,
     paddingBottom: 40,
   },
@@ -243,165 +299,201 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
   },
-  dateContainer: {
-    flex: 1,
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 14,
+    marginTop: 20,
   },
+
+  // Text Styles
   monthText: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: "#2c3e50",
   },
   phaseText: {
-    fontSize: 16,
+    fontSize: 17,
+    fontWeight: "600",
+    marginTop: 4,
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  cardText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
+    textAlign: "center",
+  },
+
+  // Calendar Styles
+  calendarStrip: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  calendarDay: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  calendarDayText: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#444",
+  },
+  calendarDayLabel: {
+    fontSize: 12,
+    color: "#aaa",
+    marginTop: 2,
+  },
+  currentDayCircle: {
+    backgroundColor: "rgba(255, 105, 180, 0.15)",
+    borderRadius: 12,
+  },
+  currentDayText: {
+    color: "#e91e63",
+    fontWeight: "bold",
+  },
+
+  // Profile Card Styles
+  userCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 25,
+    shadowColor: "#8e44ad",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  userInfoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  avatarContainer: {
+    width: 45,
+    height: 45,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+    shadowColor: "#8e44ad",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  userTextContainer: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#2c3e50",
+    letterSpacing: 0.2,
+  },
+  userAge: {
+    fontSize: 15,
     color: "#7f8c8d",
-    marginTop: 5,
+    marginTop: 4,
+    fontWeight: "500",
   },
   editButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 8,
+    backgroundColor: "rgba(155, 89, 182, 0.1)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(155, 89, 182, 0.2)",
   },
   editText: {
     color: "#9b59b6",
-    marginLeft: 5,
-    fontWeight: "500",
+    marginLeft: 6,
+    fontWeight: "600",
+    fontSize: 14,
   },
-  calendarStrip: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 25,
-    paddingHorizontal: 10,
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(155, 89, 182, 0.1)",
+    marginBottom: 16,
+    marginHorizontal: -8,
   },
-  calendarDay: {
-    alignItems: "center",
-    width: 40,
-  },
-  calendarDayText: {
-    fontSize: 16,
-    color: "#2c3e50",
-    fontWeight: "500",
-  },
-  currentDayIndicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#9b59b6",
-    marginTop: 5,
-  },
-  profileSection: {
-    marginBottom: 25,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2c3e50",
-  },
-  userAge: {
-    fontSize: 16,
-    color: "#7f8c8d",
-    marginTop: 5,
-  },
-  symptomsContainer: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    marginBottom: 15,
-  },
-  symptomsList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 10,
-  },
-  symptomPill: {
-    backgroundColor: "#f0e6ff",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  symptomText: {
-    color: "#9b59b6",
-    fontWeight: "500",
-  },
-  symptomsPrompt: {
-    color: "#7f8c8d",
-    fontStyle: "italic",
-  },
-  featuresContainer: {
-    marginBottom: 15,
-  },
-  featureRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-  featureCard: {
+
+  // Feature Button Styles
+  pressable: {
     width: "48%",
-    backgroundColor: "#f9f5ff",
-    borderRadius: 12,
-    padding: 15,
+  },
+  card: {
+    borderRadius: 16,
+    paddingVertical: 22,
+    paddingHorizontal: 12,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 120,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    minHeight: 130,
   },
-  featureText: {
-    color: "#2c3e50",
-    textAlign: "center",
-    marginTop: 10,
-    fontWeight: "500",
+
+  // Symptoms Section Styles
+  symptomsContainerCustom: {
+    marginTop: 0,
   },
-  guideContainer: {
-    marginBottom: 20,
-  },
-  guideCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#f9f5ff",
-    borderRadius: 12,
-    padding: 15,
-  },
-  guideTitle: {
-    color: "#2c3e50",
-    fontWeight: "500",
-    fontSize: 16,
-  },
-  emptyCard: {
-    width: "48%",
-    backgroundColor: "transparent",
-  },
-  guideSection: {
-    marginBottom: 25,
-  },
-  guideFeatureCard: {
-    backgroundColor: "#f9f5ff",
-    borderRadius: 12,
-    padding: 16,
-  },
-  guideContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  guideTextContainer: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  guideFeatureTitle: {
-    fontSize: 18,
+  symptomsTitleCustom: {
+    fontSize: 17,
     fontWeight: "600",
-    color: "#2c3e50",
-    marginBottom: 4,
+    color: "#8e44ad",
+    marginBottom: 14,
+    letterSpacing: 0.3,
   },
-  guideFeatureSubtitle: {
+  symptomPillCustom: {
+    backgroundColor: "rgba(155, 89, 182, 0.1)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(155, 89, 182, 0.15)",
+    shadowColor: "#8e44ad",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  symptomTextCustom: {
+    color: "#8e44ad",
+    fontWeight: "500",
     fontSize: 14,
-    color: "#7f8c8d",
   },
-  chevron: {
-    marginLeft: 10,
+  addButtonCustom: {
+    backgroundColor: "rgba(155, 89, 182, 0.1)",
+    padding: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(155, 89, 182, 0.2)",
+  },
+  removeButtonCustom: {
+    marginLeft: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    borderRadius: 10,
+    padding: 2,
   },
 });
