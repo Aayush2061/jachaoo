@@ -1,6 +1,7 @@
 // app/(home)/periods/chat.tsx
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -16,7 +17,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 type Message = {
   id: string;
   text: string;
@@ -187,108 +187,112 @@ export default function PeriodChat() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#9b59b6" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Period Health Assistant</Text>
-          <View style={{ width: 24 }} />
-        </View>
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color="#9b59b6" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Period Health Assistant</Text>
+            <View style={{ width: 24 }} />
+          </View>
 
-        {/* Messages */}
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={styles.messagesContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          style={styles.scrollView}
-        >
-          {messages.map((message) => (
-            <View
-              key={message.id}
-              style={[
-                styles.messageBubble,
-                message.sender === "user"
-                  ? styles.userBubble
-                  : styles.botBubble,
-              ]}
-            >
-              <Text
+          {/* Messages */}
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={styles.messagesContainer}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            style={styles.scrollView}
+          >
+            {messages.map((message) => (
+              <View
+                key={message.id}
                 style={[
-                  styles.messageText,
-                  message.sender === "user" ? styles.userText : styles.botText,
+                  styles.messageBubble,
+                  message.sender === "user"
+                    ? styles.userBubble
+                    : styles.botBubble,
                 ]}
               >
-                {message.text}
-              </Text>
-              <Text style={styles.timestamp}>
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </View>
-          ))}
-          {isLoading && (
-            <View style={[styles.messageBubble, styles.botBubble]}>
-              <ActivityIndicator size="small" color="#9b59b6" />
-            </View>
-          )}
-        </ScrollView>
+                <Text
+                  style={[
+                    styles.messageText,
+                    message.sender === "user"
+                      ? styles.userText
+                      : styles.botText,
+                  ]}
+                >
+                  {message.text}
+                </Text>
+                <Text style={styles.timestamp}>
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </View>
+            ))}
+            {isLoading && (
+              <View style={[styles.messageBubble, styles.botBubble]}>
+                <ActivityIndicator size="small" color="#9b59b6" />
+              </View>
+            )}
+          </ScrollView>
 
-        {/* Input Area */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.select({
-            ios: 0,
-            android: 25,
-          })}
-          style={[
-            styles.inputWrapper,
-            { marginBottom: keyboardHeight > 0 ? keyboardHeight + 25 : 0 },
-          ]}
-        >
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Ask about your period..."
-              placeholderTextColor="#999"
-              multiline
-              enablesReturnKeyAutomatically
-              returnKeyType="send"
-              onSubmitEditing={handleSend}
-            />
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={handleSend}
-              disabled={inputText.trim() === "" || isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#ccc" />
-              ) : (
-                <Ionicons
-                  name="send"
-                  size={24}
-                  color={inputText.trim() === "" ? "#ccc" : "#9b59b6"}
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
-    </SafeAreaView>
+          {/* Input Area */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.select({
+              ios: 0,
+              android: 25,
+            })}
+            style={[
+              styles.inputWrapper,
+              { marginBottom: keyboardHeight > 0 ? keyboardHeight + 25 : 0 },
+            ]}
+          >
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Ask about your period..."
+                placeholderTextColor="#999"
+                multiline
+                enablesReturnKeyAutomatically
+                returnKeyType="send"
+                onSubmitEditing={handleSend}
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={handleSend}
+                disabled={inputText.trim() === "" || isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#ccc" />
+                ) : (
+                  <Ionicons
+                    name="send"
+                    size={24}
+                    color={inputText.trim() === "" ? "#ccc" : "#9b59b6"}
+                  />
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
   },
   container: {
     flex: 1,
@@ -349,7 +353,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     paddingHorizontal: 10,
     paddingBottom: Platform.OS === "ios" ? 25 : 15,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
   },

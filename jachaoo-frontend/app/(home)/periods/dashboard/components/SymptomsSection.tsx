@@ -169,9 +169,7 @@ export default function SymptomsSection({
       )}
 
       <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>
-          Symptoms ({symptoms.length}/{MAX_SYMPTOMS})
-        </Text>
+        <Text style={styles.sectionTitle}>Symptoms</Text>
         <Pressable
           style={({ pressed }) => [
             styles.addButton,
