@@ -17,6 +17,11 @@ const analysisLimitSchema = new mongoose.Schema({
         required: true,
         default: 0
     },
+    firstAidMessageCount: {
+        type: Number,
+        required: true,
+        default: 0
+    },
     lastAnalysisDate: {
         type: Date,
         required: true,

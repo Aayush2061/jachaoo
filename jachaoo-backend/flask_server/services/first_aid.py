@@ -6,7 +6,7 @@ import os
 load_dotenv()
 
 # Configure Gemini API
-API_KEY = os.getenv("GENAI_API_KEY6") 
+API_KEY = os.getenv("GENAI_API_KEY8") 
 genai.configure(api_key=API_KEY)
 
 # Initialize the model with system instructions

@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/clerk-expo";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -58,7 +59,7 @@ export default function FirstAidScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
-
+  const {  getToken } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -83,43 +84,83 @@ export default function FirstAidScreen() {
     }
   }, [messages, keyboardHeight]);
 
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
 
-    const newUserMessage = {
-      role: "user",
-      text: inputText,
-    };
 
-    setMessages((prev) => [...prev, newUserMessage]);
-    setInputText("");
-    setIsLoading(true);
+ const handleSend = async () => {
+  if (!inputText.trim()) return;
 
-    try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_FLASK_API_URL}/firstaid`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: inputText }),
-      });
-
-      if (!response.ok) throw new Error('Request failed');
-      
-      const data = await response.json();
-      if (data.status !== 'success') throw new Error(data.error || 'Invalid response');
-
-      setMessages((prev) => [...prev, { role: "assistant", text: data.reply }]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: `Error: ${error.message}. Please try again.` },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+  // 1. Create temporary message with loading state
+  const tempMessageId = Date.now().toString();
+  const newUserMessage = {
+    id: tempMessageId, // Unique ID for later update
+    role: "user",
+    text: inputText,
+    isSending: true // 👈 Loading state
   };
 
+  // 2. Add to chat immediately (optimistic UI)
+  setMessages((prev) => [...prev, newUserMessage]);
+  setInputText(""); // Clear input right away
+  setIsLoading(true);
+
+  try {
+    const token = await getToken();
+    const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/firstaid`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message: inputText }),
+    });
+
+    if (response.status === 429) {
+      const { error } = await response.json();
+      // 3. Remove the temporary message if rate-limited
+      setMessages((prev) => prev.filter(msg => msg.id !== tempMessageId));
+      alert(`You've used your ${error.limit} daily messages. Try again tomorrow.`);
+      return;
+    }
+
+    if (!response.ok) throw new Error('Request failed');
+    
+    const data = await response.json();
+    if (data.status !== 'success') throw new Error(data.error || 'Invalid response');
+
+    // 4. Replace temporary message with final version + AI response
+    setMessages((prev) => [
+      ...prev.filter(msg => msg.id !== tempMessageId), // Remove temp
+      { 
+        id: tempMessageId,
+        role: "user",
+        text: inputText // Final confirmed message
+      },
+      { 
+        id: Date.now().toString(),
+        role: "assistant", 
+        text: data.reply 
+      }
+    ]);
+    
+  } catch (error) {
+    // 5. Update temp message to show error
+    setMessages((prev) => [
+      ...prev.filter(msg => msg.id !== tempMessageId),
+      { 
+        id: tempMessageId,
+        role: "user",
+        text: inputText 
+      },
+      { 
+        id: Date.now().toString(),
+        role: "assistant",
+        text: `Error: ${error.message}. Please try again.` 
+      }
+    ]);
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>

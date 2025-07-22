@@ -1,9 +1,18 @@
 from flask import Blueprint, request, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from services.first_aid import chat_step
 
 first_aid_bp = Blueprint('first_aid', __name__)
 
+# Initialize rate limiter
+limiter = Limiter(
+    key_func=get_remote_address,  # or use a user_id if authenticated
+    default_limits=["15 per day", "1 per 5 seconds"]  # 15/day, 1 msg every 5 sec
+)
+
 @first_aid_bp.route('/', methods=['POST'])
+@limiter.limit("5 per minute")
 def handle_first_aid():
     data = request.get_json()
     user_input = data.get('message', '').strip()
