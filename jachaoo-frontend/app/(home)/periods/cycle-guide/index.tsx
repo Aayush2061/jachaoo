@@ -1,4 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 const phaseData = [
@@ -69,43 +70,45 @@ export default function CycleGuide() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Menstrual Cycle Phases</Text>
-      <Text style={styles.subtitle}>Tap on a phase to learn more</Text>
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Menstrual Cycle Phases</Text>
+        <Text style={styles.subtitle}>Tap on a phase to learn more</Text>
 
-      {phaseData.map((phase, index) => (
-        <Pressable
-          key={index}
-          style={[styles.phaseCard, { backgroundColor: phase.color + "20" }]} // Add opacity to color
-          onPress={() => navigateToPhaseDetail(phase)}
-        >
-          <View style={styles.phaseHeader}>
-            <MaterialCommunityIcons
-              name={phase.icon}
-              size={24}
-              color={phase.color}
-            />
-            <Text style={[styles.phaseTitle, { color: phase.color }]}>
-              {phase.name}
-            </Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={phase.color}
-              style={styles.chevron}
-            />
-          </View>
-          <Text style={styles.phaseDescription}>{phase.description}</Text>
-        </Pressable>
-      ))}
-    </ScrollView>
+        {phaseData.map((phase, index) => (
+          <Pressable
+            key={index}
+            style={[styles.phaseCard, { backgroundColor: phase.color + "20" }]} // Add opacity to color
+            onPress={() => navigateToPhaseDetail(phase)}
+          >
+            <View style={styles.phaseHeader}>
+              <MaterialCommunityIcons
+                name={phase.icon}
+                size={24}
+                color={phase.color}
+              />
+              <Text style={[styles.phaseTitle, { color: phase.color }]}>
+                {phase.name}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={phase.color}
+                style={styles.chevron}
+              />
+            </View>
+            <Text style={styles.phaseDescription}>{phase.description}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255,255,255,0.4)",
     padding: 20,
     paddingBottom: 40,
   },

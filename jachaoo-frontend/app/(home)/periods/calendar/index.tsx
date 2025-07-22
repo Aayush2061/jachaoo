@@ -1,6 +1,7 @@
 // app/(home)/periods/calendar/index.tsx
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Calendar, LocaleConfig } from "react-native-calendars";
@@ -296,76 +297,78 @@ export default function CalendarScreen() {
 
   // Main calendar view
   return (
-    <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerCycleDay}>
-          {`Cycle Day - ${phaseInfo?.currentDay || "N/A"}`}
-        </Text>
-        <Text style={styles.headerPhaseText}>
-          {phaseInfo
-            ? `${formatPhaseName(phaseInfo.phase)}`
-            : "Loading cycle data..."}
-        </Text>
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerCycleDay}>
+            {`Cycle Day - ${phaseInfo?.currentDay || "N/A"}`}
+          </Text>
+          <Text style={styles.headerPhaseText}>
+            {phaseInfo
+              ? `${formatPhaseName(phaseInfo.phase)}`
+              : "Loading cycle data..."}
+          </Text>
 
-        <View style={styles.legendRow}>
-          {Object.entries(PHASE_COLORS).map(([phase, color]) => (
-            <View style={styles.legendItem} key={phase}>
-              <View style={[styles.legendDot, { backgroundColor: color }]} />
-              <Text style={styles.legendLabel}>{phase}</Text>
+          <View style={styles.legendRow}>
+            {Object.entries(PHASE_COLORS).map(([phase, color]) => (
+              <View style={styles.legendItem} key={phase}>
+                <View style={[styles.legendDot, { backgroundColor: color }]} />
+                <Text style={styles.legendLabel}>{phase}</Text>
+              </View>
+            ))}
+            <View style={styles.legendItem}>
+              <View style={styles.fertileCircle} />
+              <Text style={styles.legendLabel}>Fertile Days</Text>
             </View>
-          ))}
-          <View style={styles.legendItem}>
-            <View style={styles.fertileCircle} />
-            <Text style={styles.legendLabel}>Fertile Days</Text>
           </View>
         </View>
-      </View>
 
-      <Calendar
-        current={selectedDate.toISOString().split("T")[0]}
-        onDayPress={handleDayPress}
-        markedDates={getMarkedDates()}
-        markingType="custom"
-        hideExtraDays={true}
-        theme={{
-          backgroundColor: "#FFFFFF",
-          calendarBackground: "#FFFFFF",
-          textSectionTitleColor: "#7F8C8D",
-          dayTextColor: "#2C3E50",
-          todayTextColor: "#9B59B6",
-          selectedDayTextColor: "#FFFFFF",
-          selectedDayBackgroundColor: "#9B59B6",
-          arrowColor: "#9B59B6",
-          monthTextColor: "#2C3E50",
-          textDayFontWeight: "500",
-          textMonthFontWeight: "bold",
-          textDayHeaderFontWeight: "500",
-        }}
-        renderHeader={(date) => (
-          <View style={styles.calendarHeader}>
-            <Text style={styles.calendarMonthText}>
-              {date.toString("MMMM")}
-            </Text>
-            <Text style={styles.calendarYearText}>{date.getFullYear()}</Text>
-          </View>
-        )}
-        renderArrow={(direction) => (
-          <MaterialCommunityIcons
-            name={direction === "left" ? "chevron-left" : "chevron-right"}
-            size={24}
-            color="#9B59B6"
-          />
-        )}
-        style={styles.calendar}
-      />
-    </View>
+        <Calendar
+          current={selectedDate.toISOString().split("T")[0]}
+          onDayPress={handleDayPress}
+          markedDates={getMarkedDates()}
+          markingType="custom"
+          hideExtraDays={true}
+          theme={{
+            backgroundColor: "#FFFFFF",
+            calendarBackground: "#FFFFFF",
+            textSectionTitleColor: "#7F8C8D",
+            dayTextColor: "#2C3E50",
+            todayTextColor: "#9B59B6",
+            selectedDayTextColor: "#FFFFFF",
+            selectedDayBackgroundColor: "#9B59B6",
+            arrowColor: "#9B59B6",
+            monthTextColor: "#2C3E50",
+            textDayFontWeight: "500",
+            textMonthFontWeight: "bold",
+            textDayHeaderFontWeight: "500",
+          }}
+          renderHeader={(date) => (
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarMonthText}>
+                {date.toString("MMMM")}
+              </Text>
+              <Text style={styles.calendarYearText}>{date.getFullYear()}</Text>
+            </View>
+          )}
+          renderArrow={(direction) => (
+            <MaterialCommunityIcons
+              name={direction === "left" ? "chevron-left" : "chevron-right"}
+              size={24}
+              color="#9B59B6"
+            />
+          )}
+          style={styles.calendar}
+        />
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    // backgroundColor: "#FFFFFF",
     padding: 20,
   },
   // Phase Display Styles

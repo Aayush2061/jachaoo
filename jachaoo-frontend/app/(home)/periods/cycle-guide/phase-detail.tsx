@@ -1,8 +1,8 @@
 // app/(home)/periods/phase-detail.tsx
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams } from "expo-router";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { phaseData } from "../../../utils/phaseData";
-
 // Correct bold text renderer (no duplicates)
 const renderBoldText = (text: string) => {
   const segments = [];
@@ -226,21 +226,23 @@ export default function PhaseDetail() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={[styles.header, { backgroundColor: `${phase.color}20` }]}>
-        <Text style={styles.phaseName}>{phase.name}</Text>
-        <Text style={styles.actionName}>{action}</Text>
-      </View>
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={[styles.header, { backgroundColor: `${phase.color}20` }]}>
+          <Text style={styles.phaseName}>{phase.name}</Text>
+          <Text style={styles.actionName}>{action}</Text>
+        </View>
 
-      <View style={styles.contentContainer}>{renderContent()}</View>
-    </ScrollView>
+        <View style={styles.contentContainer}>{renderContent()}</View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     paddingBottom: 40,
   },
   header: {

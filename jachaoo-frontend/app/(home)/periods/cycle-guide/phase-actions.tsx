@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-
 const router = useRouter();
 
 const actions = [
@@ -32,60 +32,62 @@ export default function PhaseActions() {
   const phase = JSON.parse(params.phase as string);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{phase.name} Guidance</Text>
-      <Text style={styles.subtitle}>Select an area to explore</Text>
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>{phase.name} Guidance</Text>
+        <Text style={styles.subtitle}>Select an area to explore</Text>
 
-      <View style={styles.actionsContainer}>
-        {actions.map((action, index) => (
-          <Pressable
-            key={index}
-            style={({ pressed }) => [
-              styles.actionCard,
-              {
-                borderColor: phase.color,
-                opacity: pressed ? 0.8 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              },
-            ]}
-            onPress={() =>
-              router.push({
-                pathname: "/(home)/periods/cycle-guide/phase-detail",
-                params: {
-                  phase: JSON.stringify(phase),
-                  action: action.name,
+        <View style={styles.actionsContainer}>
+          {actions.map((action, index) => (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.actionCard,
+                {
+                  borderColor: phase.color,
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
                 },
-              })
-            }
-          >
-            <View style={styles.actionIconContainer}>
-              <MaterialCommunityIcons
-                name={action.icon}
-                size={32}
+              ]}
+              onPress={() =>
+                router.push({
+                  pathname: "/(home)/periods/cycle-guide/phase-detail",
+                  params: {
+                    phase: JSON.stringify(phase),
+                    action: action.name,
+                  },
+                })
+              }
+            >
+              <View style={styles.actionIconContainer}>
+                <MaterialCommunityIcons
+                  name={action.icon}
+                  size={32}
+                  color={phase.color}
+                />
+              </View>
+              <Text style={[styles.actionTitle, { color: phase.color }]}>
+                {action.name}
+              </Text>
+              <Text style={styles.actionDescription}>{action.description}</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
                 color={phase.color}
+                style={styles.chevron}
               />
-            </View>
-            <Text style={[styles.actionTitle, { color: phase.color }]}>
-              {action.name}
-            </Text>
-            <Text style={styles.actionDescription}>{action.description}</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={phase.color}
-              style={styles.chevron}
-            />
-          </Pressable>
-        ))}
-      </View>
-    </ScrollView>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 40,
