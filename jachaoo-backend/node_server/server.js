@@ -27,13 +27,17 @@ const periodDataRouter = require('./routes/periodData');
 const mentalHealthRouter = require('./routes/mentalHealth');
 const symptomsRouter = require('./routes/symptoms');
 const firstAidRouter = require('./routes/firstAid')
+const menstrualChatRouter = require('./routes/menstrualChat')
+const periodAnalysisRouter = require('./routes/periodAnalysis')
 
 app.use('/api/health', healthDataRouter);
 app.use('/api/reports', clerkMiddleware, reportsRouter);
 app.use('/api/periods', clerkMiddleware, periodDataRouter);
 app.use('/api/mental-health', clerkMiddleware, mentalHealthRouter);
 app.use('/api/symptoms', clerkMiddleware, symptomsRouter);
-app.use('/api/firstaid', clerkMiddleware, firstAidRouter)
+app.use('/api/firstaid', clerkMiddleware, firstAidRouter);
+app.use('/api/menstrual-chat', clerkMiddleware, menstrualChatRouter);
+app.use('/api/daily-analysis', clerkMiddleware, periodAnalysisRouter);
 // app.use('/api/periods', periodDataRouter);
 
 const PORT = process.env.PORT || 5000;

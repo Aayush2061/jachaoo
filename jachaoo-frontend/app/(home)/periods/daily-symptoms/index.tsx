@@ -146,7 +146,7 @@ export default function SymptomTracker() {
       };
 
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/daily-analysis`,
+        `${process.env.EXPO_PUBLIC_API_URL}/daily-analysis`,
         {
           method: "POST",
           headers: {
@@ -156,6 +156,14 @@ export default function SymptomTracker() {
           body: JSON.stringify(requestData),
         }
       );
+
+      if (response.status === 429) {
+        const { error } = await response.json();
+        alert(
+          `You've used your ${error.limit} daily analyses. Try again tomorrow.`
+        );
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Analysis failed");

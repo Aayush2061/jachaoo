@@ -5,7 +5,9 @@ const createRateLimiter = (type) => {
     const limits = {
         reportAnalysis: 2,  // 2 report analyses per day
         symptomAnalysis: 5,  // 5 symptom analyses per day
-        firstAidMessage: 15
+        firstAidMessage: 15,
+        menstrualChat: 15,
+        periodAnalysis: 2
     };
 
     return async (req, res, next) => {

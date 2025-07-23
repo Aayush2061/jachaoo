@@ -102,20 +102,20 @@ export default function PeriodChat() {
     setInputText("");
     setIsLoading(true);
 
-    console.log("Sending user context:", {
-      user_id: user?.id,
-      duration_of_period: periodData.duration.toString(),
-      cycle_length: periodData.cycleLength.toString(),
-      previous_conditions: periodData.conditions.join(", "),
-      trying_to_conceive: periodData.tryingToConceive !== "No",
-      on_hormonal_contraceptive: periodData.contraceptive !== "No",
-      first_day_of_last_period: periodData.lastPeriodDate.split("T")[0],
-    });
+    // console.log("Sending user context:", {
+    //   user_id: user?.id,
+    //   duration_of_period: periodData.duration.toString(),
+    //   cycle_length: periodData.cycleLength.toString(),
+    //   previous_conditions: periodData.conditions.join(", "),
+    //   trying_to_conceive: periodData.tryingToConceive !== "No",
+    //   on_hormonal_contraceptive: periodData.contraceptive !== "No",
+    //   first_day_of_last_period: periodData.lastPeriodDate.split("T")[0],
+    // });
 
     try {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/menstrual-chat/send`,
+        `${process.env.EXPO_PUBLIC_API_URL}/menstrual-chat`,
         {
           method: "POST",
           headers: {
@@ -137,6 +137,15 @@ export default function PeriodChat() {
           }),
         }
       );
+
+      if (response.status === 429) {
+        const { error } = await response.json();
+        setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
+        alert(
+          `You've used your ${error.limit} daily messages. Try again tomorrow.`
+        );
+        return;
+      }
 
       const data = await response.json();
 
