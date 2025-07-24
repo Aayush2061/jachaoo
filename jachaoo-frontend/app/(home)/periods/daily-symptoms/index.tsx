@@ -35,6 +35,8 @@ export default function SymptomTracker() {
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const DAILY_NOTES_MAX_LENGTH = 500;
+  const TEMP_MAX_LENGTH = 10;
 
   useEffect(() => {
     const fetchPeriodData = async () => {
@@ -110,6 +112,19 @@ export default function SymptomTracker() {
   const handleSubmit = async () => {
     if (!periodData) {
       setError("Please wait while we load your period data");
+      return;
+    }
+
+    // Add input length validation
+    if (dailyNotes.length > DAILY_NOTES_MAX_LENGTH) {
+      setError(
+        `Daily notes cannot exceed ${DAILY_NOTES_MAX_LENGTH} characters`
+      );
+      return;
+    }
+
+    if (bodyTemp.length > TEMP_MAX_LENGTH) {
+      setError(`Temperature cannot exceed ${TEMP_MAX_LENGTH} characters`);
       return;
     }
 
@@ -696,5 +711,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 16,
     fontWeight: "500",
+  },
+  charCounter: {
+    alignSelf: "flex-end",
+    color: "#64748B",
+    fontSize: 12,
+    marginTop: 4,
   },
 });

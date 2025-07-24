@@ -8,6 +8,7 @@ router.post(
     async (req, res) => {
         try {
             const requestData = req.body;
+
             // Forward to Flask
             const flaskResponse = await fetch(`${process.env.FLASK_API_URL}/daily-analysis`, {
                 method: 'POST',

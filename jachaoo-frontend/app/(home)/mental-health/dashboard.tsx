@@ -146,7 +146,7 @@ export default function MentalHealthDashboard() {
 
             <Pressable
               style={styles.featureButton}
-              // onPress={() => router.push("/(home)/mental-health/goals")}
+              onPress={() => router.push("/(home)/mental-health/daily-goal")}
             >
               <ImageBackground
                 source={require("@/assets/images/daily-goal-bg.jpg")}

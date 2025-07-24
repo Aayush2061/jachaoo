@@ -61,6 +61,7 @@ export default function FirstAidScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const {  getToken } = useAuth();
   const router = useRouter();
+  const MAX_MESSAGE_LENGTH = 300;
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", (e) => {
@@ -88,6 +89,11 @@ export default function FirstAidScreen() {
 
  const handleSend = async () => {
   if (!inputText.trim()) return;
+
+  if (inputText.length > MAX_MESSAGE_LENGTH) {
+    alert(`Message too long (max ${MAX_MESSAGE_LENGTH} characters)`);
+    return;
+  }
 
   // 1. Create temporary message with loading state
   const tempMessageId = Date.now().toString();

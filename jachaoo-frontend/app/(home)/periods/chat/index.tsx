@@ -43,6 +43,7 @@ export default function PeriodChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
+  const MAX_MESSAGE_LENGTH = 300;
 
   useFocusEffect(
     useCallback(() => {
@@ -90,6 +91,11 @@ export default function PeriodChat() {
 
   const handleSend = async () => {
     if (inputText.trim() === "" || isFetchingData || !periodData) return;
+
+    if (inputText.length > MAX_MESSAGE_LENGTH) {
+      alert(`Message too long (max ${MAX_MESSAGE_LENGTH} characters)`);
+      return;
+    }
 
     // Add user message
     const userMessage: Message = {

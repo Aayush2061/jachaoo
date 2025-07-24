@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services.symptoms import MedicalDiagnosisSystem
 import uuid
+MAX_INPUT_LENGTH = 300
 
 symptoms_bp = Blueprint('symptoms', __name__)
 
@@ -40,6 +41,13 @@ def answer_question():
     data = request.json
     session_id = data.get("session_id")
     user_input = data.get("answer")
+
+      # Add input length validation
+    if user_input and len(user_input) > MAX_INPUT_LENGTH:
+        return jsonify({
+            "error": f"Input exceeds maximum length of {MAX_INPUT_LENGTH} characters",
+            "message": "Please shorten your response"
+        }), 400
     
     system = active_sessions.get(session_id)
     if not system:

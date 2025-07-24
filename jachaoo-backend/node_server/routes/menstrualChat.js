@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { createRateLimiter, incrementRateLimit } = require('../middleware/rateLimiter');
+const MAX_MESSAGE_LENGTH = 300
 
 router.post(
     '/',
@@ -8,6 +9,12 @@ router.post(
     async (req, res) => {
         try {
             const { message, chat_history, user_context } = req.body;
+
+            if (message.length > MAX_MESSAGE_LENGTH) { // Match frontend limit
+                return res.status(400).json({
+                    error: "Message exceeds maximum length"
+                });
+            }
 
             // Forward to Flask
             const flaskResponse = await fetch(`${process.env.FLASK_API_URL}/menstrual-chat/send`, {

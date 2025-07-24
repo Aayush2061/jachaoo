@@ -57,33 +57,14 @@ def ocr_function(model, img_input):
       ]
     }
 
-    If the image is **not a lab report**, do not attempt extraction. Instead, return the same full JSON format with all values empty and add a `"warning"` key like this:
+    If the image is **not a lab report**, Never attempt extraction. Instead, respond with `"warning"` key only like this:
 
-    {
-      "laboratory": {
-        "name": "",
-        "address": "",
-        "phone": "",
-        "website": "",
-        "email": ""
-      },
-      "patient_info": {
-        "name": "",
-        "patient_no": "",
-        "age": "",
-        "sex": "",
-        "date_time": "",
-        "address": "",
-        "prescriber": ""
-      },
-      "lab_results": [],
-      "warning": "Invalid image. Please provide a lab report."
-    }
 
     Rules:
     - Do not guess or fill fields unless clearly visible in the image.
     - Always return structured JSON as shown above, no matter the input.
     - Keep fields empty if data is not present.
+    - Extraction from lab report only, avoid Marksheets/transcripts, Receipts/bills, ID cards/passports .
     """
 
     # Generate response

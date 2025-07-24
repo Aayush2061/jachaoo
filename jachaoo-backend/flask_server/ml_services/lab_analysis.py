@@ -39,7 +39,16 @@ def lab_report_analysis(cloudinary_url,health_data = None):
         clean_result = ocr_function(model , image_path)
         clean_result = clean_result.replace("```json", "").replace("```", "").strip()
 
+    except Exception as e:
+        print("Error loading or processing image:", e)
+        return "Error: Unable to read the image."       
+
+    try:
         data = json.loads(clean_result)
+
+        if "warning" in data:
+            return "Invalid image! Please send lab reports only."
+        
         extracted = {
         "age": data["patient_info"].get("age"),
         "sex": data["patient_info"].get("sex"),

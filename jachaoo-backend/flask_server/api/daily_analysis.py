@@ -16,6 +16,18 @@ def analyze_daily_data():
             
         permanent_data = data['permanent_data']
         daily_data = data['daily_data']
+
+        # Validate daily notes length
+        if 'dailyNote' in daily_data and len(daily_data.get('dailyNote', '')) > 300:
+            return jsonify({
+                'error': 'Daily notes cannot exceed 500 characters'
+            }), 400
+        
+         # Validate daily Temperature length
+        if 'bodyTemp' in daily_data and len(daily_data.get('bodyTemp', '')) > 10:
+            return jsonify({
+                'error': 'Temperature cannot exceed 10 characters'
+            }), 400
         
         # Perform analysis
         result = daily_service.analyze(permanent_data, daily_data)

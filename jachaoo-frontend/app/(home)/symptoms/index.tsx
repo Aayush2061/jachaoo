@@ -29,6 +29,7 @@ export default function SymptomChecker() {
     "start"
   );
   const { getToken } = useAuth();
+  const MAX_INPUT_LENGTH = 300;
 
   useEffect(() => {
     const fetchHealthData = async () => {
@@ -100,6 +101,15 @@ export default function SymptomChecker() {
   };
 
   const submitAnswer = async (answer: string) => {
+    // Add validation check
+    if (answer.length > MAX_INPUT_LENGTH) {
+      Alert.alert(
+        "Input Too Long",
+        `Please keep your response under ${MAX_INPUT_LENGTH} characters.`
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await fetch(
