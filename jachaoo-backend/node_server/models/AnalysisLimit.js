@@ -27,6 +27,11 @@ const analysisLimitSchema = new mongoose.Schema({
         required: true,
         default: 0
     },
+    mentalHealthChatCount: {
+        type: Number,
+        required: true,
+        default: 0
+    },
     periodAnalysisCount: {
         type: Number,
         required: true,

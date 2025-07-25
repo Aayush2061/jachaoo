@@ -133,7 +133,7 @@ export default function MentalHealthDashboard() {
           <View style={styles.featureRow}>
             <Pressable
               style={styles.featureButton}
-              // onPress={() => router.push("/(home)/mental-health/talk")}
+              onPress={() => router.push("/(home)/mental-health/chat")}
             >
               <ImageBackground
                 source={require("../../../assets/images/talk.jpg")}

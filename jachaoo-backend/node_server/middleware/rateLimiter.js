@@ -7,6 +7,7 @@ const createRateLimiter = (type) => {
         symptomAnalysis: 5,  // 5 symptom analyses per day
         firstAidMessage: 15,
         menstrualChat: 15,
+        mentalHealthChat: 15,
         periodAnalysis: 2
     };
 
