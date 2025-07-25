@@ -5,22 +5,27 @@ const appearances = [
   {
     title: "Bright Red",
     description: "Bright red, like cherry",
+    color: "#ff2d55", // Cherry Red
   },
   {
     title: "Deep Red",
     description: "Very dark, almost purple. Sometimes clots",
+    color: "#8B0000", // Dark red
   },
   {
     title: "Pale Brown",
     description: "Spotting first or last few days",
+    color: "#A0522D", // Pale brown
   },
   {
     title: "Light Red",
     description: "Almost pink, barely a bleed",
+    color: "#FFC0CB", // Light pink
   },
   {
     title: "Missing or irregular",
     description: "Varying colors and lengths",
+    // color: "#7f8c8d", // Neutral gray
   },
 ];
 
@@ -43,37 +48,47 @@ export default function AppearanceQuestion({
       <Text style={styles.subtitle}>Select one that most fits your cycle</Text>
 
       <View style={styles.appearancesContainer}>
-        {appearances.map((appearance) => (
-          <Pressable
-            key={appearance.title}
-            style={[
-              styles.appearanceButton,
-              selectedAppearance === appearance.title &&
-                styles.selectedAppearance,
-            ]}
-            onPress={() => {
-              setSelectedAppearance(appearance.title);
-              updateData(appearance.title);
-            }}
-          >
-            <Text
+        {appearances.map((appearance) => {
+          const selected = selectedAppearance === appearance.title;
+          return (
+            <Pressable
+              key={appearance.title}
               style={[
-                styles.appearanceTitle,
-                selectedAppearance === appearance.title && styles.selectedText,
+                styles.appearanceButton,
+                selected && styles.selectedAppearance,
               ]}
+              onPress={() => {
+                setSelectedAppearance(appearance.title);
+                updateData(appearance.title);
+              }}
             >
-              {appearance.title}
-            </Text>
-            <Text
-              style={[
-                styles.appearanceDescription,
-                selectedAppearance === appearance.title && styles.selectedText,
-              ]}
-            >
-              {appearance.description}
-            </Text>
-          </Pressable>
-        ))}
+              <View style={styles.row}>
+                <Text
+                  style={[
+                    styles.appearanceTitle,
+                    selected && styles.selectedText,
+                  ]}
+                >
+                  {appearance.title}
+                </Text>
+                <View
+                  style={[
+                    styles.colorDot,
+                    { backgroundColor: appearance.color },
+                  ]}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.appearanceDescription,
+                  selected && styles.selectedText,
+                ]}
+              >
+                {appearance.description}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -117,5 +132,16 @@ const styles = StyleSheet.create({
   },
   selectedText: {
     color: "white",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  colorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
 });

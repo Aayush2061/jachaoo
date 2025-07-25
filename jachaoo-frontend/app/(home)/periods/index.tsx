@@ -1,4 +1,5 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -8,7 +9,6 @@ import {
   Text,
   View,
 } from "react-native";
-import BackgroundWrapper from "./BackgroundWrapper";
 
 export default function PeriodTrackerGetStarted() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function PeriodTrackerGetStarted() {
   }
 
   return (
-    <BackgroundWrapper>
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
       <View style={styles.overlay}>
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Balance & Care</Text>
@@ -72,7 +72,7 @@ export default function PeriodTrackerGetStarted() {
           </Pressable>
         </View>
       </View>
-    </BackgroundWrapper>
+    </LinearGradient>
   );
 }
 

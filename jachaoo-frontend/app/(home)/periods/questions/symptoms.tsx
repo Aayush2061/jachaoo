@@ -1,15 +1,23 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const symptoms = [
-  "Insomnia (start)",
-  "Hot flashes (atat stcst)",
-  "Headaches",
-  "Bloating",
-  "Cramps",
+const allSymptoms = [
+  "Insomnia",
+  "Hot Flashes",
+  "Night Sweats",
+  "Low Libido",
+  "Vaginal Dryness",
   "Fatigue",
-  "Mood swings",
-  "Breast tenderness",
+  "Mood Swings",
+  "Cramps",
+  "Hair Issues",
+  "Acne",
+  "Cravings",
+  "Weight Gain",
+  "Headaches",
+  "Tender Breasts",
+  "Bloating",
+  "No Symptoms",
 ];
 
 export default function SymptomsQuestion({
@@ -24,80 +32,87 @@ export default function SymptomsQuestion({
   );
 
   const toggleSymptom = (symptom: string) => {
-    const newSymptoms = selectedSymptoms.includes(symptom)
+    const updated = selectedSymptoms.includes(symptom)
       ? selectedSymptoms.filter((s) => s !== symptom)
       : [...selectedSymptoms, symptom];
-
-    setSelectedSymptoms(newSymptoms);
-    updateData(newSymptoms);
+    setSelectedSymptoms(updated);
+    updateData(updated);
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       <Text style={styles.title}>
         Do you experience any of the following symptoms regularly?
       </Text>
-      <Text style={styles.subtitle}>Select features that apply.</Text>
+      <Text style={styles.subtitle}>Select all that apply:</Text>
 
-      <View style={styles.symptomsContainer}>
-        {symptoms.map((symptom) => (
-          <Pressable
-            key={symptom}
-            style={[
-              styles.symptomButton,
-              selectedSymptoms.includes(symptom) && styles.selectedSymptom,
-            ]}
-            onPress={() => toggleSymptom(symptom)}
-          >
-            <Text
-              style={[
-                styles.symptomText,
-                selectedSymptoms.includes(symptom) &&
-                  styles.selectedSymptomText,
-              ]}
+      <View style={styles.gridContainer}>
+        {allSymptoms.map((symptom) => {
+          const selected = selectedSymptoms.includes(symptom);
+          return (
+            <Pressable
+              key={symptom}
+              style={[styles.symptomButton, selected && styles.selectedSymptom]}
+              onPress={() => toggleSymptom(symptom)}
             >
-              {symptom}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={[
+                  styles.symptomText,
+                  selected && styles.selectedSymptomText,
+                ]}
+              >
+                {symptom}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    // paddingHorizontal: 20,
+    paddingTop: 10,
+  },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#2c3e50",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1c1c1e",
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: "#7f8c8d",
-    marginBottom: 20,
+    color: "#8e8e93",
+    marginBottom: 16,
   },
-  symptomsContainer: {
+  gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    justifyContent: "space-between",
   },
   symptomButton: {
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: "white",
+    width: "48%",
+    paddingVertical: 12,
+    marginBottom: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: "#ccc",
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
   selectedSymptom: {
     backgroundColor: "#9b59b6",
     borderColor: "#9b59b6",
   },
   symptomText: {
-    color: "#2c3e50",
+    color: "#333",
     fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
   },
   selectedSymptomText: {
-    color: "white",
+    color: "#fff",
   },
 });

@@ -88,7 +88,7 @@ export default function MentalHealthDashboard() {
 
             <Pressable
               style={styles.featureButton}
-              // onPress={() => router.push("/(home)/mental-health/breathe")}
+              onPress={() => router.push("/(home)/mental-health/breathe")}
             >
               <ImageBackground
                 source={require("@/assets/images/breathe-bg.jpg")}
@@ -104,7 +104,7 @@ export default function MentalHealthDashboard() {
           <View style={styles.featureRow}>
             <Pressable
               style={styles.featureButton}
-              // onPress={() => router.push("/(home)/mental-health/listen")}
+              onPress={() => router.push("/(home)/mental-health/listen")}
             >
               <ImageBackground
                 source={require("@/assets/images/listen-bg.jpg")}

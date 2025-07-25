@@ -1,4 +1,5 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,14 +13,12 @@ import {
   Text,
   View,
 } from "react-native";
-import BackgroundWrapper from "./BackgroundWrapper";
 import AppearanceQuestion from "./questions/appearance";
 import ConcernQuestion from "./questions/concern";
 import ConditionsQuestion from "./questions/conditions";
 import ContraceptiveQuestion from "./questions/contraceptive";
 import DateAndDurationQuestion from "./questions/date-and-duration";
 import SymptomsQuestion from "./questions/symptoms";
-
 type FormData = {
   lastPeriodDate: Date | null;
   duration: number | null;
@@ -119,7 +118,7 @@ export default function PeriodOnboarding() {
   };
 
   return (
-    <BackgroundWrapper>
+    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -159,7 +158,7 @@ export default function PeriodOnboarding() {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </BackgroundWrapper>
+    </LinearGradient>
   );
 }
 
@@ -180,7 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#6a1b9a",
-    backgroundColor: "rgba(255,255,255,0.4)",
+    // backgroundColor: "rgba(255,255,255,0.4)",
     textAlign: "center",
     paddingVertical: 10,
     borderRadius: 12,
@@ -190,7 +189,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     // paddingTop: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    // backgroundColor: "rgba(255, 255, 255, 0.4)",
     borderRadius: 16,
     padding: 10,
   },
