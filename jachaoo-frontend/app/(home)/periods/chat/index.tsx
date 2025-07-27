@@ -266,7 +266,7 @@ export default function PeriodChat() {
             })}
             style={[
               styles.inputWrapper,
-              { marginBottom: keyboardHeight > 0 ? keyboardHeight + 25 : 0 },
+              { marginBottom: keyboardHeight > 0 ? keyboardHeight + 25 : 30 },
             ]}
           >
             <View style={styles.inputContainer}>
@@ -308,6 +308,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     // backgroundColor: "#fff",
+    marginTop: 20,
   },
   container: {
     flex: 1,

@@ -122,6 +122,7 @@ export default function FirstAidScreen() {
 
     if (response.status === 429) {
       const { error } = await response.json();
+      console.log(error)
       // 3. Remove the temporary message if rate-limited
       setMessages((prev) => prev.filter(msg => msg.id !== tempMessageId));
       alert(`You've used your ${error.limit} daily messages. Try again tomorrow.`);
@@ -230,7 +231,7 @@ export default function FirstAidScreen() {
             { 
               marginBottom: keyboardHeight > 0 
                 ? keyboardHeight + 30
-                : 10 
+                : 25
             },
           ]}
         >
@@ -267,6 +268,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#f8f9fa",
+    marginTop:20
   },
   container: {
     flex: 1,

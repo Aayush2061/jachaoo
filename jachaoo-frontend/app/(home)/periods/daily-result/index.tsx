@@ -168,7 +168,8 @@ export default function DailyResult() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingBottom: 40,
+    paddingBottom: 60,
+    marginTop: 20,
   },
   contentContainer: {
     paddingHorizontal: 20,

@@ -66,14 +66,22 @@ export default function SymptomTracker() {
   }, [user?.id]);
 
   const symptomsList = [
-    "Backache",
+    "Insomnia",
+    "Hot Flashes",
+    "Night Sweats",
+    "Low Libido",
+    "Vaginal Dryness",
+    "Fatigue",
+    "Mood Swings",
     "Cramps",
-    "Headache",
+    "Hair Issues",
+    "Acne",
+    "Cravings",
+    "Weight Gain",
+    "Headaches",
+    "Tender Breasts",
     "Bloating",
-    "Constipation",
-    "Diarrhea",
-    "Sleep Issues",
-    "Nausea",
+    "No Symptoms",
   ];
 
   const flowOptions = ["Spotting", "Light", "Medium", "Heavy", "Super"];
@@ -527,7 +535,8 @@ export default function SymptomTracker() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingBottom: 40,
+    paddingBottom: 70,
+    marginTop: 20,
   },
   contentContainer: {
     paddingHorizontal: 16,

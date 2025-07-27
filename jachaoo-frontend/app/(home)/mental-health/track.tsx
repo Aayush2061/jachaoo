@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flexGrow: 1,
-    paddingBottom: 40,
+    paddingBottom: 60,
   },
   header: {
     fontSize: 28,

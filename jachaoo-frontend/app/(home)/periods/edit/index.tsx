@@ -43,13 +43,21 @@ const conditions = [
 
 const symptoms = [
   "Insomnia",
-  "Hot flashes",
-  "Headaches",
-  "Bloating",
-  "Cramps",
+  "Hot Flashes",
+  "Night Sweats",
+  "Low Libido",
+  "Vaginal Dryness",
   "Fatigue",
-  "Mood swings",
-  "Breast tenderness",
+  "Mood Swings",
+  "Cramps",
+  "Hair Issues",
+  "Acne",
+  "Cravings",
+  "Weight Gain",
+  "Headaches",
+  "Tender Breasts",
+  "Bloating",
+  "No Symptoms",
 ];
 
 const appearanceColors: Record<string, string> = {
@@ -441,7 +449,8 @@ export default function EditPeriodDetails() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 70,
+    marginTop: 20,
   },
   card: {
     backgroundColor: "#ffffffee",

@@ -450,6 +450,7 @@ export default function ReportAnalysis() {
 const styles = StyleSheet.create({
   gradientContainer: {
     flex: 1,
+    marginTop: 20,
   },
   container: {
     flexGrow: 1,

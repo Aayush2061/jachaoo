@@ -242,7 +242,7 @@ export default function ReportDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: 16, marginTop: 20, marginBottom: 40 },
 
   header: {
     flexDirection: "row",

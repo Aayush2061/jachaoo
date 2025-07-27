@@ -110,7 +110,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: "rgba(255,255,255,0.4)",
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 60,
+    marginTop: 20,
   },
   title: {
     fontSize: 24,

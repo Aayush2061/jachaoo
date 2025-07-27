@@ -26,6 +26,32 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [hasHealthData, setHasHealthData] = useState(false);
   const [healthData, setHealthData] = useState<any>(null);
+  const [dailyTip, setDailyTip] = useState<{
+    tip: string;
+    description: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchDailyTip = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/health-tips/random`
+        );
+        const data = await response.json();
+        setDailyTip(data);
+      } catch (error) {
+        console.error("Error fetching daily tip:", error);
+        // Fallback to a default tip if API fails
+        setDailyTip({
+          tip: "Drink at least 8 glasses of water daily",
+          description:
+            "Helps maintain fluid balance, supports digestion, and keeps skin healthy.",
+        });
+      }
+    };
+
+    fetchDailyTip();
+  }, []);
 
   useEffect(() => {
     const checkHealthData = async () => {
@@ -71,7 +97,7 @@ export default function HomePage() {
       color: "#FF6B6B90",
       iconLib: FontAwesome5,
       route: "/firstaid",
-      image: require("../../assets/images/home-page-icons/firstaid.avif"),
+      image: require("../../assets/images/home-page-icons/firstaid.jpg"),
     },
     {
       id: 3,
@@ -130,13 +156,13 @@ export default function HomePage() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={["#F8FAFF", "#ECF2FF"]}
-        style={styles.background}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
+    <LinearGradient
+      colors={["#F8FAFF", "#ECF2FF"]}
+      style={styles.background}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
@@ -201,26 +227,30 @@ export default function HomePage() {
           </View>
 
           {/* Health Tip */}
-          <View style={styles.tipCard}>
-            <View style={styles.tipHeader}>
-              <Ionicons name="sparkles" size={20} color="#FFC107" />
-              <Text style={styles.tipTitle}>Daily Health Tip</Text>
+          {dailyTip && (
+            <View style={styles.tipCard}>
+              <View style={styles.tipHeader}>
+                <Ionicons name="sparkles" size={20} color="#FFC107" />
+                <Text style={styles.tipTitle}>Daily Health Tip</Text>
+              </View>
+              <Text style={styles.tipContent}>
+                <Text style={{ fontWeight: "bold" }}>{dailyTip.tip}</Text>:{" "}
+                {dailyTip.description}
+              </Text>
             </View>
-            <Text style={styles.tipContent}>
-              Drinking at least 8 glasses of water daily helps maintain body
-              fluid balance, supports digestion, and keeps your skin healthy.
-            </Text>
-          </View>
+          )}
         </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 20,
     flex: 1,
-    backgroundColor: "#F8FAFF",
+    // backgroundColor: "#F8FAFF",
+    paddingBottom: 60,
   },
   background: {
     flex: 1,

@@ -26,35 +26,35 @@ const audioOptions = [
     name: "Forest Night",
     key: "forest-night",
     image: require("../../../../assets/images/sleepwell-audio/forest-night.jpg"),
-    duration: "45 min",
+    duration: "25 min",
   },
   {
     id: 2,
     name: "Camp Fire",
     key: "camp-fire",
     image: require("../../../../assets/images/sleepwell-audio/camp-fire.webp"),
-    duration: "30 min",
+    duration: "25 min",
   },
   {
     id: 3,
     name: "Soft Wind",
     key: "soft-wind",
     image: require("../../../../assets/images/sleepwell-audio/soft-wind.webp"),
-    duration: "60 min",
+    duration: "25 min",
   },
   {
     id: 4,
     name: "Ocean Waves",
     key: "ocean-waves",
     image: require("../../../../assets/images/sleepwell-audio/ocean-waves.jpg"),
-    duration: "50 min",
+    duration: "25 min",
   },
   {
     id: 5,
     name: "Rainfall",
     key: "rainfall",
     image: require("../../../../assets/images/sleepwell-audio/rainfall.webp"),
-    duration: "40 min",
+    duration: "25 min",
   },
 ];
 
@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     // backgroundColor: "#f8fafc",
+    marginTop: 20,
   },
   header: {
     fontSize: 24,

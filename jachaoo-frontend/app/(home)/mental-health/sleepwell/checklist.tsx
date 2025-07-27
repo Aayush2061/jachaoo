@@ -93,6 +93,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     // backgroundColor: "#f8fafc",
+    marginTop: 20,
+    paddingBottom: 40,
   },
   headerContainer: {
     flexDirection: "row",

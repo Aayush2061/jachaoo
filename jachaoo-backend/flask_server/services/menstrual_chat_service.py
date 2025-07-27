@@ -8,7 +8,7 @@ import os
 load_dotenv()
 
 # Gemini API setup
-API_KEY = os.getenv("GENAI_API_KEY9") 
+API_KEY = os.getenv("GENAI_API_KEY10") 
 genai.configure(api_key=API_KEY)
 
 def get_menstrual_model(system_instruction):

@@ -96,7 +96,9 @@ export default function HerbalRemediesScreen() {
 
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Benefits</Text>
-                <Text style={styles.sectionContent}>{remedy.benefits}</Text>
+                <Text style={styles.sectionContentBenifits}>
+                  {remedy.benefits}
+                </Text>
               </View>
 
               <View style={styles.section}>
@@ -117,7 +119,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingBottom: 40,
     // backgroundColor: "#f8fafc",
+    marginTop: 20,
   },
   headerContainer: {
     flexDirection: "row",
@@ -155,7 +159,7 @@ const styles = StyleSheet.create({
   },
   remedyName: {
     fontSize: 20,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 12,
     color: "#1e293b",
     fontFamily: "Inter_600SemiBold",
@@ -165,7 +169,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 4,
     color: "#334155",
     fontFamily: "Inter_500Medium",
@@ -178,5 +182,12 @@ const styles = StyleSheet.create({
   },
   precautionText: {
     color: "#dc2626",
+  },
+  sectionContentBenifits: {
+    fontSize: 15,
+    color: "green",
+    lineHeight: 22,
+    fontFamily: "Inter_400Italic", // Changed to italic variant
+    fontStyle: "italic", // Explicitly set to italic (optional if fontFamily includes italic)
   },
 });

@@ -180,6 +180,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 16,
     paddingBottom: 40,
+    marginTop: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -222,6 +223,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 16,
+    resizeMode: "contain",
   },
   featureBackgroundImage: {
     borderRadius: 16,

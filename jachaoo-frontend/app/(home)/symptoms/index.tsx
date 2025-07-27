@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
   },
-  resultContainer: { marginTop: 30 },
+  resultContainer: { marginTop: 30, marginBottom: 20 },
   resultTitle: {
     fontSize: 22,
     fontWeight: "bold",

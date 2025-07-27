@@ -370,6 +370,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // backgroundColor: "#FFFFFF",
     padding: 20,
+    marginTop: 60,
   },
   // Phase Display Styles
   phaseContainer: {

@@ -283,18 +283,18 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     textAlign: "center",
   },
-  taskBox: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
-    width: "100%",
-    marginVertical: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
-  },
+  // taskBox: {
+  //   backgroundColor: "#fff",
+  //   borderRadius: 20,
+  //   padding: 20,
+  //   width: "100%",
+  //   marginVertical: 20,
+  //   shadowColor: "#000",
+  //   shadowOffset: { width: 0, height: 4 },
+  //   shadowOpacity: 0.2,
+  //   shadowRadius: 6,
+  //   elevation: 4,
+  // },
   taskText: {
     fontSize: 16,
     fontWeight: "600",
@@ -326,6 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     width: "100%",
+    height: "40%",
     marginVertical: 15,
     // Shadow for Android
     elevation: 5,
@@ -342,6 +343,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#FF6B6B", // Red-pink
     marginBottom: 8,
+    marginTop: 10,
   },
   taskText: {
     fontSize: 17,
@@ -354,6 +356,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#7F5DF0", // Purple
     marginBottom: 8,
+    marginTop: 40,
   },
   whyText: {
     fontSize: 15,

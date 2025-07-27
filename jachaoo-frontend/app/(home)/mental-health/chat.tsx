@@ -254,7 +254,7 @@ export default function MentalHealthChat() {
             })}
             style={[
               styles.inputWrapper,
-              { marginBottom: keyboardHeight > 0 ? keyboardHeight + 25 : 0 },
+              { marginBottom: keyboardHeight > 0 ? keyboardHeight + 25 : 35 },
             ]}
           >
             <View style={styles.inputContainer}>
@@ -295,6 +295,7 @@ export default function MentalHealthChat() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    marginTop: 20,
   },
   container: {
     flex: 1,
