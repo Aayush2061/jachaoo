@@ -78,7 +78,7 @@ export default function MentalHealthDashboard() {
               onPress={() => router.push("/(home)/mental-health/track")}
             >
               <ImageBackground
-                source={require("@/assets/images/track-bg.jpg")}
+                source={require("@/assets/images/mental-health-icons/track-bg.jpg")}
                 style={styles.featureBackground}
                 imageStyle={styles.featureBackgroundImage}
               >
@@ -91,7 +91,7 @@ export default function MentalHealthDashboard() {
               onPress={() => router.push("/(home)/mental-health/breathe")}
             >
               <ImageBackground
-                source={require("@/assets/images/breathe-bg.jpg")}
+                source={require("@/assets/images/mental-health-icons/breathe-bg.jpg")}
                 style={styles.featureBackground}
                 imageStyle={styles.featureBackgroundImage}
               >
@@ -107,7 +107,7 @@ export default function MentalHealthDashboard() {
               onPress={() => router.push("/(home)/mental-health/listen")}
             >
               <ImageBackground
-                source={require("@/assets/images/listen-bg.jpg")}
+                source={require("@/assets/images/mental-health-icons/listen-bg.jpg")}
                 style={styles.featureBackground}
                 imageStyle={styles.featureBackgroundImage}
               >
@@ -120,7 +120,7 @@ export default function MentalHealthDashboard() {
               onPress={() => router.push("/(home)/mental-health/sleepwell")}
             >
               <ImageBackground
-                source={require("@/assets/images/sleepwell-bg.jpg")}
+                source={require("@/assets/images/mental-health-icons/sleepwell-bg.jpg")}
                 style={styles.featureBackground}
                 imageStyle={styles.featureBackgroundImage}
               >
@@ -136,7 +136,7 @@ export default function MentalHealthDashboard() {
               onPress={() => router.push("/(home)/mental-health/chat")}
             >
               <ImageBackground
-                source={require("../../../assets/images/talk.jpg")}
+                source={require("../../../assets/images/mental-health-icons/talk.jpg")}
                 style={styles.featureBackground}
                 imageStyle={styles.featureBackgroundImage}
               >
@@ -149,7 +149,7 @@ export default function MentalHealthDashboard() {
               onPress={() => router.push("/(home)/mental-health/daily-goal")}
             >
               <ImageBackground
-                source={require("@/assets/images/daily-goal-bg.jpg")}
+                source={require("@/assets/images/mental-health-icons/daily-goal-bg.jpg")}
                 style={styles.featureBackground}
                 imageStyle={styles.featureBackgroundImage}
               >

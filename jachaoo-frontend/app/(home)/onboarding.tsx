@@ -1,9 +1,11 @@
 import { useUser } from "@clerk/clerk-expo";
 import { Picker } from "@react-native-picker/picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,9 +25,16 @@ export default function OnboardingScreen() {
   const [diabetes, setDiabetes] = useState("Don't know");
   const [smoker, setSmoker] = useState("Don't know");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({ name: false, age: false });
 
   const handleSubmit = async () => {
-    if (!name.trim() || !age.trim()) {
+    const newErrors = {
+      name: !name.trim(),
+      age: !age.trim(),
+    };
+    setErrors(newErrors);
+
+    if (newErrors.name || newErrors.age) {
       Alert.alert("Error", "Please fill in all required fields");
       return;
     }
@@ -64,148 +73,170 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Health Information</Text>
-      <Text style={styles.subtitle}>
-        Please provide some basic health information
-      </Text>
+    <LinearGradient colors={["#F8FAFF", "#ECF2FF"]} style={styles.gradient}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>Welcome to Jachao</Text>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Full Name *</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter your full name"
-        />
-      </View>
+          <Text style={styles.subtitle}>Let's get to know you better</Text>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Age *</Text>
-        <TextInput
-          style={styles.input}
-          value={age}
-          onChangeText={setAge}
-          placeholder="Enter your age"
-          keyboardType="numeric"
-        />
-      </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Full Name *</Text>
+            <TextInput
+              style={[styles.input, errors.name && styles.inputError]}
+              value={name}
+              onChangeText={(text) => {
+                setName(text);
+                setErrors((prev) => ({ ...prev, name: false }));
+              }}
+              placeholder="Enter your full name"
+              placeholderTextColor="#aaa"
+            />
+          </View>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Sex *</Text>
-        <Picker
-          selectedValue={sex}
-          onValueChange={setSex}
-          style={styles.picker}
-        >
-          <Picker.Item label="Male" value="Male" />
-          <Picker.Item label="Female" value="Female" />
-          <Picker.Item label="Other" value="Other" />
-        </Picker>
-      </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Age *</Text>
+            <TextInput
+              style={[styles.input, errors.age && styles.inputError]}
+              value={age}
+              onChangeText={(text) => {
+                setAge(text);
+                setErrors((prev) => ({ ...prev, age: false }));
+              }}
+              placeholder="Enter your age"
+              keyboardType="numeric"
+              placeholderTextColor="#aaa"
+            />
+          </View>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>
-          Have you ever been diagnosed with high blood pressure?
-        </Text>
-        <Picker
-          selectedValue={bloodPressure}
-          onValueChange={setBloodPressure}
-          style={styles.picker}
-        >
-          <Picker.Item label="Yes" value="Yes" />
-          <Picker.Item label="No" value="No" />
-          <Picker.Item label="Don't know" value="Don't know" />
-        </Picker>
-      </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Sex *</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker selectedValue={sex} onValueChange={setSex}>
+                <Picker.Item label="Male" value="Male" />
+                <Picker.Item label="Female" value="Female" />
+                <Picker.Item label="Other" value="Other" />
+              </Picker>
+            </View>
+          </View>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Do you have diabetes?</Text>
-        <Picker
-          selectedValue={diabetes}
-          onValueChange={setDiabetes}
-          style={styles.picker}
-        >
-          <Picker.Item label="Yes" value="Yes" />
-          <Picker.Item label="No" value="No" />
-          <Picker.Item label="Don't know" value="Don't know" />
-        </Picker>
-      </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>
+              Have you been diagnosed with high blood pressure?
+            </Text>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={bloodPressure}
+                onValueChange={setBloodPressure}
+              >
+                <Picker.Item label="Yes" value="Yes" />
+                <Picker.Item label="No" value="No" />
+                <Picker.Item label="Don't know" value="Don't know" />
+              </Picker>
+            </View>
+          </View>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Are you a smoker?</Text>
-        <Picker
-          selectedValue={smoker}
-          onValueChange={setSmoker}
-          style={styles.picker}
-        >
-          <Picker.Item label="Yes" value="Yes" />
-          <Picker.Item label="No" value="No" />
-          <Picker.Item label="Don't know" value="Don't know" />
-        </Picker>
-      </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Do you have diabetes?</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker selectedValue={diabetes} onValueChange={setDiabetes}>
+                <Picker.Item label="Yes" value="Yes" />
+                <Picker.Item label="No" value="No" />
+                <Picker.Item label="Don't know" value="Don't know" />
+              </Picker>
+            </View>
+          </View>
 
-      <TouchableOpacity
-        style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
-        onPress={handleSubmit}
-        disabled={isSubmitting}
-      >
-        <Text style={styles.submitButtonText}>
-          {isSubmitting ? "Saving..." : "Save & Continue"}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Are you a smoker?</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker selectedValue={smoker} onValueChange={setSmoker}>
+                <Picker.Item label="Yes" value="Yes" />
+                <Picker.Item label="No" value="No" />
+                <Picker.Item label="Don't know" value="Don't know" />
+              </Picker>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.submitButtonText}>
+              {isSubmitting ? "Saving..." : "Save & Continue"}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 24,
+    paddingBottom: 60,
+    marginTop: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#333",
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#1A237E",
+    marginBottom: 6,
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 30,
-    color: "#666",
+    color: "#64748B",
+    marginBottom: 28,
   },
   formGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: "#333",
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
+    borderColor: "#CBD5E1",
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
+    color: "#0F172A",
+    backgroundColor: "white",
   },
-  picker: {
+  inputError: {
+    borderColor: "#EF4444",
+  },
+  pickerWrapper: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
+    borderColor: "#CBD5E1",
+    borderRadius: 12,
+    backgroundColor: "white",
   },
   submitButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#2563EB",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
     marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   submitButtonText: {
-    color: "white",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
   },

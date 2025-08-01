@@ -37,7 +37,7 @@ export default function HomeLayout() {
           name="onboarding"
           options={{
             title: "Health Information",
-            headerShown: true,
+            headerShown: false,
             gestureEnabled: false, // Prevent swipe back
           }}
         />

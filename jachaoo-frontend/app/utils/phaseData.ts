@@ -357,14 +357,21 @@ export const phaseData = {
       {
         type: "exercise",
         category: "yoga",
-        name: "Surya Namaskar",
-        // image: require("../../assets/images/periods-exercise/surya-namaskar.png"),
+        name: "Adho Mukha Svanasana",
+        image: require("../../assets/images/periods-exercise/adho-mukha-svanasana.png"),
         steps: [
-          "1. Best on empty stomach",
-          "2. Sharpens mind and warm up all muscles",
-          "3. Breathe deeply and slow",
+          "1. Start by placing your hands and knees on the floor.",
+          "2. Curl your toes under and slowly lift your hips up toward the sky.",
+          "3. Try to make your body look like an upside-down “V”.",
+          "4. Keep your head between your arms, back straight.",
+          "5. Hold for 30 sec–1 min.",
+          "6. Gently lower down and rest.",
+          "7. Repeat 2–3 times.",
         ],
-        benefits: ["Sharpens mind and warms up all muscles"],
+        benefits: [
+          "Improves blood flow and focus.",
+          "Stretches spine, legs, and shoulders.",
+        ],
       },
       {
         type: "exercise",
@@ -385,7 +392,7 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Ustrasana",
-        // image: require("../../assets/images/periods-exercise/ustrasana.png"),
+        image: require("../../assets/images/periods-exercise/ustrasana.png"),
         steps: [
           "1. Kneel down, knees hip-width apart",
           "2. Place hands on lower back",
@@ -444,7 +451,7 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Bhramari",
-        // image: require("../../assets/images/periods-exercise/bhramari.png"),
+        image: require("../../assets/images/periods-exercise/bhramari.png"),
         steps: [
           "1. Sit comfortably with your eyes closed",
           "2. Inhale deeply through your nose",
@@ -458,7 +465,7 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Visualization Meditation",
-        // image: require("../../assets/images/periods-exercise/visualization.png"),
+        image: require("../../assets/images/periods-exercise/visualization-meditation.png"),
         steps: [
           "1. Sit comfortably in a quiet, peaceful place",
           "2. Close your eyes and take slow, deep breaths",
@@ -885,7 +892,7 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "4. Supta Matsyendrasana",
-        // image: require("../../assets/images/periods-exercise/supta_matsyendrasana.png"),
+        image: require("../../assets/images/periods-exercise/supta-matsyendrasana.png"),
         steps: [
           "1. Lie on your back.",
           "2. Bend your right knee and bring it across your body to the left side.",

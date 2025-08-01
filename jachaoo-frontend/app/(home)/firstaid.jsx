@@ -220,21 +220,18 @@ export default function FirstAidScreen() {
         </ScrollView>
 
         {/* Input Box */}
-        <KeyboardAvoidingView
-           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.select({
-            ios: 40,
-            android: 25,
-          })}
-          style={[
-            styles.inputWrapper,
-            { 
-              marginBottom: keyboardHeight > 0 
-                ? keyboardHeight + 30
-                : 25
-            },
-          ]}
-        >
+         <KeyboardAvoidingView
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  keyboardVerticalOffset={Platform.OS === "ios" ? 55 : 0} // Try 20-60 depending on header height
+  style={[
+  styles.inputWrapper,
+  Platform.OS === "ios"
+    ? { marginBottom: 0 }
+    : {
+        marginBottom: keyboardHeight > 0 ? keyboardHeight + 30 : 25,
+      },
+]}
+>
           <View style={styles.inputRow}>
             <TextInput
               style={styles.input}

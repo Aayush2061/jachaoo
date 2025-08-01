@@ -75,12 +75,6 @@ NOW THINK, ANALYZE, AND GENERATE:
 Only return the question and its options in the correct format. Nothing else.
 '''
 
-# ----------------------------
-# Configure Gemini model once with system instruction
-# ----------------------------
-# Replace with your actual Gemini API key
-genai.configure(api_key=GOOGLE_API_KEY)
-#################################################
 #NAME CHANGE GARE HAI
 model = genai.GenerativeModel(
     model_name="gemini-1.5-flash",

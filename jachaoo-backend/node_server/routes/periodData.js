@@ -85,13 +85,13 @@ router.patch('/:userId', ClerkExpressRequireAuth(), symptomUpdateLimiter, async 
         )];
 
         // 3. Maximum Limit Check (configurable)
-        const MAX_SYMPTOMS = 15;
-        if (uniqueSymptoms.length > MAX_SYMPTOMS) {
-            return res.status(400).json({
-                error: 'Limit exceeded',
-                details: `Maximum ${MAX_SYMPTOMS} symptoms allowed`
-            });
-        }
+        // const MAX_SYMPTOMS = 15;
+        // if (uniqueSymptoms.length > MAX_SYMPTOMS) {
+        //     return res.status(400).json({
+        //         error: 'Limit exceeded',
+        //         details: `Maximum ${MAX_SYMPTOMS} symptoms allowed`
+        //     });
+        // }
 
         // 4. Get existing data for audit
         const existingData = await PeriodData.findOne({ userId: req.params.userId });

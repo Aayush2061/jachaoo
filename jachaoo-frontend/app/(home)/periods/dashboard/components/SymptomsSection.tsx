@@ -85,13 +85,13 @@ export default function SymptomsSection({
       return;
     }
 
-    if (trimmedSymptom.length < MIN_SYMPTOM_LENGTH) {
-      Alert.alert(
-        "Too Short",
-        `Symptom must be at least ${MIN_SYMPTOM_LENGTH} characters`
-      );
-      return;
-    }
+    // if (trimmedSymptom.length < MIN_SYMPTOM_LENGTH) {
+    //   Alert.alert(
+    //     "Too Short",
+    //     `Symptom must be at least ${MIN_SYMPTOM_LENGTH} characters`
+    //   );
+    //   return;
+    // }
 
     if (trimmedSymptom.length > MAX_SYMPTOM_LENGTH) {
       Alert.alert(

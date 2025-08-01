@@ -260,13 +260,14 @@ export default function PeriodChat() {
           {/* Input Area */}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.select({
-              ios: 0,
-              android: 25,
-            })}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 55 : 0} // Try 20-60 depending on header height
             style={[
               styles.inputWrapper,
-              { marginBottom: keyboardHeight > 0 ? keyboardHeight + 25 : 30 },
+              Platform.OS === "ios"
+                ? { marginBottom: 0 }
+                : {
+                    marginBottom: keyboardHeight > 0 ? keyboardHeight + 30 : 25,
+                  },
             ]}
           >
             <View style={styles.inputContainer}>
