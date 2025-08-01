@@ -138,6 +138,26 @@ export default function ReportDetail() {
                 {line}
               </Text>
             );
+          } else if (line.includes("Additional Diet Tips:")) {
+            // Special case for "Additional diet tips:"
+            const parts = line.split("Additional Diet Tips:");
+            return (
+              <Text key={index} style={styles.regularText}>
+                {parts[0]}
+                <Text style={{ fontWeight: "bold" }}>{line}</Text>
+                {parts[1]}
+              </Text>
+            );
+          } else if (line.includes("Weekly Plan:")) {
+            // Special case for "Additional diet tips:"
+            const parts = line.split("Weekly Plan:");
+            return (
+              <Text key={index} style={styles.regularText}>
+                {parts[0]}
+                <Text style={{ fontWeight: "bold" }}>{line}</Text>
+                {parts[1]}
+              </Text>
+            );
           } else {
             return (
               <Text key={index} style={styles.regularText}>
@@ -149,7 +169,6 @@ export default function ReportDetail() {
       </View>
     );
   };
-
   if (loading || !report) {
     return (
       <View style={styles.container}>

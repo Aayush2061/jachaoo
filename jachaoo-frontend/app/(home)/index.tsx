@@ -1,8 +1,9 @@
-import { useUser } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Link, useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -22,6 +23,7 @@ const CARD_WIDTH = (width - 48) / 2;
 
 export default function HomePage() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [hasHealthData, setHasHealthData] = useState(false);
@@ -30,29 +32,73 @@ export default function HomePage() {
     tip: string;
     description: string;
   } | null>(null);
+  const [lastTipDate, setLastTipDate] = useState<string>("");
+  // Function to fetch daily tip
+  const fetchDailyTip = async () => {
+    try {
+      const today = new Date().toDateString();
 
-  useEffect(() => {
-    const fetchDailyTip = async () => {
-      try {
+      // Only fetch new tip if we don't have one for today
+      if (lastTipDate !== today) {
+        const token = await getToken();
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/health-tips/random`
+          `${process.env.EXPO_PUBLIC_API_URL}/health-tips/random`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const data = await response.json();
         setDailyTip(data);
-      } catch (error) {
-        console.error("Error fetching daily tip:", error);
-        // Fallback to a default tip if API fails
+        setLastTipDate(today);
+
+        // Store in AsyncStorage for persistence
+        await AsyncStorage.setItem("lastTipDate", today);
+        await AsyncStorage.setItem("dailyTip", JSON.stringify(data));
+      }
+    } catch (error) {
+      console.error("Error fetching daily tip:", error);
+
+      // Try to load from cache if API fails
+      const cachedTip = await AsyncStorage.getItem("dailyTip");
+      const cachedDate = await AsyncStorage.getItem("lastTipDate");
+
+      if (cachedTip && cachedDate) {
+        setDailyTip(JSON.parse(cachedTip));
+        setLastTipDate(cachedDate);
+      } else {
+        // Fallback to default tip
         setDailyTip({
           tip: "Drink at least 8 glasses of water daily",
           description:
             "Helps maintain fluid balance, supports digestion, and keeps skin healthy.",
         });
       }
-    };
+    }
+  };
 
-    fetchDailyTip();
-  }, []);
+  // Load cached tip on focus
+  useFocusEffect(
+    useCallback(() => {
+      const loadCachedTip = async () => {
+        const today = new Date().toDateString();
+        const cachedDate = await AsyncStorage.getItem("lastTipDate");
 
+        if (cachedDate === today) {
+          const cachedTip = await AsyncStorage.getItem("dailyTip");
+          if (cachedTip) {
+            setDailyTip(JSON.parse(cachedTip));
+            setLastTipDate(cachedDate);
+          }
+        } else {
+          fetchDailyTip();
+        }
+      };
+
+      loadCachedTip();
+    }, [])
+  );
   useEffect(() => {
     const checkHealthData = async () => {
       try {

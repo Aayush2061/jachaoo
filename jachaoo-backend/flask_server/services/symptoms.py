@@ -9,8 +9,9 @@ import os
 load_dotenv()
 
 # Configure Gemini API
-API_KEY = os.getenv("GENAI_API_KEY12") 
-# ----------------------------
+API_KEY = os.getenv("GENAI_API_KEY8") 
+genai.configure(api_key=API_KEY)
+
 # Your Original Full System Instruction (UNCHANGED)
 # ----------------------------
 SYSTEM_PROMPT = '''
@@ -78,7 +79,9 @@ Only return the question and its options in the correct format. Nothing else.
 # Configure Gemini model once with system instruction
 # ----------------------------
 # Replace with your actual Gemini API key
-genai.configure(api_key=API_KEY)
+genai.configure(api_key=GOOGLE_API_KEY)
+#################################################
+#NAME CHANGE GARE HAI
 model = genai.GenerativeModel(
     model_name="gemini-1.5-flash",
     system_instruction=SYSTEM_PROMPT
@@ -227,26 +230,57 @@ class MedicalDiagnosisSystem:
             return "Any other symptoms? 1) Yes 2) No"
 
         return next_question
+    
+###################################################################
+# yo thau ma change gariyo yo function hai 
 
-    def _build_symptom_context(self, symptom_data, covered_questions) -> str:
-        context_lines = [
-            f"**Symptom Analysis: {symptom_data['symptom']}**",
-            "Collected Details:",
+    def _build_symptom_context(self, symptom_data: dict, covered_questions: list) -> str:
+        """Enhanced context builder with cross-symptom awareness"""
+        # 1. Current Symptom Details
+        current_details = [
+            f"- {q}: {a}" 
+            for q, a in symptom_data.get('details', {}).items()
         ]
+        
+        # 2. Previous Symptoms Context
+        previous_symptoms = []
+        for idx, s in enumerate(self.patient_data.get('symptoms', [])[:-1]):  # Exclude current
+            symptom_entry = [
+                f"Previously reported: {s.get('symptom', 'Unknown symptom')}",
+                *[f"  - {q}: {a}" for q, a in s.get('details', {}).items()]
+            ]
+            previous_symptoms.extend(symptom_entry)
+        
+        # 3. Dynamic Patient Background
+        background = [
+            f"- {field.replace('_', ' ').title()}: {value}"
+            for field, value in self.patient_data.get('basic_info', {}).items()
+        ]
+        
+        # 4. Temporal Relationships
+        temporal_notes = []
+        if len(self.patient_data.get('symptoms', [])) > 1:
+            symptom_chain = " → ".join(
+                s.get('symptom', 'Unknown') 
+                for s in self.patient_data['symptoms']
+            )
+            temporal_notes.append(f"Timeline: {symptom_chain}")
 
-        for q, a in symptom_data["details"].items():
-            context_lines.append(f"- {q}: {a}")
-
-        context_lines.append("\n**Patient Background**")
-        for key, value in self.patient_data["basic_info"].items():
-            context_lines.append(f"- {key.replace('_', ' ').title()}: {value}")
-
-        context_lines.append("\n**Diagnostic Progress**")
-        context_lines.append(f"- Current stage: {self.current_stage}")
-        if covered_questions:
-            context_lines.append(f"- Already asked about: {', '.join(covered_questions)}")
-
-        return "\n".join(context_lines)
+        # Structured Assembly (Python 3.9 compatible)
+        sections = ["**Full Clinical Context**",
+                    "CURRENT SYMPTOM:",
+                    f"✦ {symptom_data.get('symptom', '')}"] + \
+                current_details + \
+                [""] + \
+                ["PRIOR SYMPTOMS:"] + \
+                (previous_symptoms if previous_symptoms else ["No prior symptoms"]) + \
+                [""] + \
+                ["PATIENT BACKGROUND:"] + \
+                background + \
+                [""] + \
+                temporal_notes
+        
+        return "\n".join(filter(None, sections))
 
     def _get_symptom_prompt(self, symptom: str, context: str) -> str:
         return SYSTEM_PROMPT.replace("{symptom}", symptom).replace("{context}", context)
