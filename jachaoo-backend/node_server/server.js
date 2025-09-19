@@ -32,6 +32,7 @@ const periodAnalysisRouter = require('./routes/periodAnalysis')
 const dailyGoalsRouter = require('./routes/dailyGoals');
 const mentalHealthChatRouter = require('./routes/mentalHealthChat');
 const healthTipsRouter = require('./routes/healthTips');
+const accountDeletionRouter = require('./routes/accountDeletion');
 
 app.use('/api/health', healthDataRouter);
 app.use('/api/reports', clerkMiddleware, reportsRouter);
@@ -44,6 +45,7 @@ app.use('/api/daily-analysis', clerkMiddleware, periodAnalysisRouter);
 app.use('/api/daily-goals', clerkMiddleware, dailyGoalsRouter);
 app.use('/api/mental-chat', clerkMiddleware, mentalHealthChatRouter);
 app.use('/api/health-tips', healthTipsRouter);
+app.use('/api/account', clerkMiddleware, accountDeletionRouter);
 // app.use('/api/periods', periodDataRouter);
 
 const PORT = process.env.PORT || 5000;

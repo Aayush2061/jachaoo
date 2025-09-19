@@ -1,6 +1,6 @@
 import { useClerk, useUser } from "@clerk/clerk-expo";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -233,6 +233,12 @@ export default function ProfilePage() {
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutButtonText}>Sign Out</Text>
         </TouchableOpacity>
+
+        <Link href="/(home)/delete-account" asChild>
+          <TouchableOpacity style={styles.deleteAccountButton}>
+            <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
+          </TouchableOpacity>
+        </Link>
 
         {/* Edit Health Data Modal */}
         <Modal
@@ -566,6 +572,26 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: "white",
+    fontWeight: "600",
+  },
+  deleteAccountButton: {
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#E74C3C",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  deleteAccountButtonText: {
+    color: "#E74C3C",
+    fontSize: 16,
     fontWeight: "600",
   },
 });
