@@ -15,7 +15,7 @@ from ml_services.ocr import ocr_function
 load_dotenv()
 
 # Get the API key from the environment
-api_key = os.getenv("GENAI_API_KEY6")
+api_key = os.getenv("FINAL_API_KEY")
 
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")

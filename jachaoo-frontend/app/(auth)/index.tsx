@@ -51,7 +51,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
-          source={require("../../assets/images/react-logo.png")} // Your app logo
+          source={require("../../assets/images/jachao-logo.jpg")} // Your app logo
           style={styles.logo}
           resizeMode="contain"
         />

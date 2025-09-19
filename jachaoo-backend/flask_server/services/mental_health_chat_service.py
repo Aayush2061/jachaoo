@@ -6,7 +6,7 @@ import os
 load_dotenv()
 
 # Gemini API setup
-API_KEY = os.getenv("GENAI_API_KEY9") 
+API_KEY = os.getenv("FINAL_API_KEY") 
 genai.configure(api_key=API_KEY)
 
 def mental_health_chatbot(user_query, chat_history, diagnosed_condition=None, support_system=None, frequency=None, goals=None):

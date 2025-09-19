@@ -6,7 +6,7 @@ import os
 load_dotenv()
 
 # Get the API key from the environment
-api_key = os.getenv("GENAI_API_KEY6")
+api_key = os.getenv("FINAL_API_KEY")
 
 API_KEY = api_key
 
