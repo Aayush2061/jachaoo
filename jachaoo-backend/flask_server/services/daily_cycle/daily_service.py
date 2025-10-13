@@ -13,7 +13,7 @@ API_KEY = api_key
 class DailyCycleService:
     def __init__(self):
         genai.configure(api_key=API_KEY)  # Use your key
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.model = genai.GenerativeModel("gemini-2.0-flash")
 
     def analyze(self, permanent_data, daily_data):
         prompt = self.build_prompt(permanent_data, daily_data)

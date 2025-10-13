@@ -77,7 +77,7 @@ Only return the question and its options in the correct format. Nothing else.
 
 #NAME CHANGE GARE HAI
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-2.0-flash",
     system_instruction=SYSTEM_PROMPT
 )
 
@@ -387,7 +387,7 @@ class MedicalDiagnosisSystem:
     
     def _generate_final_diagnosis(self) -> str:
         # Create a clean model instance without the symptom-focused system prompt
-        clean_model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+        clean_model = genai.GenerativeModel(model_name="gemini-2.0-flash")
         
         # Build symptom summary
         symptom_details = []

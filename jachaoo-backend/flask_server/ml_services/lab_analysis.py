@@ -18,7 +18,7 @@ load_dotenv()
 api_key = os.getenv("FINAL_API_KEY")
 
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
+model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
 
 def download_image_to_temp( cloudinary_url):
     # Step 1: Download image into memory
@@ -56,7 +56,7 @@ def lab_report_analysis(cloudinary_url,health_data = None):
         }
 
         genai.configure(api_key= api_key)
-        model2 = genai.GenerativeModel("models/gemini-1.5-flash")
+        model2 = genai.GenerativeModel("models/gemini-2.0-flash")
 
         print(health_data)
         
