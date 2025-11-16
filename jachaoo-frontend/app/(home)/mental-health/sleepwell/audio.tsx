@@ -15,8 +15,8 @@ const CARD_WIDTH = (width - 40 - 12) / 2;
 const audioFiles = {
   "forest-night": require("../../../../assets/audio/fast_forest-night.m4a"),
   "camp-fire": require("../../../../assets/audio/fast_camp-fire.m4a"),
-  "soft-wind": require("../../../../assets/audio/fast_soft-wind.m4a"),
-  "ocean-waves": require("../../../../assets/audio/fast_ocean-waves.m4a"),
+  "soft-wind": require("../../../../assets/audio/fast_soft-wind.mp3"),
+  "ocean-waves": require("../../../../assets/audio/relaxing_river_audio.mp3"),
   rainfall: require("../../../../assets/audio/fast_rainfall.m4a"),
 };
 
@@ -44,9 +44,9 @@ const audioOptions = [
   },
   {
     id: 4,
-    name: "Ocean Waves",
+    name: "River",
     key: "ocean-waves",
-    image: require("../../../../assets/images/sleepwell-audio/ocean-waves.jpg"),
+    image: require("../../../../assets/images/sleepwell-audio/river.jpeg"),
     duration: "25 min",
   },
   {

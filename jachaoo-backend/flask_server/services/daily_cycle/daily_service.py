@@ -50,6 +50,7 @@ class DailyCycleService:
         prompt = f'''
     - Strictly follow the below prompt
     You are a menstrual health assistant. Given the user's permanent menstrual profile and today's daily tracking data, generate a detailed daily tracking summary in the following structured format in very simple and easy language :
+    give me directly the result in the given format dont give any other text above it
 
     🗓️ Date: {today.strftime('%B %d, %Y')}
     📍 Cycle Day: {cycle_day} , {phase}

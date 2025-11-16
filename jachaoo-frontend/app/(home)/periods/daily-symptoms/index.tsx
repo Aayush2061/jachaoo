@@ -1,5 +1,6 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -35,6 +36,7 @@ export default function SymptomTracker() {
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tempUnit, setTempUnit] = useState<"C" | "F">("C");
   const DAILY_NOTES_MAX_LENGTH = 500;
   const TEMP_MAX_LENGTH = 10;
 
@@ -131,6 +133,28 @@ export default function SymptomTracker() {
       return;
     }
 
+    // Convert to float
+    const temp = parseFloat(bodyTemp);
+
+    // Universal error for invalid input
+    if (!bodyTemp || isNaN(temp)) {
+      setError("Please enter a valid temperature.");
+      return;
+    }
+
+    // Range validation
+    if (tempUnit === "C") {
+      if (temp < 20 || temp > 50) {
+        setError("Temperature must be between 20°C and 50°C.");
+        return;
+      }
+    } else {
+      if (temp < 68 || temp > 122) {
+        setError("Temperature must be between 68°F and 122°F.");
+        return;
+      }
+    }
+
     if (bodyTemp.length > TEMP_MAX_LENGTH) {
       setError(`Temperature cannot exceed ${TEMP_MAX_LENGTH} characters`);
       return;
@@ -155,7 +179,10 @@ export default function SymptomTracker() {
           appearance: periodData.appearance,
         },
         daily_data: {
-          bodyTemp,
+          bodyTemp: {
+            value: bodyTemp,
+            unit: tempUnit,
+          },
           hadSex,
           symptoms: selectedSymptoms,
           caffeineEmptyStomach,
@@ -167,6 +194,8 @@ export default function SymptomTracker() {
           date: today,
         },
       };
+
+      // console.log(requestData);
 
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/daily-analysis`,
@@ -263,17 +292,29 @@ export default function SymptomTracker() {
             <Text style={styles.sectionTitle}>Health Metrics</Text>
 
             {/* Body Temperature */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Body temperature (°C)</Text>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. 37.0"
-                  keyboardType="decimal-pad"
-                  value={bodyTemp}
-                  onChangeText={setBodyTemp}
-                />
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+            >
+              {/* Left Dropdown */}
+              <View style={styles.dropdownContainer}>
+                <Picker
+                  selectedValue={tempUnit}
+                  style={styles.picker}
+                  onValueChange={(value) => setTempUnit(value)}
+                >
+                  <Picker.Item label="°C" value="C" />
+                  <Picker.Item label="°F" value="F" />
+                </Picker>
               </View>
+
+              {/* Right Input */}
+              <TextInput
+                style={styles.tempInput}
+                placeholder={tempUnit === "C" ? "37.0" : "98.6"}
+                keyboardType="decimal-pad"
+                value={bodyTemp}
+                onChangeText={(text) => setBodyTemp(text)}
+              />
             </View>
 
             {/* Sexual Health */}
@@ -533,6 +574,25 @@ export default function SymptomTracker() {
 }
 
 const styles = StyleSheet.create({
+  dropdownContainer: {
+    width: 90,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    justifyContent: "center",
+  },
+  picker: {
+    width: "100%",
+    height: 55,
+  },
+  tempInput: {
+    flex: 1,
+    height: 55,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+  },
   container: {
     flexGrow: 1,
     paddingBottom: 70,

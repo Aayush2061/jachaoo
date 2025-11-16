@@ -28,14 +28,17 @@ export default function OnboardingScreen() {
   const [errors, setErrors] = useState({ name: false, age: false });
 
   const handleSubmit = async () => {
+    const ageNumber = parseInt(age);
+
     const newErrors = {
       name: !name.trim(),
-      age: !age.trim(),
+      age: !age.trim() || isNaN(ageNumber) || ageNumber < 1 || ageNumber > 150,
     };
+
     setErrors(newErrors);
 
     if (newErrors.name || newErrors.age) {
-      Alert.alert("Error", "Please fill in all required fields");
+      Alert.alert("Invalid Input", "Please enter a valid name and age (1-150)");
       return;
     }
 
@@ -46,13 +49,11 @@ export default function OnboardingScreen() {
         `${process.env.EXPO_PUBLIC_API_URL}/health`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: user?.id,
             name,
-            age: parseInt(age),
+            age: ageNumber,
             sex,
             bloodPressure,
             diabetes,
@@ -62,7 +63,6 @@ export default function OnboardingScreen() {
       );
 
       if (!response.ok) throw new Error("Failed to save health data");
-
       router.replace("/(home)");
     } catch (error) {
       console.error("Error saving health data:", error);
@@ -100,7 +100,9 @@ export default function OnboardingScreen() {
               style={[styles.input, errors.age && styles.inputError]}
               value={age}
               onChangeText={(text) => {
-                setAge(text);
+                // Allow only numbers
+                const numeric = text.replace(/[^0-9]/g, "");
+                setAge(numeric);
                 setErrors((prev) => ({ ...prev, age: false }));
               }}
               placeholder="Enter your age"
