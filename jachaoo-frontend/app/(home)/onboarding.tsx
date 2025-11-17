@@ -14,31 +14,84 @@ import {
   View,
 } from "react-native";
 
+// Define the illness options based on your image
+const ILLNESS_OPTIONS = [
+  "Asthma",
+  "Heart Problem",
+  "Kidney Problem",
+  "Liver Problem",
+  "Thyroid",
+  "Tuberculosis (TB)",
+  "Mental Health Conditions",
+  "Obesity",
+  "Others",
+];
+
 export default function OnboardingScreen() {
   const { user } = useUser();
   const router = useRouter();
 
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
+  const [weight, setWeight] = useState("");
   const [sex, setSex] = useState("Male");
   const [bloodPressure, setBloodPressure] = useState("Don't know");
   const [diabetes, setDiabetes] = useState("Don't know");
   const [smoker, setSmoker] = useState("Don't know");
+  const [hasIllness, setHasIllness] = useState("No"); // New state
+  const [selectedIllnesses, setSelectedIllnesses] = useState<string[]>([]); // New state
+  const [otherIllness, setOtherIllness] = useState(""); // New state
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({ name: false, age: false });
+  const [errors, setErrors] = useState({
+    name: false,
+    age: false,
+    weight: false,
+    otherIllness: false,
+  });
+
+  const handleIllnessToggle = (illness: string) => {
+    setSelectedIllnesses((prev) => {
+      if (prev.includes(illness)) {
+        return prev.filter((item) => item !== illness);
+      } else {
+        return [...prev, illness];
+      }
+    });
+  };
 
   const handleSubmit = async () => {
     const ageNumber = parseInt(age);
+    const weightNumber = parseFloat(weight);
 
     const newErrors = {
       name: !name.trim(),
       age: !age.trim() || isNaN(ageNumber) || ageNumber < 1 || ageNumber > 150,
+      weight:
+        !weight.trim() ||
+        isNaN(weightNumber) ||
+        weightNumber < 1 ||
+        weightNumber > 500,
+      otherIllness:
+        hasIllness === "Yes" &&
+        selectedIllnesses.includes("Others") &&
+        !otherIllness.trim(),
     };
 
     setErrors(newErrors);
 
-    if (newErrors.name || newErrors.age) {
-      Alert.alert("Invalid Input", "Please enter a valid name and age (1-150)");
+    if (
+      newErrors.name ||
+      newErrors.age ||
+      newErrors.weight ||
+      newErrors.otherIllness
+    ) {
+      let errorMessage = "Please enter valid:";
+      if (newErrors.name) errorMessage += "\n• Name";
+      if (newErrors.age) errorMessage += "\n• Age (1-150)";
+      if (newErrors.weight) errorMessage += "\n• Weight (1-500 kg)";
+      if (newErrors.otherIllness) errorMessage += "\n• Other illness details";
+
+      Alert.alert("Invalid Input", errorMessage);
       return;
     }
 
@@ -55,9 +108,15 @@ export default function OnboardingScreen() {
             name,
             age: ageNumber,
             sex,
+            weight: weightNumber,
             bloodPressure,
             diabetes,
             smoker,
+            hasIllness,
+            illnesses: selectedIllnesses,
+            otherIllness: selectedIllnesses.includes("Others")
+              ? otherIllness
+              : "",
           }),
         }
       );
@@ -77,9 +136,9 @@ export default function OnboardingScreen() {
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.title}>Welcome to Jachao</Text>
-
           <Text style={styles.subtitle}>Let's get to know you better</Text>
 
+          {/* Existing form fields (name, age, weight, sex, etc.) */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Full Name *</Text>
             <TextInput
@@ -100,12 +159,32 @@ export default function OnboardingScreen() {
               style={[styles.input, errors.age && styles.inputError]}
               value={age}
               onChangeText={(text) => {
-                // Allow only numbers
                 const numeric = text.replace(/[^0-9]/g, "");
                 setAge(numeric);
                 setErrors((prev) => ({ ...prev, age: false }));
               }}
               placeholder="Enter your age"
+              keyboardType="numeric"
+              placeholderTextColor="#aaa"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Weight (kg) *</Text>
+            <TextInput
+              style={[styles.input, errors.weight && styles.inputError]}
+              value={weight}
+              onChangeText={(text) => {
+                const numeric = text.replace(/[^0-9.]/g, "");
+                const parts = numeric.split(".");
+                const formatted =
+                  parts.length > 2
+                    ? parts[0] + "." + parts.slice(1).join("")
+                    : numeric;
+                setWeight(formatted);
+                setErrors((prev) => ({ ...prev, weight: false }));
+              }}
+              placeholder="Enter your weight in kg"
               keyboardType="numeric"
               placeholderTextColor="#aaa"
             />
@@ -122,6 +201,70 @@ export default function OnboardingScreen() {
             </View>
           </View>
 
+          {/* New Illness Section */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Do you have any type of illness? *</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker selectedValue={hasIllness} onValueChange={setHasIllness}>
+                <Picker.Item label="No" value="No" />
+                <Picker.Item label="Yes" value="Yes" />
+              </Picker>
+            </View>
+          </View>
+
+          {hasIllness === "Yes" && (
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Select your illnesses:</Text>
+              <View style={styles.illnessContainer}>
+                {ILLNESS_OPTIONS.map((illness) => (
+                  <TouchableOpacity
+                    key={illness}
+                    style={styles.illnessOption}
+                    onPress={() => handleIllnessToggle(illness)}
+                  >
+                    <View style={styles.checkboxContainer}>
+                      <View
+                        style={[
+                          styles.checkbox,
+                          selectedIllnesses.includes(illness) &&
+                            styles.checkboxSelected,
+                        ]}
+                      >
+                        {selectedIllnesses.includes(illness) && (
+                          <Text style={styles.checkmark}>✓</Text>
+                        )}
+                      </View>
+                    </View>
+                    <Text style={styles.illnessText}>{illness}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Other Illness Input */}
+              {selectedIllnesses.includes("Others") && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>
+                    Please specify other illness *
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.otherIllness && styles.inputError,
+                    ]}
+                    value={otherIllness}
+                    onChangeText={(text) => {
+                      setOtherIllness(text);
+                      setErrors((prev) => ({ ...prev, otherIllness: false }));
+                    }}
+                    placeholder="Enter the illness name"
+                    placeholderTextColor="#aaa"
+                  />
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Existing health questions (blood pressure, diabetes, smoker) */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>
               Have you been diagnosed with high blood pressure?
@@ -175,6 +318,7 @@ export default function OnboardingScreen() {
   );
 }
 
+// Add new styles for the illness section
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
@@ -221,6 +365,44 @@ const styles = StyleSheet.create({
     borderColor: "#CBD5E1",
     borderRadius: 12,
     backgroundColor: "white",
+  },
+  // New styles for illness section
+  illnessContainer: {
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 12,
+    backgroundColor: "white",
+    padding: 12,
+  },
+  illnessOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: "#CBD5E1",
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxSelected: {
+    backgroundColor: "#2563EB",
+    borderColor: "#2563EB",
+  },
+  checkmark: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  illnessText: {
+    fontSize: 16,
+    color: "#0F172A",
   },
   submitButton: {
     backgroundColor: "#2563EB",

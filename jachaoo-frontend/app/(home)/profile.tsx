@@ -17,6 +17,22 @@ import {
   View,
 } from "react-native";
 
+// Define the illness options (same as in onboarding)
+const ILLNESS_OPTIONS = [
+  "Asthma",
+  "Insulin",
+  "High Blood Pressure",
+  "Diabetes",
+  "Heart Problem",
+  "Kidney Problem",
+  "Liver Problem",
+  "Thyroid",
+  "TB",
+  "Mental Health",
+  "Obesity",
+  "Others",
+];
+
 export default function ProfilePage() {
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -27,10 +43,14 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     name: "",
     age: "",
+    weight: "",
     sex: "Male",
     bloodPressure: "No",
     diabetes: "No",
     smoker: "No",
+    hasIllness: "No",
+    illnesses: [] as string[],
+    otherIllness: "",
   });
 
   useEffect(() => {
@@ -47,10 +67,14 @@ export default function ProfilePage() {
           setFormData({
             name: data.name || "",
             age: data.age?.toString() || "",
+            weight: data.weight?.toString() || "",
             sex: data.sex || "Male",
             bloodPressure: data.bloodPressure || "No",
             diabetes: data.diabetes || "No",
             smoker: data.smoker || "No",
+            hasIllness: data.hasIllness || "No",
+            illnesses: data.illnesses || [],
+            otherIllness: data.otherIllness || "",
           });
         }
       } catch (error) {
@@ -85,8 +109,59 @@ export default function ProfilePage() {
     ]);
   };
 
+  const handleIllnessToggle = (illness: string) => {
+    setFormData((prev) => {
+      const currentIllnesses = [...prev.illnesses];
+      if (currentIllnesses.includes(illness)) {
+        return {
+          ...prev,
+          illnesses: currentIllnesses.filter((item) => item !== illness),
+          // Clear otherIllness if "Others" is deselected
+          otherIllness: illness === "Others" ? "" : prev.otherIllness,
+        };
+      } else {
+        return {
+          ...prev,
+          illnesses: [...currentIllnesses, illness],
+        };
+      }
+    });
+  };
+
   const handleUpdateHealthData = async () => {
     try {
+      // Validation
+      const ageNumber = parseInt(formData.age);
+      const weightNumber = parseFloat(formData.weight);
+
+      if (
+        !formData.name.trim() ||
+        !formData.age.trim() ||
+        !formData.weight.trim()
+      ) {
+        Alert.alert("Error", "Please fill in all required fields");
+        return;
+      }
+
+      if (isNaN(ageNumber) || ageNumber < 1 || ageNumber > 150) {
+        Alert.alert("Error", "Please enter a valid age (1-150)");
+        return;
+      }
+
+      if (isNaN(weightNumber) || weightNumber < 1 || weightNumber > 500) {
+        Alert.alert("Error", "Please enter a valid weight (1-500 kg)");
+        return;
+      }
+
+      if (
+        formData.hasIllness === "Yes" &&
+        formData.illnesses.includes("Others") &&
+        !formData.otherIllness.trim()
+      ) {
+        Alert.alert("Error", "Please specify your other illness");
+        return;
+      }
+
       setLoading(true);
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/health`,
@@ -98,11 +173,17 @@ export default function ProfilePage() {
           body: JSON.stringify({
             userId: user?.id,
             name: formData.name,
-            age: parseInt(formData.age),
+            age: ageNumber,
+            weight: weightNumber,
             sex: formData.sex,
             bloodPressure: formData.bloodPressure,
             diabetes: formData.diabetes,
             smoker: formData.smoker,
+            hasIllness: formData.hasIllness,
+            illnesses: formData.illnesses,
+            otherIllness: formData.illnesses.includes("Others")
+              ? formData.otherIllness
+              : "",
           }),
         }
       );
@@ -110,6 +191,7 @@ export default function ProfilePage() {
       const data = await response.json();
       setHealthData(data);
       setEditModalVisible(false);
+      Alert.alert("Success", "Health information updated successfully");
     } catch (error) {
       console.error("Error updating health data:", error);
       Alert.alert("Error", "Failed to update health information");
@@ -192,6 +274,18 @@ export default function ProfilePage() {
               </View>
 
               <View style={styles.infoItem}>
+                <MaterialIcons
+                  name="monitor-weight"
+                  size={20}
+                  color="#4A90E2"
+                />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Weight</Text>
+                  <Text style={styles.infoValue}>{healthData.weight} kg</Text>
+                </View>
+              </View>
+
+              <View style={styles.infoItem}>
                 <MaterialIcons name="wc" size={20} color="#4A90E2" />
                 <View style={styles.infoTextContainer}>
                   <Text style={styles.infoLabel}>Sex</Text>
@@ -224,6 +318,36 @@ export default function ProfilePage() {
                   <Text style={styles.infoValue}>{healthData.smoker}</Text>
                 </View>
               </View>
+
+              <View style={styles.infoItem}>
+                <MaterialIcons
+                  name="local-hospital"
+                  size={20}
+                  color="#4A90E2"
+                />
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>Has Illness</Text>
+                  <Text style={styles.infoValue}>
+                    {healthData.hasIllness || "No"}
+                  </Text>
+                </View>
+              </View>
+
+              {healthData.hasIllness === "Yes" &&
+                healthData.illnesses &&
+                healthData.illnesses.length > 0 && (
+                  <View style={styles.infoItem}>
+                    <MaterialIcons name="list" size={20} color="#4A90E2" />
+                    <View style={styles.infoTextContainer}>
+                      <Text style={styles.infoLabel}>Illnesses</Text>
+                      <Text style={styles.infoValue}>
+                        {healthData.illnesses.join(", ")}
+                        {healthData.otherIllness &&
+                          `, ${healthData.otherIllness}`}
+                      </Text>
+                    </View>
+                  </View>
+                )}
             </>
           ) : (
             <Text style={styles.noDataText}>No health data available</Text>
@@ -249,71 +373,69 @@ export default function ProfilePage() {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Update Health Information</Text>
+              <ScrollView>
+                <Text style={styles.modalTitle}>Update Health Information</Text>
 
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Full Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.name}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, name: text })
-                  }
-                  placeholder="Enter your full name"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Age</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.age}
-                  onChangeText={(text) =>
-                    setFormData({ ...formData, age: text })
-                  }
-                  placeholder="Enter your age"
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Sex</Text>
-                <View style={styles.radioGroup}>
-                  {["Male", "Female", "Other"].map((option) => (
-                    <Pressable
-                      key={option}
-                      style={styles.radioOption}
-                      onPress={() => setFormData({ ...formData, sex: option })}
-                    >
-                      <View style={styles.radioCircle}>
-                        {formData.sex === option && (
-                          <View style={styles.radioInnerCircle} />
-                        )}
-                      </View>
-                      <Text style={styles.radioLabel}>{option}</Text>
-                    </Pressable>
-                  ))}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Full Name *</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.name}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, name: text })
+                    }
+                    placeholder="Enter your full name"
+                  />
                 </View>
-              </View>
 
-              {["bloodPressure", "diabetes", "smoker"].map((field) => (
-                <View key={field} style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>
-                    {field
-                      .replace(/([A-Z])/g, " $1")
-                      .replace(/^./, (str) => str.toUpperCase())}
-                  </Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Age *</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.age}
+                    onChangeText={(text) =>
+                      setFormData({
+                        ...formData,
+                        age: text.replace(/[^0-9]/g, ""),
+                      })
+                    }
+                    placeholder="Enter your age"
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Weight (kg) *</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.weight}
+                    onChangeText={(text) => {
+                      const numeric = text.replace(/[^0-9.]/g, "");
+                      const parts = numeric.split(".");
+                      const formatted =
+                        parts.length > 2
+                          ? parts[0] + "." + parts.slice(1).join("")
+                          : numeric;
+                      setFormData({ ...formData, weight: formatted });
+                    }}
+                    placeholder="Enter your weight in kg"
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Sex *</Text>
                   <View style={styles.radioGroup}>
-                    {["Yes", "No", "Don't know"].map((option) => (
+                    {["Male", "Female", "Other"].map((option) => (
                       <Pressable
                         key={option}
                         style={styles.radioOption}
                         onPress={() =>
-                          setFormData({ ...formData, [field]: option })
+                          setFormData({ ...formData, sex: option })
                         }
                       >
                         <View style={styles.radioCircle}>
-                          {formData[field] === option && (
+                          {formData.sex === option && (
                             <View style={styles.radioInnerCircle} />
                           )}
                         </View>
@@ -322,27 +444,128 @@ export default function ProfilePage() {
                     ))}
                   </View>
                 </View>
-              ))}
 
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setEditModalVisible(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.saveButton]}
-                  onPress={handleUpdateHealthData}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
+                {/* Illness Section */}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>
+                    Do you have any type of illness? *
+                  </Text>
+                  <View style={styles.radioGroup}>
+                    {["No", "Yes"].map((option) => (
+                      <Pressable
+                        key={option}
+                        style={styles.radioOption}
+                        onPress={() =>
+                          setFormData({ ...formData, hasIllness: option })
+                        }
+                      >
+                        <View style={styles.radioCircle}>
+                          {formData.hasIllness === option && (
+                            <View style={styles.radioInnerCircle} />
+                          )}
+                        </View>
+                        <Text style={styles.radioLabel}>{option}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                {formData.hasIllness === "Yes" && (
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>
+                      Select your illnesses:
+                    </Text>
+                    <View style={styles.illnessContainer}>
+                      {ILLNESS_OPTIONS.map((illness) => (
+                        <TouchableOpacity
+                          key={illness}
+                          style={styles.illnessOption}
+                          onPress={() => handleIllnessToggle(illness)}
+                        >
+                          <View style={styles.checkboxContainer}>
+                            <View
+                              style={[
+                                styles.checkbox,
+                                formData.illnesses.includes(illness) &&
+                                  styles.checkboxSelected,
+                              ]}
+                            >
+                              {formData.illnesses.includes(illness) && (
+                                <Text style={styles.checkmark}>✓</Text>
+                              )}
+                            </View>
+                          </View>
+                          <Text style={styles.illnessText}>{illness}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {formData.illnesses.includes("Others") && (
+                      <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>
+                          Please specify other illness *
+                        </Text>
+                        <TextInput
+                          style={styles.input}
+                          value={formData.otherIllness}
+                          onChangeText={(text) =>
+                            setFormData({ ...formData, otherIllness: text })
+                          }
+                          placeholder="Enter the illness name"
+                        />
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {["bloodPressure", "diabetes", "smoker"].map((field) => (
+                  <View key={field} style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>
+                      {field
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (str) => str.toUpperCase())}
+                    </Text>
+                    <View style={styles.radioGroup}>
+                      {["Yes", "No", "Don't know"].map((option) => (
+                        <Pressable
+                          key={option}
+                          style={styles.radioOption}
+                          onPress={() =>
+                            setFormData({ ...formData, [field]: option })
+                          }
+                        >
+                          <View style={styles.radioCircle}>
+                            {formData[field] === option && (
+                              <View style={styles.radioInnerCircle} />
+                            )}
+                          </View>
+                          <Text style={styles.radioLabel}>{option}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setEditModalVisible(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.saveButton]}
+                    onPress={handleUpdateHealthData}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.saveButtonText}>Save Changes</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
             </View>
           </View>
         </Modal>
@@ -493,7 +716,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 12,
     padding: 20,
-    maxHeight: "80%",
+    maxHeight: "90%",
   },
   modalTitle: {
     fontSize: 20,
@@ -509,6 +732,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#7F8C8D",
     marginBottom: 8,
+    fontWeight: "500",
   },
   input: {
     borderWidth: 1,
@@ -520,13 +744,15 @@ const styles = StyleSheet.create({
   },
   radioGroup: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     marginTop: 5,
+    flexWrap: "wrap",
   },
   radioOption: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 15,
+    marginRight: 20,
+    marginBottom: 10,
   },
   radioCircle: {
     width: 20,
@@ -545,6 +771,45 @@ const styles = StyleSheet.create({
     backgroundColor: "#4A90E2",
   },
   radioLabel: {
+    fontSize: 16,
+    color: "#2C3E50",
+  },
+  // Illness section styles
+  illnessContainer: {
+    borderWidth: 1,
+    borderColor: "#ECF0F1",
+    borderRadius: 8,
+    backgroundColor: "#F8FAFF",
+    padding: 12,
+    // maxHeight: 200,
+  },
+  illnessOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: "#CBD5E1",
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxSelected: {
+    backgroundColor: "#4A90E2",
+    borderColor: "#4A90E2",
+  },
+  checkmark: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  illnessText: {
     fontSize: 16,
     color: "#2C3E50",
   },

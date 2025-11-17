@@ -5,14 +5,37 @@ const HealthData = require('../models/HealthData');
 // Save health data - REMOVED AUTH CHECK
 router.post('/', async (req, res) => {
     try {
-        const { userId, name, age, sex, bloodPressure, diabetes, smoker } = req.body;
+        const {
+            userId,
+            name,
+            age,
+            sex,
+            weight,
+            bloodPressure,
+            diabetes,
+            smoker,
+            hasIllness,
+            illnesses,
+            otherIllness
+        } = req.body;
 
         let healthData = await HealthData.findOne({ userId });
 
         if (healthData) {
             healthData = await HealthData.findOneAndUpdate(
                 { userId },
-                { name, age, sex, bloodPressure, diabetes, smoker },
+                {
+                    name,
+                    age,
+                    sex,
+                    weight,
+                    bloodPressure,
+                    diabetes,
+                    smoker,
+                    hasIllness,
+                    illnesses,
+                    otherIllness
+                },
                 { new: true }
             );
         } else {
@@ -21,9 +44,13 @@ router.post('/', async (req, res) => {
                 name,
                 age,
                 sex,
+                weight,
                 bloodPressure,
                 diabetes,
-                smoker
+                smoker,
+                hasIllness,
+                illnesses,
+                otherIllness
             });
             await healthData.save();
         }
