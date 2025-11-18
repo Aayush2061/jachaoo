@@ -25,6 +25,7 @@ export default function LoginScreen() {
 
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isPressed, setIsPressed] = React.useState(false);
   const router = useRouter();
 
   const onGoogleSignIn = React.useCallback(async () => {
@@ -57,12 +58,18 @@ export default function LoginScreen() {
         />
       </View>
 
-      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.title}>Welcome to Jachao</Text>
       <Text style={styles.subtitle}>Sign in to continue</Text>
 
       <TouchableOpacity
-        style={[styles.googleButton, isLoading && styles.buttonDisabled]}
+        style={[
+          styles.googleButton,
+          isLoading && styles.buttonDisabled,
+          isPressed && styles.buttonPressed,
+        ]}
         onPress={onGoogleSignIn}
+        onPressIn={() => setIsPressed(true)}
+        onPressOut={() => setIsPressed(false)}
         disabled={isLoading}
       >
         <View style={styles.buttonContent}>
@@ -92,60 +99,73 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#F9FAFB",
   },
   logoContainer: {
-    marginBottom: 40,
+    marginTop: 100,
+    marginBottom: 32,
   },
   logo: {
     width: 120,
     height: 120,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontFamily: "Poppins-Bold", // or "Inter" depending on which font you prefer
+    // fontWeight: "700",
     textAlign: "center",
-    marginBottom: 10,
-    color: "#1a1a1a",
+    marginBottom: 8,
+    color: "#0F3A5D",
+    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
+    fontFamily: "Poppins-Medium",
     textAlign: "center",
-    marginBottom: 50,
-    color: "#666",
+    marginBottom: 40,
+    color: "#6B7280",
   },
   googleButton: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    width: "85%", // 80-85% of screen width
+    height: 52,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    minWidth: 280,
+    borderColor: "#E5E7EB",
+    marginTop: 40,
+    // Shadow for depth (optional)
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
+    flex: 1,
+    paddingLeft: 24, // Icon left padding
   },
   googleIcon: {
-    width: 30,
-    height: 30,
+    width: 22,
+    height: 22,
+    marginRight: 12,
   },
   buttonDisabled: {
     backgroundColor: "#f0f0f0",
     opacity: 0.7,
   },
+  // For pressed state - you'll need to handle this with state
+  buttonPressed: {
+    backgroundColor: "#F3F4F6",
+    transform: [{ scale: 0.97 }],
+  },
   googleButtonText: {
-    color: "#444",
-    textAlign: "center",
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "Poppins-SemiBold", // Weight 600 = SemiBold
+    color: "#1F2937",
+    textAlign: "center",
   },
   footer: {
     position: "absolute",
@@ -154,7 +174,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: "#999",
+    fontFamily: "Poppins-Regular",
+    color: "#9CA3AF",
+    marginTop: 40,
     textAlign: "center",
   },
 });

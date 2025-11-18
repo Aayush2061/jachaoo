@@ -89,7 +89,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Balasana",
-        image: require("../../assets/images/periods-exercise/Balasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381250/Balasana_gjls9b.png",
+        },
         steps: [
           "1. Sit on your knees, feet together",
           "2. Bend forward slowly, chest between thighs",
@@ -103,7 +105,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Cat-Cow Stretch",
-        image: require("../../assets/images/periods-exercise/cat-cow.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381254/cat-cow_vrdrrf.png",
+        },
         steps: [
           "1. Get on the pose",
           `${bullet}  Cow Pose`,
@@ -118,7 +122,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Viparita Karani",
-        image: require("../../assets/images/periods-exercise/vparita-karani.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381275/vparita-karani_tqltel.png",
+        },
         steps: [
           "1. Sit near a wall.",
           "2. Lie down and lift your legs up, placing them straight on the wall.",
@@ -132,7 +138,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Supta Baddha Konasana",
-        image: require("../../assets/images/periods-exercise/supta-buddha-konasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381265/supta-buddha-konasana_qd3nnt.png",
+        },
         steps: [
           "1. Lie down on your back.",
           "2. Join your feet together, and let your knees fall open like butterfly wings.",
@@ -145,7 +153,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Apanasana",
-        image: require("../../assets/images/periods-exercise/apanasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381250/apanasana_nvanhi.png",
+        },
         steps: [
           "1. Lie down on your back.",
           "2. Bring one knee close to your chest and hold it with both hands.",
@@ -162,7 +172,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Anulom Vilom",
-        // image: require("@assets/images/period-exercise/anulom_vilom.jpg"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381246/anulom_vilom_c62pbc.jpg",
+        },
         steps: [
           "1. Sit comfortably with your back straight.",
           "2. Close your eyes and relax your face.",
@@ -181,7 +193,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Deep Belly Breathing",
-        image: require("../../assets/images/periods-exercise/deep-belly-breathing.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381254/deep-belly-breathing_gst05h.png",
+        },
         steps: [
           "1. Sit or lie down comfortably.",
           "2. Place one hand on your belly and one on your chest.",
@@ -199,7 +213,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Womb Meditation",
-        image: require("../../assets/images/periods-exercise/womb-meditation.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381277/womb-meditation_vr9nma.png",
+        },
         steps: [
           "1. Sit or lie down in a quiet place.",
           "2. Place both hands on your womb (below the belly button).",
@@ -358,7 +374,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Adho Mukha Svanasana",
-        image: require("../../assets/images/periods-exercise/adho-mukha-svanasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381248/adho-mukha-svanasana_wgh4gw.png",
+        },
         steps: [
           "1. Start by placing your hands and knees on the floor.",
           "2. Curl your toes under and slowly lift your hips up toward the sky.",
@@ -377,7 +395,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Virabhadrasana I",
-        image: require("../../assets/images/periods-exercise/virabhadrasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381272/virabhadrasana_x8k5b5.png",
+        },
         steps: [
           "1. Step your left leg back, bend the right knee",
           "2. Raise both arms straight up, face forward",
@@ -392,7 +412,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Ustrasana",
-        image: require("../../assets/images/periods-exercise/ustrasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381269/utkatasana_ngi4hd.png",
+        },
         steps: [
           "1. Kneel down, knees hip-width apart",
           "2. Place hands on lower back",
@@ -411,7 +433,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Setu Bandhasana",
-        image: require("../../assets/images/periods-exercise/setu-bandhasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381262/setu-bandhasana_hxsr2l.png",
+        },
         steps: [
           "1. Lie on your back, bend your knees",
           "2. Place feet flat on the floor, arms by your side",
@@ -433,7 +457,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Kapalbhati",
-        image: require("../../assets/images/periods-exercise/kapalbhati.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381256/kapalbhati_ojz3ss.png",
+        },
         steps: [
           "1. Sit comfortably with a straight back",
           "2. Take a deep breath in",
@@ -451,7 +477,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Bhramari",
-        image: require("../../assets/images/periods-exercise/bhramari.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381253/bhramari_jcrvns.png",
+        },
         steps: [
           "1. Sit comfortably with your eyes closed",
           "2. Inhale deeply through your nose",
@@ -465,7 +493,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Visualization Meditation",
-        image: require("../../assets/images/periods-exercise/visualization-meditation.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381275/visualization-meditation_ufhe4p.png",
+        },
         steps: [
           "1. Sit comfortably in a quiet, peaceful place",
           "2. Close your eyes and take slow, deep breaths",
@@ -593,7 +623,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Bhujangasana",
-        image: require("../../assets/images/periods-exercise/bhujangasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381251/bhujangasana_l53trm.png",
+        },
         steps: [
           "1. Lie down on your stomach",
           "2. Put your hands under your shoulders",
@@ -612,7 +644,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Dhanurasana (Bow pose)",
-        image: require("../../assets/images/periods-exercise/dhanurasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381256/dhanurasana_luapc9.png",
+        },
         steps: [
           "1. Lie on your stomach",
           "2. Bend your knees and hold your ankles with your hands",
@@ -630,7 +664,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Utkatasana",
-        image: require("../../assets/images/periods-exercise/utkatasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381269/utkatasana_ngi4hd.png",
+        },
         steps: [
           "1. Stand straight with your feet a little apart",
           "2. Raise both hands straight up",
@@ -648,7 +684,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "Plank Pose",
-        image: require("../../assets/images/periods-exercise/plank-pose.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381263/plank-pose_bviii7.png",
+        },
         steps: [
           "1. Lie on your stomach and then lift your body on your hands and toes",
           "2. Keep your body straight like a line",
@@ -669,7 +707,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Bhramari",
-        image: require("../../assets/images/periods-exercise/bhramari.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381253/bhramari_jcrvns.png",
+        },
         steps: [
           "1. Sit in a quiet place, cross your legs and keep your back straight",
           "2. Close your eyes and relax",
@@ -686,7 +726,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "Chandra Bhedana",
-        // image: require("../../assets/images/exercise/chandra-bhedana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381246/anulom_vilom_c62pbc.jpg",
+        },
         steps: [
           "1. Sit comfortably with your back straight",
           "2. Use your right hand to close your right nostril with your thumb",
@@ -837,7 +879,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "1. Apanasana",
-        image: require("../../assets/images/periods-exercise/apanasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381250/apanasana_nvanhi.png",
+        },
         steps: [
           "1. Lie on your back with legs straight.",
           "2. Slowly bend both knees and bring them close to your chest.",
@@ -854,7 +898,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "2. Ananda Balasana",
-        image: require("../../assets/images/periods-exercise/ananda-balasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381248/ananda-balasana_voix3b.png",
+        },
         steps: [
           "1. Lie on your back.",
           "2. Bend your knees and bring them towards your chest.",
@@ -872,7 +918,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "3. Parivrtta Janu Sirsasana",
-        image: require("../../assets/images/periods-exercise/parivrtta-janu.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381261/parivrtta-janu_fe8pce.png",
+        },
         steps: [
           "1. Sit on the floor with one leg stretched out and the other leg bent inward.",
           "2. Turn your body slightly toward the stretched leg.",
@@ -892,7 +940,9 @@ export const phaseData = {
         type: "exercise",
         category: "yoga",
         name: "4. Supta Matsyendrasana",
-        image: require("../../assets/images/periods-exercise/supta-matsyendrasana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381265/supta-matsyendrasana_i2uqmx.png",
+        },
         steps: [
           "1. Lie on your back.",
           "2. Bend your right knee and bring it across your body to the left side.",
@@ -915,7 +965,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "1. Nadi Shodhana",
-        // image: require("../../assets/images/periods-exercise/nadi_shodhana.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381246/anulom_vilom_c62pbc.jpg",
+        },
         steps: [
           "1. Sit comfortably with your back straight.",
           "2. Use your **right thumb** to close your **right nostril**.",
@@ -935,7 +987,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "2. Yoga Nidra",
-        image: require("../../assets/images/periods-exercise/yoga-nidra.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381277/yoga-nidra_x81d7f.png",
+        },
         steps: [
           "1. Lie flat on your back, arms and legs relaxed.",
           "2. Close your eyes and take a few deep breaths.",
@@ -953,7 +1007,9 @@ export const phaseData = {
         type: "exercise",
         category: "meditation",
         name: "3. Bhramari",
-        image: require("../../assets/images/periods-exercise/bhramari.png"),
+        image: {
+          uri: "https://res.cloudinary.com/drgny2hcw/image/upload/v1763381253/bhramari_jcrvns.png",
+        },
         steps: [
           "1. Sit quietly with your eyes closed.",
           "2. Place your thumbs gently on your ears (to close them softly).",

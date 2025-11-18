@@ -13,11 +13,21 @@ import MentalHealthBackground from "../MentalHealthBackground";
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 40 - 12) / 2;
 const audioFiles = {
-  "forest-night": require("../../../../assets/audio/fast_forest-night.m4a"),
-  "camp-fire": require("../../../../assets/audio/fast_camp-fire.m4a"),
-  "soft-wind": require("../../../../assets/audio/fast_soft-wind.mp3"),
-  "ocean-waves": require("../../../../assets/audio/relaxing_river_audio.mp3"),
-  rainfall: require("../../../../assets/audio/fast_rainfall.m4a"),
+  "forest-night": {
+    uri: "https://res.cloudinary.com/drgny2hcw/video/upload/v1763371245/fast_forest-night_mqy8h2.m4a",
+  },
+  "camp-fire": {
+    uri: "https://res.cloudinary.com/drgny2hcw/video/upload/v1763371241/fast_camp-fire_hxoe6l.m4a",
+  },
+  "soft-wind": {
+    uri: "https://res.cloudinary.com/drgny2hcw/video/upload/v1763371250/fast_soft-wind_am8o9n.mp3",
+  },
+  "ocean-waves": {
+    uri: "https://res.cloudinary.com/drgny2hcw/video/upload/v1763371241/relaxing_river_audio_lp1trq.mp3",
+  },
+  rainfall: {
+    uri: "https://res.cloudinary.com/drgny2hcw/video/upload/v1763371230/fast_rainfall_oy6smd.m4a",
+  },
 };
 
 const audioOptions = [

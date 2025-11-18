@@ -9,7 +9,7 @@ export default function BackgroundWrapper({
 }) {
   return (
     <ImageBackground
-      source={require("@/assets/images/period-tracker1.png")}
+      source={require("@/assets/images/period-tracker.png")}
       style={styles.backgroundImage}
       resizeMode="cover"
     >

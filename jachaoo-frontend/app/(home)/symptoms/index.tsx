@@ -56,6 +56,18 @@ export default function SymptomChecker() {
       setLoading(true);
       const token = await getToken();
 
+      // console.log("Starting diagnosis with health data:", {
+      //   smoker: healthData?.smoker || "Don't know",
+      //   diabetes: healthData?.diabetes || "Don't know",
+      //   blood_pressure: healthData?.bloodPressure || "Don't know",
+      //   age: healthData?.age?.toString() || "",
+      //   weight: healthData?.weight?.toString() || "",
+      //   sex: healthData?.sex || "",
+      //   has_illness: healthData?.hasIllness || "No",
+      //   illnesses: healthData?.illnesses || [],
+      //   other_illness: healthData?.otherIllness || "",
+      // });
+
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/symptoms/start`,
         {
@@ -68,6 +80,12 @@ export default function SymptomChecker() {
             smoker: healthData?.smoker || "Don't know",
             diabetes: healthData?.diabetes || "Don't know",
             blood_pressure: healthData?.bloodPressure || "Don't know",
+            age: healthData?.age?.toString() || "",
+            weight: healthData?.weight?.toString() || "",
+            sex: healthData?.sex || "",
+            has_illness: healthData?.hasIllness || "No",
+            illnesses: healthData?.illnesses || [],
+            other_illness: healthData?.otherIllness || "",
           }),
         }
       );

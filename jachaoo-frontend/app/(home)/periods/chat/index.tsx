@@ -17,6 +17,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { getCyclePhaseInfo } from "../../../utils/cycleUtils";
+
 type Message = {
   id: string;
   text: string;
@@ -29,6 +32,7 @@ export default function PeriodChat() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const [periodData, setPeriodData] = useState<any>(null);
+  const [cyclePhaseInfo, setCyclePhaseInfo] = useState<any>(null);
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -64,6 +68,27 @@ export default function PeriodChat() {
           const data = await response.json();
           setPeriodData(data);
           // console.log(data);
+
+          // Calculate cycle phase information
+          if (
+            data &&
+            data.lastPeriodDate &&
+            data.cycleLength &&
+            data.duration
+          ) {
+            try {
+              const phaseInfo = getCyclePhaseInfo({
+                lastPeriodDate: data.lastPeriodDate,
+                cycleLength: data.cycleLength,
+                duration: data.duration,
+                today: new Date(),
+              });
+              // console.log("Current Phase: ", phaseInfo.phase);
+              setCyclePhaseInfo(phaseInfo);
+            } catch (error) {
+              console.error("Error calculating cycle phase:", error);
+            }
+          }
         } catch (error) {
           console.error("Error fetching period data:", error);
         } finally {
@@ -116,6 +141,7 @@ export default function PeriodChat() {
     //   trying_to_conceive: periodData.tryingToConceive !== "No",
     //   on_hormonal_contraceptive: periodData.contraceptive !== "No",
     //   first_day_of_last_period: periodData.lastPeriodDate.split("T")[0],
+    //   current_cycle_phase: cyclePhaseInfo?.phase || "Unknown",
     // });
 
     try {
@@ -139,6 +165,7 @@ export default function PeriodChat() {
               trying_to_conceive: periodData.tryingToConceive !== "No",
               on_hormonal_contraceptive: periodData.contraceptive !== "No",
               first_day_of_last_period: periodData.lastPeriodDate.split("T")[0],
+              current_cycle_phase: cyclePhaseInfo?.phase || "Unknown",
             },
           }),
         }
