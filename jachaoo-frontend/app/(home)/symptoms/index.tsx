@@ -51,22 +51,17 @@ export default function SymptomChecker() {
     fetchHealthData();
   }, [user?.id]);
 
+  // Clear input when question changes to "Please describe your next symptom."
+  useEffect(() => {
+    if (currentQuestion.includes("Please describe your next symptom")) {
+      setUserInput("");
+    }
+  }, [currentQuestion]);
+
   const startDiagnosis = async () => {
     try {
       setLoading(true);
       const token = await getToken();
-
-      // console.log("Starting diagnosis with health data:", {
-      //   smoker: healthData?.smoker || "Don't know",
-      //   diabetes: healthData?.diabetes || "Don't know",
-      //   blood_pressure: healthData?.bloodPressure || "Don't know",
-      //   age: healthData?.age?.toString() || "",
-      //   weight: healthData?.weight?.toString() || "",
-      //   sex: healthData?.sex || "",
-      //   has_illness: healthData?.hasIllness || "No",
-      //   illnesses: healthData?.illnesses || [],
-      //   other_illness: healthData?.otherIllness || "",
-      // });
 
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/symptoms/start`,
@@ -108,6 +103,8 @@ export default function SymptomChecker() {
         setSessionId(data.session_id);
         setCurrentQuestion(data.message);
         setStage("question");
+        // Clear any existing input when starting new diagnosis
+        setUserInput("");
       }
     } catch (error: any) {
       if (!error.message.includes("daily limit")) {
@@ -143,12 +140,18 @@ export default function SymptomChecker() {
       if (data.session_over) {
         setDiagnosis(data.diagnosis || "No diagnosis provided");
         setStage("diagnosis");
+        // Clear input when diagnosis is complete
+        setUserInput("");
       } else {
         setCurrentQuestion(
           data.question.includes("?") ? data.question : `${data.question}?`
         );
         setOptions(data.options || []);
-        if (!data.options) setUserInput("");
+        // Only clear input if there are options (multiple choice)
+        // For text input questions, we'll handle clearing in the useEffect above
+        if (data.options) {
+          setUserInput("");
+        }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to submit answer");
@@ -220,7 +223,11 @@ export default function SymptomChecker() {
                     value={userInput}
                     onChangeText={setUserInput}
                     multiline
+                    maxLength={MAX_INPUT_LENGTH}
                   />
+                  <Text style={styles.charCount}>
+                    {userInput.length}/{MAX_INPUT_LENGTH}
+                  </Text>
                   <TouchableOpacity
                     style={[
                       styles.submitButton,
@@ -379,11 +386,17 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     minHeight: 100,
-    marginBottom: 12,
+    marginBottom: 8,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 1,
+  },
+  charCount: {
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "right",
+    marginBottom: 12,
   },
   submitButton: {
     backgroundColor: "#4F7CFF",

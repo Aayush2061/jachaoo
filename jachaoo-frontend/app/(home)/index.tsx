@@ -9,7 +9,7 @@ import {
   Alert,
   Animated,
   Dimensions,
-  ImageBackground,
+  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -19,7 +19,7 @@ import {
 } from "react-native";
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = (width - 48) / 2;
+const CARD_WIDTH = (width - 70) / 2;
 
 export default function HomePage() {
   const { user } = useUser();
@@ -33,12 +33,32 @@ export default function HomePage() {
     description: string;
   } | null>(null);
   const [lastTipDate, setLastTipDate] = useState<string>("");
+
+  // Heartbeat animation
+  const heartbeat = new Animated.Value(1);
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(heartbeat, {
+          toValue: 1.2,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartbeat, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
   // Function to fetch daily tip
   const fetchDailyTip = async () => {
     try {
       const today = new Date().toDateString();
 
-      // Only fetch new tip if we don't have one for today
       if (lastTipDate !== today) {
         const token = await getToken();
         const response = await fetch(
@@ -53,14 +73,12 @@ export default function HomePage() {
         setDailyTip(data);
         setLastTipDate(today);
 
-        // Store in AsyncStorage for persistence
         await AsyncStorage.setItem("lastTipDate", today);
         await AsyncStorage.setItem("dailyTip", JSON.stringify(data));
       }
     } catch (error) {
       console.error("Error fetching daily tip:", error);
 
-      // Try to load from cache if API fails
       const cachedTip = await AsyncStorage.getItem("dailyTip");
       const cachedDate = await AsyncStorage.getItem("lastTipDate");
 
@@ -68,7 +86,6 @@ export default function HomePage() {
         setDailyTip(JSON.parse(cachedTip));
         setLastTipDate(cachedDate);
       } else {
-        // Fallback to default tip
         setDailyTip({
           tip: "Drink at least 8 glasses of water daily",
           description:
@@ -78,7 +95,6 @@ export default function HomePage() {
     }
   };
 
-  // Load cached tip on focus
   useFocusEffect(
     useCallback(() => {
       const loadCachedTip = async () => {
@@ -99,6 +115,7 @@ export default function HomePage() {
       loadCachedTip();
     }, [])
   );
+
   useEffect(() => {
     const checkHealthData = async () => {
       try {
@@ -113,7 +130,7 @@ export default function HomePage() {
           setHasHealthData(true);
           setHealthData(data);
         } else {
-          router.replace("/(home)/onboarding");
+          router.replace("/(home)/onboarding/welcome");
         }
       } catch (error) {
         console.error("Error checking health data:", error);
@@ -129,48 +146,53 @@ export default function HomePage() {
   const features = [
     {
       id: 1,
-      title: "Symptom Checker",
+      title: "Symptom Diagnosis",
+      subtitle: "AI-powered symptom analysis",
       icon: "stethoscope",
-      color: "#5E8BFF90", // Added alpha channel for transparency
+      stripeColor: "#2FB7F0",
+      bgColor: "#E8F6FD",
       iconLib: FontAwesome5,
       route: "/(home)/symptoms",
-      image: require("../../assets/images/home-page-icons/symptoms.jpg"),
     },
     {
       id: 2,
-      title: "First Aid",
-      icon: "first-aid",
-      color: "#FF6B6B90",
+      title: "Lab Report",
+      subtitle: "Scan & understand reports",
+      icon: "file-medical-alt",
+      stripeColor: "#1B3C73",
+      bgColor: "#E8EDF5",
       iconLib: FontAwesome5,
-      route: "/firstaid",
-      image: require("../../assets/images/home-page-icons/firstaid.jpg"),
+      route: "/(home)/reports",
     },
     {
       id: 3,
-      title: "Lab Report Analysis",
-      icon: "file-alt",
-      color: "#6BD0FF90",
+      title: "First Aid",
+      subtitle: "Emergency care guide",
+      icon: "first-aid",
+      stripeColor: "#FF6B6B",
+      bgColor: "#FFE8E8",
       iconLib: FontAwesome5,
-      route: "/(home)/reports",
-      image: require("../../assets/images/home-page-icons/reportanalysis.jpg"),
+      route: "/firstaid",
     },
     {
       id: 4,
       title: "Period Tracker",
-      icon: "heart",
-      color: "#FF8E9E90",
+      subtitle: "Track your cycle",
+      icon: "heartbeat",
+      stripeColor: "#E84C88",
+      bgColor: "#FFEAF1",
       iconLib: FontAwesome5,
       route: "/(home)/periods",
-      image: require("../../assets/images/home-page-icons/periods.jpg"),
     },
     {
       id: 5,
       title: "Mental Health",
+      subtitle: "Emotional wellness support",
       icon: "brain",
-      color: "#A78BFA90",
+      stripeColor: "#7F5AF0",
+      bgColor: "#F3EDFF",
       iconLib: FontAwesome5,
       route: "/(home)/mental-health",
-      image: require("../../assets/images/home-page-icons/mental-health.jpg"),
     },
   ];
 
@@ -178,7 +200,7 @@ export default function HomePage() {
 
   const handlePressIn = (index: number) => {
     Animated.spring(scaleValues[index], {
-      toValue: 0.95,
+      toValue: 0.96,
       useNativeDriver: true,
     }).start();
   };
@@ -195,183 +217,303 @@ export default function HomePage() {
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#5E8BFF" />
+        <ActivityIndicator size="large" color="#1B3C73" />
         <Text style={styles.loadingText}>Loading your health data...</Text>
       </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={["#F8FAFF", "#ECF2FF"]}
-      style={styles.background}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+    <View style={styles.background}>
       <SafeAreaView style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header Section */}
+          {/* Premium Header Section */}
           <View style={styles.header}>
-            <View style={styles.headerContent}>
+            <View style={styles.greetingContainer}>
               <Text style={styles.greeting}>
-                Hello, {healthData?.name || "User"}
+                Hello, {healthData?.name || "User"} 👋
               </Text>
-              <Text style={styles.subtitle}>
-                Your personal health companion
-              </Text>
+              <Text style={styles.subtitle}>Stay healthy today!</Text>
             </View>
-            <Link href="/(home)/profile" asChild>
-              <Pressable
-                style={styles.profileButton}
-                android_ripple={{ color: "#E6F0FF", borderless: true }}
-              >
-                <Ionicons name="person-circle" size={44} color="#5E8BFF" />
-              </Pressable>
-            </Link>
+            <View style={styles.headerRight}>
+              <Animated.View
+                style={[
+                  styles.heartbeatIcon,
+                  { transform: [{ scale: heartbeat }] },
+                ]}
+              ></Animated.View>
+              <Link href="/(home)/profile" asChild>
+                <Pressable style={styles.profilePicContainer}>
+                  {user?.imageUrl ? (
+                    <Image
+                      source={{ uri: user.imageUrl }}
+                      style={styles.profilePic}
+                    />
+                  ) : (
+                    <View style={styles.profilePicPlaceholder}>
+                      <Ionicons name="person" size={20} color="#1B3C73" />
+                    </View>
+                  )}
+                </Pressable>
+              </Link>
+            </View>
           </View>
 
-          {/* Features Grid */}
-          <Text style={styles.sectionTitle}>Health Services</Text>
+          {/* Main Features Grid */}
           <View style={styles.featuresGrid}>
             {features.map((feature, index) => (
               <Animated.View
                 key={feature.id}
-                style={{
-                  transform: [{ scale: scaleValues[index] }],
-                }}
+                style={[
+                  styles.featureCardWrapper,
+                  {
+                    transform: [{ scale: scaleValues[index] }],
+                  },
+                ]}
               >
                 <Pressable
                   onPress={() => router.push(feature.route)}
                   onPressIn={() => handlePressIn(index)}
                   onPressOut={() => handlePressOut(index)}
+                  style={styles.featureCardPressable}
                 >
-                  <ImageBackground
-                    source={feature.image}
+                  <View
                     style={[
                       styles.featureCard,
-                      { backgroundColor: feature.color },
+                      { backgroundColor: feature.bgColor },
                     ]}
-                    imageStyle={styles.featureImage}
                   >
-                    <View style={styles.featureContent}>
-                      <View style={styles.featureIconContainer}>
+                    {/* Colored stripe accent */}
+                    <View
+                      style={[
+                        styles.stripeAccent,
+                        { backgroundColor: feature.stripeColor },
+                      ]}
+                    />
+
+                    <View style={styles.cardContent}>
+                      <View
+                        style={[
+                          styles.iconCircle,
+                          { backgroundColor: feature.stripeColor },
+                        ]}
+                      >
                         <feature.iconLib
                           name={feature.icon}
-                          size={28}
+                          size={24}
                           color="white"
                         />
                       </View>
-                      <Text style={styles.featureText}>{feature.title}</Text>
+                      <View style={styles.textContainer}>
+                        <Text style={styles.featureTitle}>{feature.title}</Text>
+                        <Text style={styles.featureSubtitle}>
+                          {feature.subtitle}
+                        </Text>
+                      </View>
                     </View>
-                  </ImageBackground>
+                  </View>
                 </Pressable>
               </Animated.View>
             ))}
           </View>
 
-          {/* Health Tip */}
+          {/* Premium Daily Tip Card */}
           {dailyTip && (
-            <View style={styles.tipCard}>
-              <View style={styles.tipHeader}>
-                <Ionicons name="sparkles" size={20} color="#FFC107" />
-                <Text style={styles.tipTitle}>Daily Health Tip</Text>
-              </View>
-              <Text style={styles.tipContent}>
-                <Text style={{ fontWeight: "bold" }}>{dailyTip.tip}</Text>:{" "}
-                {dailyTip.description}
-              </Text>
-            </View>
+            <Pressable style={styles.tipCardPressable}>
+              <LinearGradient
+                colors={["#2FB7F0", "#1B3C73"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.tipCard}
+              >
+                <View style={styles.tipHeader}>
+                  <Ionicons name="bulb" size={24} color="#FFFFFF" />
+                  <Text style={styles.tipTitle}>Today's Health Tip</Text>
+                </View>
+                <Text style={styles.tipContent}>{dailyTip.tip}</Text>
+                <Text style={styles.tipDescription}>
+                  {dailyTip.description}
+                </Text>
+              </LinearGradient>
+            </Pressable>
           )}
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    marginTop: 10,
     flex: 1,
-    // backgroundColor: "#F8FAFF",
     paddingBottom: 60,
   },
   background: {
     flex: 1,
-    width: "100%",
+    backgroundColor: "#FAFAF7",
   },
   scrollContainer: {
-    padding: 20,
+    padding: 24,
     paddingBottom: 40,
-    paddingTop: 16,
-    paddingHorizontal: 16,
   },
   loadingContainer: {
     justifyContent: "center",
     alignItems: "center",
     gap: 16,
+    backgroundColor: "#FAFAF7",
   },
   loadingText: {
     fontSize: 16,
-    color: "#5E8BFF",
+    color: "#1B3C73",
     marginTop: 16,
+    fontFamily: "Poppins-Regular",
   },
+
+  // Header Styles
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 28,
+    marginBottom: 30,
   },
-  headerContent: {
+  greetingContainer: {
     flex: 1,
   },
   greeting: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#1A237E",
-    fontFamily: "Inter_700Bold",
+    fontSize: 20,
+    // fontWeight: "600",
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
   },
   subtitle: {
-    fontSize: 15,
-    color: "#64748B",
-    marginTop: 6,
-    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    color: "#555555",
+    marginTop: 2,
+    fontFamily: "Poppins-Regular",
   },
-  profileButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  heartbeatIcon: {
+    // Animation container
+  },
+  profilePicContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#E8F0FE",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 16,
-    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1A237E",
-    marginBottom: 18,
-    fontFamily: "Inter_600SemiBold",
+  profilePic: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 22,
   },
+  profilePicPlaceholder: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 22,
+    backgroundColor: "#E8F0FE",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // Features Grid
   featuresGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 24,
-    gap: 12,
+    marginBottom: 26,
+    rowGap: 16,
+    columnGap: 12,
   },
-  tipCard: {
+  featureCardWrapper: {
+    width: CARD_WIDTH,
+  },
+  featureCardPressable: {
+    width: "100%",
+  },
+  featureCard: {
+    width: "100%",
+    height: 160,
+    borderRadius: 24,
     backgroundColor: "white",
-    borderRadius: 16,
-    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+    overflow: "hidden",
+  },
+  stripeAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 5,
+  },
+  cardContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingLeft: 22,
+    justifyContent: "space-between",
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  textContainer: {
+    gap: 4,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1B3C73",
+    letterSpacing: 0.2,
+    fontFamily: "Poppins-Bold",
+  },
+  featureSubtitle: {
+    fontSize: 12,
+    color: "#666666",
+    lineHeight: 16,
+    fontFamily: "Poppins-Regular",
+  },
+
+  // Daily Tip Card
+  tipCardPressable: {
+    marginTop: 4,
+  },
+  tipCard: {
+    borderRadius: 20,
+    padding: 20,
+    minHeight: 120,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowRadius: 12,
     elevation: 3,
-    marginTop: 8,
   },
   tipHeader: {
     flexDirection: "row",
@@ -382,57 +524,22 @@ const styles = StyleSheet.create({
   tipTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A237E",
-    fontFamily: "Inter_600SemiBold",
+    color: "#FFFFFF",
+    fontFamily: "Poppins-SemiBold",
   },
   tipContent: {
-    fontSize: 14,
-    color: "#64748B",
-    lineHeight: 22,
-    fontFamily: "Inter_400Regular",
-  },
-  featureCard: {
-    width: CARD_WIDTH,
-    height: CARD_WIDTH * 0.9,
-    borderRadius: 16,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  featureImage: {
-    opacity: 0.8,
-    resizeMode: "cover",
-  },
-  featureContent: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.3)",
-  },
-  featureIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  featureText: {
-    color: "white",
-    fontWeight: "600",
     fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-    marginTop: 8,
-    textAlign: "center",
+    fontWeight: "600",
+    color: "#FFFFFF",
+    lineHeight: 22,
+    marginBottom: 6,
+    fontFamily: "Poppins-SemiBold",
+  },
+  tipDescription: {
+    fontSize: 13,
+    color: "#FFFFFF",
+    lineHeight: 20,
+    opacity: 0.95,
+    fontFamily: "Poppins-Regular",
   },
 });
