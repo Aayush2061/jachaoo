@@ -15,6 +15,8 @@ import {
   View,
 } from "react-native";
 
+import { getCyclePhaseInfo } from "../../../utils/cycleUtils";
+
 export default function SymptomTracker() {
   const { user } = useUser();
   const router = useRouter();
@@ -33,6 +35,7 @@ export default function SymptomTracker() {
   const [moods, setMoods] = useState<string[]>([]);
   const [dailyNotes, setDailyNotes] = useState<string>("");
   const [periodData, setPeriodData] = useState<any>(null);
+  const [cyclePhaseInfo, setCyclePhaseInfo] = useState<any>(null);
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +60,22 @@ export default function SymptomTracker() {
         );
         const data = await response.json();
         setPeriodData(data);
+
+        // Calculate cycle phase information
+        if (data && data.lastPeriodDate && data.cycleLength && data.duration) {
+          try {
+            const phaseInfo = getCyclePhaseInfo({
+              lastPeriodDate: data.lastPeriodDate,
+              cycleLength: data.cycleLength,
+              duration: data.duration,
+              today: new Date(),
+            });
+            console.log("Current Phase: ", phaseInfo.phase);
+            setCyclePhaseInfo(phaseInfo);
+          } catch (error) {
+            console.error("Error calculating cycle phase:", error);
+          }
+        }
       } catch (error) {
         console.error("Error fetching period data:", error);
       } finally {
@@ -137,10 +156,10 @@ export default function SymptomTracker() {
     const temp = parseFloat(bodyTemp);
 
     // Universal error for invalid input
-    if (!bodyTemp || isNaN(temp)) {
-      setError("Please enter a valid temperature.");
-      return;
-    }
+    // if (isNaN(temp)) {
+    //   setError("Please enter a valid temperature.");
+    //   return;
+    // }
 
     // Range validation
     if (tempUnit === "C") {
@@ -177,6 +196,7 @@ export default function SymptomTracker() {
           tryingToConceive: periodData.tryingToConceive,
           mainConcern: periodData.mainConcern,
           appearance: periodData.appearance,
+          currentCyclePhase: cyclePhaseInfo?.phase || "Unknown",
         },
         daily_data: {
           bodyTemp: {
@@ -195,7 +215,7 @@ export default function SymptomTracker() {
         },
       };
 
-      // console.log(requestData);
+      console.log(requestData);
 
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/daily-analysis`,

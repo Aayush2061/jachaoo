@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Image, // <-- Added Image component import
 } from "react-native";
 
 export default function PeriodTrackerGetStarted() {
@@ -64,6 +65,15 @@ export default function PeriodTrackerGetStarted() {
             Track your menstrual cycle, symptoms, and patterns to better
             understand your body
           </Text>
+
+          {/* The new image component inserted here */}
+          <Image
+            // NOTE: Ensure the path to your image asset is correct in your project structure.
+            source={require("../../../assets/images/periods_girl.png")}
+            style={styles.heroImage}
+            resizeMode="contain"
+          />
+
           <Pressable
             style={styles.button}
             onPress={() => router.push("/(home)/periods/onboarding")}
@@ -85,7 +95,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(255, 255, 255, 0.1)", // Semi-transparent white overlay
-    // justifyContent: "center",
+    // The contentContainer now handles all internal positioning
   },
   contentContainer: {
     alignItems: "center",
@@ -103,14 +113,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
     color: "#555",
-    // marginTop: 200,
-    marginBottom: 40,
+    marginBottom: 20, // Reduced from 40 to bring it closer to the image
     paddingHorizontal: 20,
     lineHeight: 24, // Better readability
   },
+  heroImage: {
+    // UPDATED SIZE: Increased height from 380 to 450 while maintaining aspect ratio (512/1080)
+    height: 450, // Prominent height for the hero image
+    width: 450 * (512 / 1080), // Calculated width to maintain the aspect ratio (~213)
+    maxWidth: "80%", // Ensure it scales down gracefully
+    alignSelf: "center",
+    marginVertical: 20, // Add vertical spacing around the image
+  },
   button: {
     backgroundColor: "#9b59b6",
-    marginTop: 500,
+    marginTop: 35, // Slightly reduced spacing to accommodate the larger image
     padding: 18, // Slightly larger padding
     borderRadius: 10,
     width: "80%", // Not full width for better aesthetics

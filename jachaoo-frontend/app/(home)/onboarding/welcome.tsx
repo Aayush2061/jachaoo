@@ -19,6 +19,12 @@ export default function WelcomeScreen() {
         <Text style={styles.subtitle}>
           Let's personalize your health experience
         </Text>
+
+        <Text style={styles.disclaimer}>
+          Disclaimer: Jachao provides AI-based health insights for informational
+          purposes only. It is not a substitute for professional medical advice,
+          diagnosis, or treatment. Always consult a healthcare professional.
+        </Text>
       </View>
 
       <NextButton
@@ -53,5 +59,14 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     textAlign: "center",
     lineHeight: 24,
+  },
+  disclaimer: {
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: "#9CA3AF", // subtle gray
+    textAlign: "center",
+    marginTop: 20,
+    paddingHorizontal: 20,
+    lineHeight: 16,
   },
 });

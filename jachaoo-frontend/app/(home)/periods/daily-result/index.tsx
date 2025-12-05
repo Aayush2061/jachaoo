@@ -159,6 +159,11 @@ export default function DailyResult() {
               {formatAnalysisText(analysis.result)}
             </Markdown>
           </View>
+          <Text style={styles.disclaimer}>
+            Results are not a substitute for professional medical advice,
+            diagnosis, or treatment. Consult a healthcare provider for any
+            health decisions.
+          </Text>
         </View>
       </ScrollView>
     </LinearGradient>
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 12,
     padding: 20,
-    marginBottom: 20,
+    // marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -284,6 +289,14 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  disclaimer: {
+    fontSize: 12,
+    color: "#777",
+    marginTop: 16,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 20,
   },
 });
 

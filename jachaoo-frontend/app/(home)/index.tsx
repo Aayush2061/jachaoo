@@ -340,6 +340,12 @@ export default function HomePage() {
               </LinearGradient>
             </Pressable>
           )}
+          <Text style={styles.disclaimer}>
+            Disclaimer: Jachao provides general health information and
+            AI-generated insights. It does not offer medical advice, diagnosis,
+            or treatment. Always consult a qualified healthcare professional for
+            medical concerns.
+          </Text>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -540,6 +546,16 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     lineHeight: 20,
     opacity: 0.95,
+    fontFamily: "Poppins-Regular",
+  },
+  disclaimer: {
+    fontSize: 11,
+    color: "#9CA3AF", // subtle grey
+    textAlign: "center",
+    marginTop: 30,
+    paddingHorizontal: 20,
+    lineHeight: 15,
+    marginBottom: 20,
     fontFamily: "Poppins-Regular",
   },
 });

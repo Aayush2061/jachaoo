@@ -1,492 +1,195 @@
-import { useAuth, useUser } from "@clerk/clerk-expo";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
-export default function SymptomChecker() {
-  const { user } = useUser();
+export default function SymptomGreeting() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState("");
-  const [currentQuestion, setCurrentQuestion] = useState("");
-  const [options, setOptions] = useState<string[]>([]);
-  const [userInput, setUserInput] = useState("");
-  const [diagnosis, setDiagnosis] = useState("");
-  const [healthData, setHealthData] = useState<any>(null);
-  const [stage, setStage] = useState<"start" | "question" | "diagnosis">(
-    "start"
-  );
-  const { getToken } = useAuth();
-  const MAX_INPUT_LENGTH = 300;
-
-  useEffect(() => {
-    const fetchHealthData = async () => {
-      try {
-        if (!user?.id) return;
-
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
-        );
-        const data = await response.json();
-        setHealthData(data);
-      } catch (error) {
-        console.error("Error fetching health data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHealthData();
-  }, [user?.id]);
-
-  // Clear input when question changes to "Please describe your next symptom."
-  useEffect(() => {
-    if (currentQuestion.includes("Please describe your next symptom")) {
-      setUserInput("");
-    }
-  }, [currentQuestion]);
-
-  const startDiagnosis = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/symptoms/start`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            smoker: healthData?.smoker || "Don't know",
-            diabetes: healthData?.diabetes || "Don't know",
-            blood_pressure: healthData?.bloodPressure || "Don't know",
-            age: healthData?.age?.toString() || "",
-            weight: healthData?.weight?.toString() || "",
-            sex: healthData?.sex || "",
-            has_illness: healthData?.hasIllness || "No",
-            illnesses: healthData?.illnesses || [],
-            other_illness: healthData?.otherIllness || "",
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 429) {
-          Alert.alert(
-            "Analysis Limit Reached",
-            errorData.error?.message ||
-              "You've reached your daily symptom analysis limit"
-          );
-          return;
-        }
-        throw new Error(errorData.message || "Failed to start diagnosis");
-      }
-
-      const data = await response.json();
-      if (data.session_id) {
-        setSessionId(data.session_id);
-        setCurrentQuestion(data.message);
-        setStage("question");
-        // Clear any existing input when starting new diagnosis
-        setUserInput("");
-      }
-    } catch (error: any) {
-      if (!error.message.includes("daily limit")) {
-        Alert.alert("Error", error.message || "Failed to start diagnosis");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const submitAnswer = async (answer: string) => {
-    // Add validation check
-    if (answer.length > MAX_INPUT_LENGTH) {
-      Alert.alert(
-        "Input Too Long",
-        `Please keep your response under ${MAX_INPUT_LENGTH} characters.`
-      );
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/symptoms/answer`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId, answer }),
-        }
-      );
-
-      const data = await response.json();
-      if (data.session_over) {
-        setDiagnosis(data.diagnosis || "No diagnosis provided");
-        setStage("diagnosis");
-        // Clear input when diagnosis is complete
-        setUserInput("");
-      } else {
-        setCurrentQuestion(
-          data.question.includes("?") ? data.question : `${data.question}?`
-        );
-        setOptions(data.options || []);
-        // Only clear input if there are options (multiple choice)
-        // For text input questions, we'll handle clearing in the useEffect above
-        if (data.options) {
-          setUserInput("");
-        }
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to submit answer");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOptionSelect = (option: string) => {
-    const optionIndex = options.indexOf(option) + 1;
-    submitAnswer(optionIndex.toString());
-  };
-
-  const renderLoading = () => (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#4F7CFF" />
-      <Text style={styles.loadingText}>Processing your response...</Text>
-    </View>
-  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient colors={["#F8FAFF", "#E3ECFF"]} style={styles.background}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled"
+    <LinearGradient colors={["#E3ECFF", "#FFFFFF"]} style={styles.container}>
+      <View style={styles.inner}>
+        {/* Avatar + Chat Bubble Wrapper */}
+        <View style={{ alignItems: "center", width: "100%" }}>
+          {/* Chat Bubble */}
+          {/* <Animated.View
+            entering={FadeInUp.delay(100).duration(600)}
+            style={styles.chatBubble}
+          >
+            <Text style={styles.chatText}>Hi! I'm here to help 😊</Text>
+          </Animated.View> */}
+
+          {/* Avatar */}
+          <Animated.View
+            entering={FadeInUp.duration(700)}
+            style={styles.avatarWrapper}
+          >
+            <View style={styles.glow} />
+            <Image
+              source={require("../../../assets/avatars/idle.png")}
+              style={styles.avatar}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        </View>
+
+        {/* Greeting Text */}
+        <Animated.Text
+          entering={FadeInUp.delay(200).duration(600)}
+          style={styles.title}
         >
-          {loading && renderLoading()}
+          Let’s begin your symptom check
+        </Animated.Text>
 
-          {!loading && stage === "start" && (
-            <Animated.View
-              entering={FadeInUp.duration(600)}
-              style={styles.centerContent}
-            >
-              <Text style={styles.title}>🩺 Symptom Checker</Text>
-              <Text style={styles.subtitle}>
-                Tell us what you're feeling and we'll help you understand it.
-              </Text>
-              <TouchableOpacity
-                style={styles.startButton}
-                onPress={startDiagnosis}
-              >
-                <Text style={styles.buttonText}>Begin Diagnosis</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          )}
+        <Animated.Text
+          entering={FadeInUp.delay(300).duration(600)}
+          style={styles.subtitle}
+        >
+          Answer a few simple questions and get personalized guidance.
+        </Animated.Text>
 
-          {!loading && stage === "question" && (
-            <Animated.View
-              entering={FadeInUp.duration(400)}
-              style={styles.questionSection}
-            >
-              <Text style={styles.questionText}>{currentQuestion}</Text>
-              {options.length > 0 ? (
-                options.map((option, i) => (
-                  <TouchableOpacity
-                    key={i}
-                    style={styles.optionButton}
-                    onPress={() => handleOptionSelect(option)}
-                  >
-                    <Text style={styles.optionText}>{option}</Text>
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Type your answer..."
-                    value={userInput}
-                    onChangeText={setUserInput}
-                    multiline
-                    maxLength={MAX_INPUT_LENGTH}
-                  />
-                  <Text style={styles.charCount}>
-                    {userInput.length}/{MAX_INPUT_LENGTH}
-                  </Text>
-                  <TouchableOpacity
-                    style={[
-                      styles.submitButton,
-                      !userInput.trim() && { opacity: 0.5 },
-                    ]}
-                    onPress={() => submitAnswer(userInput)}
-                    disabled={!userInput.trim()}
-                  >
-                    <Text style={styles.buttonText}>Submit Answer</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </Animated.View>
-          )}
+        {/* Button */}
+        <Animated.View
+          entering={FadeInUp.delay(400).duration(600)}
+          style={styles.buttonWrapper}
+        >
+          <TouchableOpacity
+            style={styles.startButton}
+            activeOpacity={0.8}
+            onPress={() => router.push("/(home)/symptoms/diagnose")}
+          >
+            <Text style={styles.buttonText}>Begin Diagnosis</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
-          {!loading && stage === "diagnosis" && (
-            <Animated.View
-              entering={FadeInUp.duration(500)}
-              style={styles.resultContainer}
-            >
-              <View style={styles.headerRow}>
-                <Text style={styles.resultTitle}>📝 Diagnosis Result</Text>
-              </View>
-              <View style={styles.resultBox}>
-                {diagnosis.split("\n").map((line, i) => {
-                  // Skip empty lines
-                  if (!line.trim()) return null;
+        {/* Privacy Note */}
+        <Animated.Text entering={FadeInDown.delay(500)} style={styles.safeNote}>
+          🔒 Your answers are private and secure
+        </Animated.Text>
 
-                  // Style the main header
-                  if (line === "MEDICAL ASSESSMENT REPORT") {
-                    return (
-                      <Text key={i} style={styles.mainHeader}>
-                        {line}
-                      </Text>
-                    );
-                  }
-
-                  // Style numbered section headers (like "1. Three most likely conditions:")
-                  if (line.match(/^\d+\.\s+[A-Z][^:]+:/)) {
-                    return (
-                      <Text key={i} style={styles.sectionHeader}>
-                        {line}
-                      </Text>
-                    );
-                  }
-
-                  // Style conditions with percentages
-                  if (line.match(/^[A-Z][^%(]+\(\d+%\)/)) {
-                    const [condition, ...rest] = line.split("(");
-                    const percentage = rest.join("(");
-                    return (
-                      <View key={i} style={styles.conditionContainer}>
-                        <Text style={styles.conditionText}>
-                          <Text style={styles.conditionName}>{condition}</Text>
-                          <Text style={styles.conditionPercentage}>
-                            ({percentage}
-                          </Text>
-                        </Text>
-                      </View>
-                    );
-                  }
-
-                  // Style red flags with bullet points
-                  if (line.startsWith("* ")) {
-                    return (
-                      <View key={i} style={styles.redFlagItem}>
-                        <Text style={styles.redFlagBullet}>•</Text>
-                        <Text style={styles.redFlagText}>
-                          {line.substring(2)}
-                        </Text>
-                      </View>
-                    );
-                  }
-
-                  // Default text style
-                  return (
-                    <Text key={i} style={styles.resultText}>
-                      {line}
-                    </Text>
-                  );
-                })}
-              </View>
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={() => router.back()}
-              >
-                <Text style={styles.buttonText}>Return to Home</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          )}
-        </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+        <Animated.Text
+          entering={FadeInDown.delay(500)}
+          style={{
+            fontSize: 12,
+            color: "#6B7280",
+            textAlign: "center",
+            marginTop: 24,
+            marginBottom: 10,
+            fontFamily: "Poppins-Regular",
+            lineHeight: 18,
+          }}
+        >
+          Results are not a substitute for professional medical advice,
+          diagnosis, or treatment. Consult a healthcare provider for any health
+          decisions.
+        </Animated.Text>
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  background: { flex: 1 },
-  scrollContainer: { padding: 20 },
-  centerContent: { alignItems: "center", paddingTop: 60 },
-  loadingContainer: {
+
+  inner: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    paddingTop: 100,
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
-  loadingText: { marginTop: 16, fontSize: 16, color: "#4F7CFF" },
+
+  // Chat Bubble
+  chatBubble: {
+    maxWidth: "75%",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+    // marginBottom: 10,
+  },
+
+  chatText: {
+    fontSize: 15,
+    color: "#0F3A5D",
+    fontFamily: "Poppins-Medium",
+  },
+
+  // Avatar section
+  avatarWrapper: {
+    width: "100%",
+    height: 260,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+
+  glow: {
+    position: "absolute",
+    width: 260,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(79, 124, 255, 0.20)",
+    zIndex: -1,
+  },
+
+  avatar: {
+    width: 260,
+    height: 160,
+  },
+
+  // Greeting Text
   title: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#1A237E",
-    marginBottom: 10,
+    fontFamily: "Poppins-Bold",
+    textAlign: "center",
+    marginBottom: 8,
+    color: "#0F3A5D",
+    letterSpacing: 0.2,
   },
+
   subtitle: {
     fontSize: 16,
-    color: "#475569",
+    fontFamily: "Poppins-Medium",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 40,
+    color: "#6B7280",
+    lineHeight: 22,
+    width: "85%",
   },
+
+  // Button
+  buttonWrapper: {
+    width: "100%",
+    alignItems: "center",
+  },
+
   startButton: {
     backgroundColor: "#4F7CFF",
-    paddingVertical: 14,
-    paddingHorizontal: 40,
-    borderRadius: 30,
+    paddingVertical: 16,
+    width: "80%",
+    borderRadius: 16,
+    shadowColor: "#4F7CFF",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
     elevation: 3,
   },
+
   buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#FFF",
     textAlign: "center",
-  },
-  questionSection: { marginTop: 50 },
-  questionText: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#1E293B",
-    marginBottom: 16,
+    fontFamily: "Poppins-SemiBold",
   },
-  optionButton: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  optionText: { fontSize: 16, color: "#1E293B" },
-  input: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    minHeight: 100,
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  charCount: {
-    fontSize: 12,
-    color: "#64748B",
-    textAlign: "right",
-    marginBottom: 12,
-  },
-  submitButton: {
-    backgroundColor: "#4F7CFF",
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  resultContainer: { marginTop: 30, marginBottom: 20 },
-  resultTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#1A237E",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  resultBox: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  mainHeader: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1A237E",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1A237E",
+
+  // Safe note
+  safeNote: {
     marginTop: 16,
-    marginBottom: 8,
-  },
-  conditionContainer: {
-    marginVertical: 8,
-    paddingLeft: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: "#4F7CFF",
-  },
-  conditionText: {
-    fontSize: 16,
-    lineHeight: 22,
-    color: "#334155",
-  },
-  conditionName: {
-    fontWeight: "600",
-    color: "#1E293B",
-  },
-  conditionPercentage: {
-    color: "#4F7CFF",
-    fontWeight: "600",
-  },
-  resultText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#334155",
-    marginBottom: 8,
-  },
-  redFlagItem: {
-    flexDirection: "row",
-    marginVertical: 4,
-    alignItems: "flex-start",
-  },
-  redFlagBullet: {
-    color: "#EF4444",
-    fontSize: 16,
-    marginRight: 8,
-  },
-  redFlagText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#EF4444",
-    flex: 1,
-  },
-  doneButton: {
-    backgroundColor: "#4F7CFF",
-    paddingVertical: 16,
-    borderRadius: 12,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    paddingHorizontal: 8,
+    fontSize: 13,
+    color: "#777",
+    textAlign: "center",
   },
 });

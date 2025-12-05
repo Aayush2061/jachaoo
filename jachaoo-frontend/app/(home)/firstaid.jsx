@@ -255,6 +255,13 @@ export default function FirstAidScreen() {
               />
             </TouchableOpacity>
           </View>
+         {keyboardHeight === 0 && (
+  <View style={{ paddingHorizontal: 16, marginBottom: 4 }}>
+    <Text style={{ fontSize: 12, color: "#888", textAlign: "center" }}>
+      Not a substitute for professional care.
+    </Text>
+  </View>
+)}
         </KeyboardAvoidingView>
       </View>
     </SafeAreaView>

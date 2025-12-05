@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   ritualCard: {
-    backgroundColor: "white",
+    backgroundColor: "#f8f9fa",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,

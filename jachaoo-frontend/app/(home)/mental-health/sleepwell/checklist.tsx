@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   checklistItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "white",
+    backgroundColor: "#f8f9fa",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,

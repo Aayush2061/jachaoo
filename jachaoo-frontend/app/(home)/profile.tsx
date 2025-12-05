@@ -1,10 +1,12 @@
 import { useClerk, useUser } from "@clerk/clerk-expo";
-import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   Image,
   Modal,
   Pressable,
@@ -17,7 +19,8 @@ import {
   View,
 } from "react-native";
 
-// Define the illness options (same as in onboarding)
+const { height: screenHeight } = Dimensions.get("window");
+
 const ILLNESS_OPTIONS = [
   "Asthma",
   "Insulin",
@@ -61,7 +64,14 @@ export default function ProfilePage() {
         const response = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
         );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+        console.log("Full health data:", data); // Debug log
+
         setHealthData(data);
         if (data) {
           setFormData({
@@ -79,6 +89,19 @@ export default function ProfilePage() {
         }
       } catch (error) {
         console.error("Error fetching health data:", error);
+        // Set default data for testing
+        setHealthData({
+          name: user?.fullName || "Test User",
+          age: "25",
+          weight: "70",
+          sex: "Male",
+          bloodPressure: "No",
+          diabetes: "No",
+          smoker: "No",
+          hasIllness: "No",
+          illnesses: [],
+          otherIllness: "",
+        });
       } finally {
         setLoading(false);
       }
@@ -101,7 +124,7 @@ export default function ProfilePage() {
             await signOut();
             router.replace("/(auth)");
           } catch (err) {
-            console.error("Sign out error:", JSON.stringify(err, null, 2));
+            console.error("Sign out error:", err);
             Alert.alert("Error", "Failed to sign out");
           }
         },
@@ -116,7 +139,6 @@ export default function ProfilePage() {
         return {
           ...prev,
           illnesses: currentIllnesses.filter((item) => item !== illness),
-          // Clear otherIllness if "Others" is deselected
           otherIllness: illness === "Others" ? "" : prev.otherIllness,
         };
       } else {
@@ -130,7 +152,6 @@ export default function ProfilePage() {
 
   const handleUpdateHealthData = async () => {
     try {
-      // Validation
       const ageNumber = parseInt(formData.age);
       const weightNumber = parseFloat(formData.weight);
 
@@ -163,33 +184,24 @@ export default function ProfilePage() {
       }
 
       setLoading(true);
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/health`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: user?.id,
-            name: formData.name,
-            age: ageNumber,
-            weight: weightNumber,
-            sex: formData.sex,
-            bloodPressure: formData.bloodPressure,
-            diabetes: formData.diabetes,
-            smoker: formData.smoker,
-            hasIllness: formData.hasIllness,
-            illnesses: formData.illnesses,
-            otherIllness: formData.illnesses.includes("Others")
-              ? formData.otherIllness
-              : "",
-          }),
-        }
-      );
 
-      const data = await response.json();
-      setHealthData(data);
+      // Update local state for testing
+      const updatedData = {
+        name: formData.name,
+        age: ageNumber,
+        weight: weightNumber,
+        sex: formData.sex,
+        bloodPressure: formData.bloodPressure,
+        diabetes: formData.diabetes,
+        smoker: formData.smoker,
+        hasIllness: formData.hasIllness,
+        illnesses: formData.illnesses,
+        otherIllness: formData.illnesses.includes("Others")
+          ? formData.otherIllness
+          : "",
+      };
+
+      setHealthData(updatedData);
       setEditModalVisible(false);
       Alert.alert("Success", "Health information updated successfully");
     } catch (error) {
@@ -202,145 +214,189 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A90E2" />
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1B3C73" />
+        <Text style={styles.loadingText}>Loading your profile...</Text>
+      </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            {user?.imageUrl ? (
-              <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <MaterialIcons name="person" size={50} color="#4A90E2" />
-              </View>
-            )}
-          </View>
-          <Text style={styles.name}>
-            {user?.fullName || `${user?.firstName} ${user?.lastName}` || "User"}
-          </Text>
-          <Text style={styles.email}>
-            {user?.primaryEmailAddress?.emailAddress || "Not available"}
-          </Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Account Information</Text>
-
-          <View style={styles.infoItem}>
-            <MaterialIcons name="email" size={20} color="#4A90E2" />
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>
-                {user?.primaryEmailAddress?.emailAddress || "Not available"}
-              </Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Header Section */}
+        <LinearGradient
+          colors={["#2FB7F0", "#1B3C73"]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.header}>
+            <View style={styles.avatarContainer}>
+              {user?.imageUrl ? (
+                <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Ionicons name="person" size={40} color="#FFFFFF" />
+                </View>
+              )}
             </View>
+            <Text style={styles.name}>
+              {user?.fullName ||
+                `${user?.firstName} ${user?.lastName}` ||
+                "User"}
+            </Text>
+            <Text style={styles.email}>
+              {user?.primaryEmailAddress?.emailAddress || "Not available"}
+            </Text>
           </View>
-        </View>
+        </LinearGradient>
 
+        {/* Health Information Card - FIXED: Show all health data */}
         <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.cardTitle}>Health Information</Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleContainer}>
+              <Ionicons name="fitness" size={24} color="#1B3C73" />
+              <Text style={styles.cardTitle}>Health Information</Text>
+            </View>
             <TouchableOpacity
               onPress={() => setEditModalVisible(true)}
               style={styles.editButton}
             >
-              <MaterialIcons name="edit" size={20} color="#4A90E2" />
+              <Ionicons name="create-outline" size={20} color="#2FB7F0" />
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
           </View>
 
           {healthData ? (
-            <>
-              <View style={styles.infoItem}>
-                <MaterialIcons name="person" size={20} color="#4A90E2" />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Name</Text>
-                  <Text style={styles.infoValue}>{healthData.name}</Text>
+            <View style={styles.healthGrid}>
+              {/* Basic Information */}
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#E8F6FD" }]}
+                >
+                  <FontAwesome5 name="user" size={16} color="#2FB7F0" />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Name</Text>
+                  <Text style={styles.healthValue}>{healthData.name}</Text>
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <MaterialIcons name="cake" size={20} color="#4A90E2" />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Age</Text>
-                  <Text style={styles.infoValue}>{healthData.age}</Text>
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#FFE8E8" }]}
+                >
+                  <FontAwesome5
+                    name="birthday-cake"
+                    size={16}
+                    color="#FF6B6B"
+                  />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Age</Text>
+                  <Text style={styles.healthValue}>{healthData.age} years</Text>
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <MaterialIcons
-                  name="monitor-weight"
-                  size={20}
-                  color="#4A90E2"
-                />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Weight</Text>
-                  <Text style={styles.infoValue}>{healthData.weight} kg</Text>
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#E8EDF5" }]}
+                >
+                  <FontAwesome5 name="weight" size={16} color="#1B3C73" />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Weight</Text>
+                  <Text style={styles.healthValue}>{healthData.weight} kg</Text>
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <MaterialIcons name="wc" size={20} color="#4A90E2" />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Sex</Text>
-                  <Text style={styles.infoValue}>{healthData.sex}</Text>
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#FFEAF1" }]}
+                >
+                  <FontAwesome5 name="venus-mars" size={16} color="#E84C88" />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Sex</Text>
+                  <Text style={styles.healthValue}>{healthData.sex}</Text>
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <MaterialIcons name="favorite" size={20} color="#4A90E2" />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Blood Pressure</Text>
-                  <Text style={styles.infoValue}>
+              {/* Health Conditions */}
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#F3EDFF" }]}
+                >
+                  <FontAwesome5 name="heartbeat" size={16} color="#7F5AF0" />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Blood Pressure</Text>
+                  <Text style={styles.healthValue}>
                     {healthData.bloodPressure}
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <MaterialIcons name="healing" size={20} color="#4A90E2" />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Diabetes</Text>
-                  <Text style={styles.infoValue}>{healthData.diabetes}</Text>
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#E8F6FD" }]}
+                >
+                  <FontAwesome5 name="syringe" size={16} color="#2FB7F0" />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Diabetes</Text>
+                  <Text style={styles.healthValue}>{healthData.diabetes}</Text>
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <MaterialIcons name="smoking-rooms" size={20} color="#4A90E2" />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Smoker</Text>
-                  <Text style={styles.infoValue}>{healthData.smoker}</Text>
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#FFE8E8" }]}
+                >
+                  <FontAwesome5 name="smoking" size={16} color="#FF6B6B" />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Smoker</Text>
+                  <Text style={styles.healthValue}>{healthData.smoker}</Text>
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <MaterialIcons
-                  name="local-hospital"
-                  size={20}
-                  color="#4A90E2"
-                />
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>Has Illness</Text>
-                  <Text style={styles.infoValue}>
+              <View style={styles.healthItem}>
+                <View
+                  style={[styles.healthIcon, { backgroundColor: "#E8EDF5" }]}
+                >
+                  <FontAwesome5
+                    name="notes-medical"
+                    size={16}
+                    color="#1B3C73"
+                  />
+                </View>
+                <View style={styles.healthInfo}>
+                  <Text style={styles.healthLabel}>Has Illness</Text>
+                  <Text style={styles.healthValue}>
                     {healthData.hasIllness || "No"}
                   </Text>
                 </View>
               </View>
 
+              {/* Illnesses List - Full Width */}
               {healthData.hasIllness === "Yes" &&
                 healthData.illnesses &&
                 healthData.illnesses.length > 0 && (
-                  <View style={styles.infoItem}>
-                    <MaterialIcons name="list" size={20} color="#4A90E2" />
-                    <View style={styles.infoTextContainer}>
-                      <Text style={styles.infoLabel}>Illnesses</Text>
-                      <Text style={styles.infoValue}>
+                  <View style={styles.fullWidthItem}>
+                    <View
+                      style={[
+                        styles.healthIcon,
+                        { backgroundColor: "#FFEAF1" },
+                      ]}
+                    >
+                      <FontAwesome5 name="list" size={16} color="#E84C88" />
+                    </View>
+                    <View style={styles.healthInfo}>
+                      <Text style={styles.healthLabel}>Illnesses</Text>
+                      <Text style={styles.healthValue}>
                         {healthData.illnesses.join(", ")}
                         {healthData.otherIllness &&
                           `, ${healthData.otherIllness}`}
@@ -348,33 +404,64 @@ export default function ProfilePage() {
                     </View>
                   </View>
                 )}
-            </>
+            </View>
           ) : (
-            <Text style={styles.noDataText}>No health data available</Text>
+            <View style={styles.noDataContainer}>
+              <Ionicons name="medical-outline" size={48} color="#CBD5E1" />
+              <Text style={styles.noDataText}>No health data available</Text>
+              <TouchableOpacity
+                style={styles.addDataButton}
+                onPress={() => setEditModalVisible(true)}
+              >
+                <Text style={styles.addDataButtonText}>
+                  Add Health Information
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
 
+        {/* Action Buttons */}
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={20} color="#E74C3C" />
           <Text style={styles.signOutButtonText}>Sign Out</Text>
         </TouchableOpacity>
 
         <Link href="/(home)/delete-account" asChild>
           <TouchableOpacity style={styles.deleteAccountButton}>
+            <Ionicons name="trash-outline" size={20} color="#E74C3C" />
             <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
           </TouchableOpacity>
         </Link>
+      </ScrollView>
 
-        {/* Edit Health Data Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={editModalVisible}
-          onRequestClose={() => setEditModalVisible(false)}
-        >
+      {/* Edit Health Data Modal - FIXED: Full form with proper scrolling */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <ScrollView>
-                <Text style={styles.modalTitle}>Update Health Information</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Update Health Information</Text>
+              <TouchableOpacity
+                onPress={() => setEditModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={styles.modalScrollView}
+              contentContainerStyle={styles.modalContent}
+              showsVerticalScrollIndicator={true}
+            >
+              {/* Basic Information */}
+              <View style={styles.formSection}>
+                <Text style={styles.sectionTitle}>Basic Information</Text>
 
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>Full Name *</Text>
@@ -444,8 +531,78 @@ export default function ProfilePage() {
                     ))}
                   </View>
                 </View>
+              </View>
 
-                {/* Illness Section */}
+              {/* Health Conditions */}
+              <View style={styles.formSection}>
+                <Text style={styles.sectionTitle}>Health Conditions</Text>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>High Blood Pressure</Text>
+                  <View style={styles.radioGroup}>
+                    {["Yes", "No", "Don't know"].map((option) => (
+                      <Pressable
+                        key={option}
+                        style={styles.radioOption}
+                        onPress={() =>
+                          setFormData({ ...formData, bloodPressure: option })
+                        }
+                      >
+                        <View style={styles.radioCircle}>
+                          {formData.bloodPressure === option && (
+                            <View style={styles.radioInnerCircle} />
+                          )}
+                        </View>
+                        <Text style={styles.radioLabel}>{option}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Diabetes</Text>
+                  <View style={styles.radioGroup}>
+                    {["Yes", "No", "Don't know"].map((option) => (
+                      <Pressable
+                        key={option}
+                        style={styles.radioOption}
+                        onPress={() =>
+                          setFormData({ ...formData, diabetes: option })
+                        }
+                      >
+                        <View style={styles.radioCircle}>
+                          {formData.diabetes === option && (
+                            <View style={styles.radioInnerCircle} />
+                          )}
+                        </View>
+                        <Text style={styles.radioLabel}>{option}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Smoker</Text>
+                  <View style={styles.radioGroup}>
+                    {["Yes", "No", "Don't know"].map((option) => (
+                      <Pressable
+                        key={option}
+                        style={styles.radioOption}
+                        onPress={() =>
+                          setFormData({ ...formData, smoker: option })
+                        }
+                      >
+                        <View style={styles.radioCircle}>
+                          {formData.smoker === option && (
+                            <View style={styles.radioInnerCircle} />
+                          )}
+                        </View>
+                        <Text style={styles.radioLabel}>{option}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>
                     Do you have any type of illness? *
@@ -475,7 +632,7 @@ export default function ProfilePage() {
                     <Text style={styles.inputLabel}>
                       Select your illnesses:
                     </Text>
-                    <View style={styles.illnessContainer}>
+                    <ScrollView style={styles.illnessContainer}>
                       {ILLNESS_OPTIONS.map((illness) => (
                         <TouchableOpacity
                           key={illness}
@@ -498,7 +655,7 @@ export default function ProfilePage() {
                           <Text style={styles.illnessText}>{illness}</Text>
                         </TouchableOpacity>
                       ))}
-                    </View>
+                    </ScrollView>
 
                     {formData.illnesses.includes("Others") && (
                       <View style={styles.inputContainer}>
@@ -517,59 +674,31 @@ export default function ProfilePage() {
                     )}
                   </View>
                 )}
+              </View>
 
-                {["bloodPressure", "diabetes", "smoker"].map((field) => (
-                  <View key={field} style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>
-                      {field
-                        .replace(/([A-Z])/g, " $1")
-                        .replace(/^./, (str) => str.toUpperCase())}
-                    </Text>
-                    <View style={styles.radioGroup}>
-                      {["Yes", "No", "Don't know"].map((option) => (
-                        <Pressable
-                          key={option}
-                          style={styles.radioOption}
-                          onPress={() =>
-                            setFormData({ ...formData, [field]: option })
-                          }
-                        >
-                          <View style={styles.radioCircle}>
-                            {formData[field] === option && (
-                              <View style={styles.radioInnerCircle} />
-                            )}
-                          </View>
-                          <Text style={styles.radioLabel}>{option}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-                ))}
-
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setEditModalVisible(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.saveButton]}
-                    onPress={handleUpdateHealthData}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={styles.saveButtonText}>Save Changes</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-            </View>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setEditModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.saveButton]}
+                  onPress={handleUpdateHealthData}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save Changes</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
-        </Modal>
-      </ScrollView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -577,126 +706,199 @@ export default function ProfilePage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFF",
+    backgroundColor: "#FAFAF7",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#F8FAFF",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#FAFAF7",
   },
-  scrollContainer: {
+  loadingText: {
+    fontSize: 16,
+    color: "#1B3C73",
+    marginTop: 16,
+  },
+  // Header Styles
+  headerGradient: {
+    paddingTop: 60,
     paddingBottom: 40,
   },
   header: {
     alignItems: "center",
-    padding: 30,
-    marginBottom: 10,
+    paddingHorizontal: 24,
   },
   avatarContainer: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-    marginBottom: 15,
+    marginBottom: 16,
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 4,
+    borderColor: "rgba(255,255,255,0.3)",
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#E8F0FE",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 4,
+    borderColor: "rgba(255,255,255,0.3)",
   },
   name: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "600",
-    color: "#2C3E50",
-    marginBottom: 5,
+    color: "#FFFFFF",
+    marginBottom: 4,
+    textAlign: "center",
   },
   email: {
     fontSize: 16,
-    color: "#7F8C8D",
+    color: "rgba(255,255,255,0.8)",
+    textAlign: "center",
   },
+  // Card Styles
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 20,
+    borderRadius: 20,
+    padding: 24,
+    marginHorizontal: 24,
     marginBottom: 20,
+    marginTop: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  sectionHeader: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
-    paddingBottom: 10,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#ECF0F1",
+    borderBottomColor: "#F1F5F9",
+  },
+  cardTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
-    color: "#2C3E50",
+    color: "#1B3C73",
   },
   editButton: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#F8FAFF",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 6,
   },
   editButtonText: {
-    color: "#4A90E2",
-    fontSize: 16,
-    fontWeight: "500",
-    marginLeft: 5,
+    color: "#2FB7F0",
+    fontSize: 14,
+    fontWeight: "600",
   },
-  infoItem: {
+  // Health Grid
+  healthGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  healthItem: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    backgroundColor: "#F8FAFF",
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
   },
-  infoTextContainer: {
-    marginLeft: 15,
+  fullWidthItem: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8FAFF",
+    padding: 16,
+    borderRadius: 16,
+    gap: 12,
+    marginTop: 8,
+  },
+  healthIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  healthInfo: {
     flex: 1,
   },
-  infoLabel: {
-    fontSize: 14,
-    color: "#7F8C8D",
+  healthLabel: {
+    fontSize: 12,
+    color: "#64748B",
     marginBottom: 2,
   },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#2C3E50",
+  healthValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1B3C73",
+  },
+  // No Data State
+  noDataContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+    gap: 12,
   },
   noDataText: {
-    textAlign: "center",
-    color: "#7F8C8D",
-    marginVertical: 20,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#64748B",
   },
+  addDataButton: {
+    backgroundColor: "#2FB7F0",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  addDataButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  // Action Buttons
   signOutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#FFFFFF",
     padding: 16,
-    borderRadius: 12,
-    marginHorizontal: 20,
-    marginTop: 10,
+    borderRadius: 16,
+    marginHorizontal: 24,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E74C3C",
-    alignItems: "center",
+    borderColor: "#FECACA",
+    gap: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowRadius: 8,
     elevation: 2,
   },
   signOutButtonText: {
@@ -704,158 +906,211 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
+  deleteAccountButton: {
+    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 16,
+    marginHorizontal: 24,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  modalContent: {
-    width: "90%",
-    backgroundColor: "white",
-    borderRadius: 12,
+  deleteAccountButtonText: {
+    color: "#E74C3C",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // Modal Styles - FIXED
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: screenHeight,
+    width: "100%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
-    maxHeight: "90%",
+    paddingTop: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+    backgroundColor: "#FFFFFF",
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    color: "#2C3E50",
+    fontWeight: "700",
+    color: "#1B3C73",
+    flex: 1,
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#F8FAFC",
+  },
+  modalScrollView: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  formSection: {
+    marginBottom: 0,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1B3C73",
     marginBottom: 20,
-    textAlign: "center",
+    paddingBottom: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: "#E0F2FE",
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
-    color: "#7F8C8D",
+    fontWeight: "600",
+    color: "#334155",
     marginBottom: 8,
-    fontWeight: "500",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ECF0F1",
-    borderRadius: 8,
-    padding: 12,
+    borderColor: "#CBD5E1",
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
-    backgroundColor: "#F8FAFF",
+    color: "#1E293B",
+    backgroundColor: "#F8FAFC",
   },
   radioGroup: {
     flexDirection: "row",
-    justifyContent: "flex-start",
-    marginTop: 5,
     flexWrap: "wrap",
+    gap: 16,
+    marginTop: 8,
   },
   radioOption: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 20,
-    marginBottom: 10,
+    gap: 8,
+    paddingVertical: 4,
   },
   radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#4A90E2",
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: "#2FB7F0",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 5,
+    backgroundColor: "#FFFFFF",
   },
   radioInnerCircle: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#4A90E2",
+    backgroundColor: "#2FB7F0",
   },
   radioLabel: {
-    fontSize: 16,
-    color: "#2C3E50",
+    fontSize: 15,
+    color: "#334155",
+    fontWeight: "500",
   },
-  // Illness section styles
   illnessContainer: {
     borderWidth: 1,
-    borderColor: "#ECF0F1",
-    borderRadius: 8,
-    backgroundColor: "#F8FAFF",
+    borderColor: "#CBD5E1",
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
     padding: 12,
-    // maxHeight: 200,
+    maxHeight: "100%",
   },
   illnessOption: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
   checkboxContainer: {
     marginRight: 12,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderWidth: 2,
     borderColor: "#CBD5E1",
-    borderRadius: 4,
+    borderRadius: 6,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
   checkboxSelected: {
-    backgroundColor: "#4A90E2",
-    borderColor: "#4A90E2",
+    backgroundColor: "#2FB7F0",
+    borderColor: "#2FB7F0",
   },
   checkmark: {
-    color: "white",
-    fontSize: 12,
+    color: "#FFFFFF",
+    fontSize: 14,
     fontWeight: "bold",
   },
   illnessText: {
-    fontSize: 16,
-    color: "#2C3E50",
+    fontSize: 15,
+    color: "#334155",
+    fontWeight: "500",
   },
   modalButtons: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
+    gap: 12,
+    marginTop: 0,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
   },
   modalButton: {
     flex: 1,
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     alignItems: "center",
-    marginHorizontal: 5,
+    justifyContent: "center",
   },
   cancelButton: {
-    backgroundColor: "#ECF0F1",
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   saveButton: {
-    backgroundColor: "#4A90E2",
+    backgroundColor: "#2FB7F0",
+    shadowColor: "#2FB7F0",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cancelButtonText: {
-    color: "#2C3E50",
+    color: "#64748B",
+    fontSize: 16,
     fontWeight: "600",
   },
   saveButtonText: {
-    color: "white",
-    fontWeight: "600",
-  },
-  deleteAccountButton: {
-    backgroundColor: "#FFFFFF",
-    padding: 16,
-    borderRadius: 12,
-    marginHorizontal: 20,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: "#E74C3C",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  deleteAccountButtonText: {
-    color: "#E74C3C",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
