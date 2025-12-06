@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   featureCard: {
     width: "100%",
-    height: 160,
+    height: 165, // Fixed height for consistency
     borderRadius: 24,
     backgroundColor: "white",
     shadowColor: "#000",
@@ -473,10 +473,10 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 20,
-    paddingLeft: 22,
-    justifyContent: "space-between",
+    paddingLeft: 20,
+    justifyContent: "space-between", // Distribute space evenly
   },
   iconCircle: {
     width: 52,
@@ -489,21 +489,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    marginBottom: 12, // Consistent spacing
   },
-  textContainer: {
-    gap: 4,
-  },
+  textContainer: {},
   featureTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "#1B3C73",
-    letterSpacing: 0.2,
     fontFamily: "Poppins-Bold",
+    flexWrap: "wrap",
+    includeFontPadding: false, // Prevent extra padding
+    textAlignVertical: "top",
   },
   featureSubtitle: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: "#666666",
-    lineHeight: 16,
+    lineHeight: 14,
     fontFamily: "Poppins-Regular",
   },
 

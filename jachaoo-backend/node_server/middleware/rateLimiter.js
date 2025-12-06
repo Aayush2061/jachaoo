@@ -3,12 +3,12 @@ const AnalysisLimit = require('../models/AnalysisLimit');
 
 const createRateLimiter = (type) => {
     const limits = {
-        reportAnalysis: 100,  // 2 report analyses per day
-        symptomAnalysis: 100,  // 5 symptom analyses per day
-        firstAidMessage: 300,
-        menstrualChat: 300,
-        mentalHealthChat: 300,
-        periodAnalysis: 50
+        reportAnalysis: 3,  // 2 report analyses per day
+        symptomAnalysis: 3,  // 5 symptom analyses per day
+        firstAidMessage: 15,
+        menstrualChat: 15,
+        mentalHealthChat: 20,
+        periodAnalysis: 2
     };
 
     return async (req, res, next) => {
