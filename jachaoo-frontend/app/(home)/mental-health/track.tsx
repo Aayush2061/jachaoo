@@ -1,6 +1,9 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Animated,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -8,7 +11,6 @@ import {
   Text,
   View,
 } from "react-native";
-
 type MoodLevel = "Very Low" | "Low" | "Neutral" | "Good" | "Very Good";
 type MoodFactor =
   | "Work or Studies"
@@ -36,6 +38,9 @@ export default function TrackMoodScreen() {
   const [selfcareActivities, setSelfcareActivities] = useState<
     SelfcareActivity[]
   >([]);
+  // Add these states
+  const [showToast, setShowToast] = useState(false);
+  const toastOpacity = useState(new Animated.Value(0))[0];
 
   const toggleFactor = (factor: MoodFactor) => {
     setSelectedFactors((prev) =>
@@ -54,17 +59,35 @@ export default function TrackMoodScreen() {
   };
 
   const handleSubmit = () => {
-    console.log({
-      mood: selectedMood,
-      factors: selectedFactors,
-      sleepQuality,
-      energyLevel,
-      selfcareActivities,
-      timestamp: new Date().toISOString(),
-    });
-    router.push("/(home)/mental-health/dashboard");
-  };
+    // console.log({
+    //   mood: selectedMood,
+    //   factors: selectedFactors,
+    //   sleepQuality,
+    //   energyLevel,
+    //   selfcareActivities,
+    //   timestamp: new Date().toISOString(),
+    // });
+    // Add this alert
+    // Show toast
+    setShowToast(true);
+    Animated.timing(toastOpacity, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
 
+    // Hide toast after 2 seconds and navigate
+    setTimeout(() => {
+      Animated.timing(toastOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowToast(false);
+        router.push("/(home)/mental-health/dashboard");
+      });
+    }, 2000);
+  };
   const isFormValid =
     selectedMood &&
     sleepQuality &&
@@ -77,6 +100,20 @@ export default function TrackMoodScreen() {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
+      {showToast && (
+        <Animated.View
+          style={[styles.toastContainer, { opacity: toastOpacity }]}
+        >
+          <LinearGradient
+            colors={["#4CAF50", "#2E7D32"]}
+            style={styles.toastGradient}
+          >
+            <MaterialIcons name="check-circle" size={24} color="white" />
+            <Text style={styles.toastText}>Mood saved successfully!</Text>
+          </LinearGradient>
+        </Animated.View>
+      )}
+
       <View style={styles.overlay}>
         <ScrollView
           contentContainerStyle={styles.container}
@@ -350,5 +387,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#fff",
+  },
+  // Add toast styles
+  toastContainer: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    right: 20,
+    zIndex: 1000,
+  },
+  toastGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  toastText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
   },
 });
