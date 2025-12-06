@@ -122,6 +122,7 @@ export default function ReportAnalysis() {
           `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
         );
         const data = await response.json();
+        // console.log("Fetched health data:", data);
         setHealthData(data);
       } catch (error) {
         console.error("Error fetching health data:", error);
@@ -262,6 +263,11 @@ export default function ReportAnalysis() {
         diabetes: healthData?.diabetes || "Don't know",
         hypertension: healthData?.bloodPressure || "Don't know",
         smoker: healthData?.smoker || "Don't know",
+        sex: healthData?.sex || "",
+        age: healthData?.age?.toString() || "",
+        weight: healthData?.weight?.toString() || "",
+        illnesses: healthData?.illnesses || [],
+        other_illness: healthData?.otherIllness || "",
       };
 
       const analysisResponse = await fetch(
