@@ -20,6 +20,9 @@ import {
 } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
+// Import the new component
+import AnalysisProgressScreen from "./AnalysisProgressScreen";
+
 export default function ReportAnalysis() {
   const { user } = useUser();
   const router = useRouter();
@@ -39,11 +42,18 @@ export default function ReportAnalysis() {
     reportName: false,
     labName: false,
   });
+  const reportNameRef = useRef<TextInput>(null);
+  const labNameRef = useRef<TextInput>(null);
+
   const [avatarState, setAvatarState] = useState<
     "idle" | "thinking" | "reading" | "success"
   >("idle");
-  const reportNameRef = useRef<TextInput>(null);
-  const labNameRef = useRef<TextInput>(null);
+
+  // New state for analysis screen
+  const [showAnalysisScreen, setShowAnalysisScreen] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState<
+    "analyzing" | "complete" | "error"
+  >("analyzing");
 
   // Determine which avatar to show based on current state
   const getAvatarSource = () => {
@@ -323,12 +333,12 @@ export default function ReportAnalysis() {
       return;
     }
 
+    // Show the analysis screen
+    setShowAnalysisScreen(true);
+    setAnalysisStatus("analyzing");
     setIsLoading(true);
-    updateAvatarState("reading"); // Start with reading avatar
 
     try {
-      updateAvatarState("thinking"); // Switch to thinking during processing
-
       const compressedUri = await compressImage(image);
       const cloudinaryData = await uploadToCloudinary(compressedUri);
       const savedReport = await analyzeAndSaveReport(
@@ -336,18 +346,20 @@ export default function ReportAnalysis() {
         cloudinaryData.cloudinaryId
       );
 
-      updateAvatarState("success"); // Success avatar
-      router.replace({
-        pathname: `/(home)/reports/${savedReport._id}`,
-        params: { shouldRefresh: "true" },
-      });
+      // Update status to complete
+      setAnalysisStatus("complete");
 
+      // Show success state for 2 seconds before navigating (UPDATED)
       setTimeout(() => {
-        Alert.alert("Success", "Report analyzed successfully!");
-        updateAvatarState("idle"); // Reset to idle
-      }, 500);
+        router.replace({
+          pathname: `/(home)/reports/${savedReport._id}`,
+          params: { shouldRefresh: "true" },
+        });
+      }, 2000); // Changed from 1000 to 2000 ms
     } catch (error: any) {
-      updateAvatarState("idle"); // Reset on error
+      // Handle errors
+      setAnalysisStatus("error");
+
       if (error.message.startsWith("LIMIT_REACHED:")) {
         const limit = error.message.split(":")[1];
         Alert.alert(
@@ -371,6 +383,12 @@ export default function ReportAnalysis() {
           error.message || "Please try again later."
         );
       }
+
+      // Hide analysis screen on error after delay
+      setTimeout(() => {
+        setShowAnalysisScreen(false);
+        setAnalysisStatus("analyzing");
+      }, 2000);
     } finally {
       setIsLoading(false);
     }
@@ -380,130 +398,141 @@ export default function ReportAnalysis() {
       colors={["#f7f9fc", "#eef2f5"]}
       style={styles.gradientContainer}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Analyze Medical Report</Text>
-        {/* Avatar Section */}
-        <Animated.View
-          style={styles.avatarSection}
-          entering={FadeIn.duration(600)}
-        >
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatarGlow} />
-            <Image
-              source={getAvatarSource()}
-              style={styles.avatarImage}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.avatarCaption}>
-            {avatarState === "thinking"
-              ? "Analyzing your report..."
-              : avatarState === "reading"
-              ? "Reviewing the details..."
-              : avatarState === "success"
-              ? "Analysis complete!"
-              : "Ready to analyze your medical report"}
-          </Text>
-        </Animated.View>
-        <View style={styles.formContainer}>
-          <Text style={styles.sectionTitle}>Report Details</Text>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Report Type *</Text>
-            <TextInput
-              ref={reportNameRef}
-              style={[styles.input, errors.reportName && styles.inputError]}
-              placeholder="e.g., Blood Test, Thyroid Test"
-              value={reportName}
-              onChangeText={(text) => {
-                setReportName(text);
-                setErrors((prev) => ({ ...prev, reportName: false }));
-              }}
-              placeholderTextColor="#999"
-            />
-            {errors.reportName && (
-              <Text style={styles.errorText}>Report type is required</Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Lab Name *</Text>
-            <TextInput
-              ref={labNameRef}
-              style={[styles.input, errors.labName && styles.inputError]}
-              placeholder="e.g., City Lab, Health Diagnostics"
-              value={labName}
-              onChangeText={(text) => {
-                setLabName(text);
-                setErrors((prev) => ({ ...prev, labName: false }));
-              }}
-              placeholderTextColor="#999"
-            />
-            {errors.labName && (
-              <Text style={styles.errorText}>Lab name is required</Text>
-            )}
-          </View>
-
-          <Text style={styles.sectionTitle}>Upload Report</Text>
-          <Text style={styles.subtitle}>
-            Take a photo or select from your gallery
-          </Text>
-
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.cameraButton]}
-              onPress={takePhoto}
-              disabled={isLoading}
-            >
-              <MaterialIcons name="photo-camera" size={24} color="white" />
-              <Text style={styles.buttonText}>Take Photo</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.galleryButton]}
-              onPress={pickImage}
-              disabled={isLoading}
-            >
-              <MaterialIcons name="photo-library" size={24} color="white" />
-              <Text style={styles.buttonText}>Choose from Gallery</Text>
-            </TouchableOpacity>
-          </View>
-
-          {image && (
-            <View style={styles.imageContainer}>
+      {showAnalysisScreen ? (
+        <AnalysisProgressScreen
+          status={analysisStatus}
+          onComplete={() => {
+            // Optional: Add any completion callback if needed
+          }}
+        />
+      ) : (
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>Analyze Medical Report</Text>
+          {/* Avatar Section */}
+          <Animated.View
+            style={styles.avatarSection}
+            entering={FadeIn.duration(600)}
+          >
+            <View style={styles.avatarWrapper}>
+              <View style={styles.avatarGlow} />
               <Image
-                source={{ uri: image }}
-                style={styles.imagePreview}
+                source={getAvatarSource()}
+                style={styles.avatarImage}
                 resizeMode="contain"
               />
+            </View>
+            <Text style={styles.avatarCaption}>
+              {avatarState === "thinking"
+                ? "Analyzing your report..."
+                : avatarState === "reading"
+                ? "Reviewing the details..."
+                : avatarState === "success"
+                ? "Analysis complete!"
+                : "Ready to analyze your medical report"}
+            </Text>
+          </Animated.View>
+          <View style={styles.formContainer}>
+            <Text style={styles.sectionTitle}>Report Details</Text>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Report Type *</Text>
+              <TextInput
+                ref={reportNameRef}
+                style={[styles.input, errors.reportName && styles.inputError]}
+                placeholder="e.g., Blood Test, Thyroid Test"
+                value={reportName}
+                onChangeText={(text) => {
+                  setReportName(text);
+                  setErrors((prev) => ({ ...prev, reportName: false }));
+                }}
+                placeholderTextColor="#999"
+              />
+              {errors.reportName && (
+                <Text style={styles.errorText}>Report type is required</Text>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Lab Name *</Text>
+              <TextInput
+                ref={labNameRef}
+                style={[styles.input, errors.labName && styles.inputError]}
+                placeholder="e.g., City Lab, Health Diagnostics"
+                value={labName}
+                onChangeText={(text) => {
+                  setLabName(text);
+                  setErrors((prev) => ({ ...prev, labName: false }));
+                }}
+                placeholderTextColor="#999"
+              />
+              {errors.labName && (
+                <Text style={styles.errorText}>Lab name is required</Text>
+              )}
+            </View>
+
+            <Text style={styles.sectionTitle}>Upload Report</Text>
+            <Text style={styles.subtitle}>
+              Take a photo or select from your gallery
+            </Text>
+
+            <View style={styles.buttonGroup}>
               <TouchableOpacity
-                style={styles.removeButton}
-                onPress={handleRemoveImage}
+                style={[styles.actionButton, styles.cameraButton]}
+                onPress={takePhoto}
+                disabled={isLoading}
               >
-                <MaterialIcons name="close" size={20} color="white" />
+                <MaterialIcons name="photo-camera" size={24} color="white" />
+                <Text style={styles.buttonText}>Take Photo</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.galleryButton]}
+                onPress={pickImage}
+                disabled={isLoading}
+              >
+                <MaterialIcons name="photo-library" size={24} color="white" />
+                <Text style={styles.buttonText}>Choose from Gallery</Text>
               </TouchableOpacity>
             </View>
-          )}
 
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#4a90e2" />
-              <Text style={styles.loadingText}>Processing your report...</Text>
-            </View>
-          ) : image ? (
-            <TouchableOpacity
-              style={styles.analyzeButton}
-              onPress={handleUploadAndAnalyze}
-              disabled={isLoading}
-            >
-              <Text style={styles.analyzeButtonText}>
-                <FontAwesome name="magic" size={16} color="white" /> Analyze
-                Report
-              </Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      </ScrollView>
+            {image && (
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: image }}
+                  style={styles.imagePreview}
+                  resizeMode="contain"
+                />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={handleRemoveImage}
+                >
+                  <MaterialIcons name="close" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#4a90e2" />
+                <Text style={styles.loadingText}>
+                  Processing your report...
+                </Text>
+              </View>
+            ) : image ? (
+              <TouchableOpacity
+                style={styles.analyzeButton}
+                onPress={handleUploadAndAnalyze}
+                disabled={isLoading}
+              >
+                <Text style={styles.analyzeButtonText}>
+                  <FontAwesome name="magic" size={16} color="white" /> Analyze
+                  Report
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </ScrollView>
+      )}
     </LinearGradient>
   );
 }
