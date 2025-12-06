@@ -67,158 +67,52 @@ def lab_report_analysis(cloudinary_url,health_data = None):
         
         eng_prompt = f"""
 You are a professional health and fitness advisor.
-If the provided input is not a valid lab report then respond with 
+
+If the input says "Invalid report" then respond with:
 "Invalid image! Please send lab reports only."
 
-Your task is to analyze the lab report provided below and generate a clean, well-structured report with medical insights and practical advice. The format should be professional and easy to read. Do not use asterisks, emojis, or markdown symbols.Use simple words not heavy words.
+Your task is to analyze the lab report provided below and produce a **clean, concise, and professional report** in the exact structure shown here. Use simple, clear language. Do not use asterisks, emojis, or markdown symbols. Focus on **clarity and readability**.
 
-Follow this structure exactly:
+The report should have these sections:
 
 1. Lab Report Analysis
-
-- For each test, output a short line in this format:
-Test Name – Human-friendly interpretation
-
-- Interpret values specifically based on clinical relevance, severity, and combinations with other test results. Avoid generic phrases like “normal” or “low” unless fully appropriate.
-- Ensure different lab results lead to clearly different interpretations.
-
-Example:
-Sodium – Level is within normal range  
-Creatinine – Slightly elevated, monitor kidney function  
-Hemoglobin – Low, possible sign of anemia
-
-Keep each line short, clear, and medically accurate.
-
-- Study the report, analyze the value of the test result and go for the suggestion
-- In Exercise section, you can go for the Yoga, Meditation and Breathing give steps in details if you suggest and benefits  in structured way
-- In food you can give, food options which can be added on the daily food of the user
+- List each test in this format: Test Name – Short interpretation , only if some test is abnormal(if not inside the range be strict).
+- Only if all tests are normal, write "All test results are within normal ranges."
 
 
 2. Personalized Diet Plan
-
-- While suggesting diet plan in Breakfast, Lunch, Dinner focus food local to Nepal rather than fancy foods along with other foods rather than fancy foods
-- Donot go for the same food everytime, after having detail insight in report then only provide suggestions
-- Considering providing nepali name in brackets if you feel necessary not in every place for only which may be difficult to understand by average nepali
-- Focus on suggesting good foods, nepali origin also 
-- Provide a list of options of good local and all foods for the user
-
-Breakfast:
-
-Example:
- - Fruit Salad(Apple, Oranges, watermelon)   
- - Selroti          
- - Nuts(almonds , walnuts)  
- - Tea(Herbal teas)                           
- - Lemon water 
- - Yogurt                                        
- - Boiled eggs(With onions)     
- - Banana
-                        
-Benefits: In this portion show what benefits can be provided by the food related to the tests and test result in short.
-
-- This is just a example donot paste it to the user 
-- Strictly follow this structure
-- Provide any meal suggestion after analyzing the report deeply 
-- You can suggest some foods to add in existing breakfast like - Add 1 honey in milk
-- Suggest relevant options. Example: Dhido is heavy food no one eats in breakfast
--Provide around 10 - 12 options of food items as described in above format 
-
-Lunch:
-
-- Same detail as breakfast with diverse, healthy food choices
-- Also provide foods that can be locally available and give varities so user can have options
-- Provide more options for lunch also like 10 - 12 options
-
-Dinner:
-
-- Just like in breakfast provide 10 - 12 options in format mentioned in breakfast
-- Provide more options for the dinner also
-- Focus on lighter, easy-to-digest foods
-- You can also provide some dessert options according to the lab report result
-
-Additional Diet Tips:
-
-- Provide 2–3 clear dietary recommendations to follow or avoid based on the lab results
+- Include Breakfast, Lunch, Dinner sections.
+- Provide 5–10 food options for each meal.
+- After each meal, add a short “Benefits” line summarizing their health impact.
+- Include 2–3 general diet tips based on the lab report.
+- Focus on suggesting good foods especially nepali 
+- Prefer locally available Nepali foods, include Nepali names in brackets only if needed.
 
 3. Exercise Recommendations
-
-- State the primary goal of the exercise plan (e.g., manage blood sugar, support kidney health)
-
-Morning:
-
-- Activity type, duration, intensity, and expected benefits
-- While suggesting Yoga or Meditaion provide steps how to perform in steps in each line basis and benefits ex:
-
-Example:
-1) Balasana
-    - Sit on your knees.
-    - Bend forward and touch your forehead to the floor.
-    - Stretch your hands forward or keep them near your legs.
-    - Close your eyes and breathe slowly.
-    - Stay in this position for a while.
-    - Slowly come back up.
-    Benefits:
-    - Relieves stress & anxiety
-    - Reduce backpain and tension
-
-- Strictly follow this structure while suggesting Yoga and donot paste balasana everytime provide relevant Yoga, Breathing and Meditation.While suggesting use lines wise comma technique to show clean information.
-- Give Meditation options also in the exact same format above in example
-- After suggesting each yoga or breathing or meditation provide a line space and go for another options to show clear result
-
-
-Evening:
-
-- Relaxation or flexibility exercises with detailed examples
-- Provide information as you provided in Morning in details
-
-Weekly Plan:
-
-- Outline a detailed 4–5 day exercise schedule
-- Include specific activities for each day (e.g., Monday: 30 min brisk walk, Wednesday: strength training with light weights)
-- Mention rest or active recovery days
-- Provide advice on how to gradually increase intensity or duration over weeks
-- Add caution if any lab result suggests reduced physical tolerance or limitations
+- Morning and Evening sections.
+- Include 2–3 exercises with short description.
+- Mention duration and benefits.
+- Add a weekly plan with number of active, light, and rest days.
 
 4. Lifestyle Improvements
+- Provide 5–6 short bullet points (hydration, sleep, stress, sunlight, screen time, smoking/alcohol).
 
-Provide at least 6 bullet points with spacing:
-- Hydration
-- Sleep
-- Stress reduction
-- Sunlight exposure
-- Screen time
-- Posture and ergonomic care
-- Caffeine/alcohol/smoking considerations
-
-5. Important Health Notes or Warnings
-- Provide short and simple 
-- If any value is abnormal or concerning, state it clearly with the name, and why it matters
-- Recommend professional follow-up (e.g., nephrologist, endocrinologist)
-- Keep the tone calm and helpful, not alarming 
-
-The user has shared the following existing health conditions:
-
+Use the user’s health conditions to guide your advice:
 - Diabetes: {diabetes}
 - High Blood Pressure: {hypertension}
 - Smoker: {smoker}
 
-Use this health history to guide your recommendations.
 Lab Report:
 \"\"\" 
 {extracted}
 \"\"\"
 
-
 Rules:
-- 
-- Strictly follow the above structure
-- Do not use asterisks, emojis, markdown, or symbols
-- Leave space between sections and bullet points
-- Leave two line spaces after each main heading
-- Leave one line space after each subheading
-- Be accurate and base all advice on the provided lab data only
-- Use clear headings and bullet points to organize information
-- Ensure that **interpretations and advice vary noticeably** depending on the values and the condition shown in the report. Avoid repeating phrasing from one report to another if the context changes.
+- Follow the sections and headings exactly as above.
+- Do not include instructions or explanations inside the report.
+- Keep wording simple and medically accurate.
+- Leave a line space between sections for readability.
+- Only provide the report text — do not add extra commentary.
 """
 
         response = model2.generate_content(eng_prompt)

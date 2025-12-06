@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 export default function ReportAnalysis() {
   const { user } = useUser();
@@ -32,13 +33,39 @@ export default function ReportAnalysis() {
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(
     null
   );
+  // Add avatar state near other useState declarations
   const [mediaPermission, setMediaPermission] = useState<boolean | null>(null);
   const [errors, setErrors] = useState({
     reportName: false,
     labName: false,
   });
+  const [avatarState, setAvatarState] = useState<
+    "idle" | "thinking" | "reading" | "success"
+  >("idle");
   const reportNameRef = useRef<TextInput>(null);
   const labNameRef = useRef<TextInput>(null);
+
+  // Determine which avatar to show based on current state
+  const getAvatarSource = () => {
+    switch (avatarState) {
+      case "thinking":
+        return require("../../../assets/avatars/report_thinking.png");
+      case "reading":
+        return require("../../../assets/avatars/report_reading.png");
+      case "success":
+        return require("../../../assets/avatars/report_success.png");
+      case "idle":
+      default:
+        return require("../../../assets/avatars/idle.png"); // Default to reading
+    }
+  };
+
+  // Update avatar state during different phases
+  const updateAvatarState = (
+    state: "idle" | "thinking" | "reading" | "success"
+  ) => {
+    setAvatarState(state);
+  };
 
   // Add this validation function
   const validateForm = () => {
@@ -129,6 +156,7 @@ export default function ReportAnalysis() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
+        updateAvatarState("reading");
       }
     } catch (error) {
       console.error("Error taking photo:", error);
@@ -157,11 +185,16 @@ export default function ReportAnalysis() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setImage(result.assets[0].uri);
+        updateAvatarState("reading");
       }
     } catch (error) {
       console.error("Error picking image:", error);
       Alert.alert("Error", "Failed to pick image. Please try again.");
     }
+  };
+  const handleRemoveImage = () => {
+    setImage(null);
+    updateAvatarState("idle");
   };
 
   const compressImage = async (uri: string) => {
@@ -291,7 +324,11 @@ export default function ReportAnalysis() {
     }
 
     setIsLoading(true);
+    updateAvatarState("reading"); // Start with reading avatar
+
     try {
+      updateAvatarState("thinking"); // Switch to thinking during processing
+
       const compressedUri = await compressImage(image);
       const cloudinaryData = await uploadToCloudinary(compressedUri);
       const savedReport = await analyzeAndSaveReport(
@@ -299,16 +336,18 @@ export default function ReportAnalysis() {
         cloudinaryData.cloudinaryId
       );
 
+      updateAvatarState("success"); // Success avatar
       router.replace({
         pathname: `/(home)/reports/${savedReport._id}`,
         params: { shouldRefresh: "true" },
       });
 
-      setTimeout(
-        () => Alert.alert("Success", "Report analyzed successfully!"),
-        500
-      );
+      setTimeout(() => {
+        Alert.alert("Success", "Report analyzed successfully!");
+        updateAvatarState("idle"); // Reset to idle
+      }, 500);
     } catch (error: any) {
+      updateAvatarState("idle"); // Reset on error
       if (error.message.startsWith("LIMIT_REACHED:")) {
         const limit = error.message.split(":")[1];
         Alert.alert(
@@ -343,7 +382,29 @@ export default function ReportAnalysis() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Analyze Medical Report</Text>
-
+        {/* Avatar Section */}
+        <Animated.View
+          style={styles.avatarSection}
+          entering={FadeIn.duration(600)}
+        >
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarGlow} />
+            <Image
+              source={getAvatarSource()}
+              style={styles.avatarImage}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.avatarCaption}>
+            {avatarState === "thinking"
+              ? "Analyzing your report..."
+              : avatarState === "reading"
+              ? "Reviewing the details..."
+              : avatarState === "success"
+              ? "Analysis complete!"
+              : "Ready to analyze your medical report"}
+          </Text>
+        </Animated.View>
         <View style={styles.formContainer}>
           <Text style={styles.sectionTitle}>Report Details</Text>
 
@@ -417,7 +478,7 @@ export default function ReportAnalysis() {
               />
               <TouchableOpacity
                 style={styles.removeButton}
-                onPress={() => setImage(null)}
+                onPress={handleRemoveImage}
               >
                 <MaterialIcons name="close" size={20} color="white" />
               </TouchableOpacity>
@@ -581,5 +642,60 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
+  },
+  // Avatar Section Styles
+  avatarSection: {
+    alignItems: "center",
+    marginBottom: 24,
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  avatarWrapper: {
+    width: "100%",
+    height: 180,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+
+  avatarGlow: {
+    position: "absolute",
+    width: 200,
+    height: 120,
+    borderRadius: 100,
+    backgroundColor: "rgba(74, 144, 226, 0.15)",
+    zIndex: -1,
+  },
+
+  avatarImage: {
+    width: 200,
+    height: 120,
+  },
+
+  avatarCaption: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2c3e50",
+    textAlign: "center",
+    marginTop: 8,
+  },
+
+  // Update gradientContainer for better spacing
+  gradientContainer: {
+    flex: 1,
+  },
+
+  container: {
+    flexGrow: 1,
+    padding: 20,
+    paddingBottom: 40,
+    paddingTop: 60, // Increased top padding for avatar
   },
 });

@@ -17,9 +17,14 @@ def start_diagnosis():
             
         session_id = str(uuid.uuid4())
         system = MedicalDiagnosisSystem(
-            data.get("smoker", "No"),
-            data.get("diabetes", "No"),
-            data.get("blood_pressure", "No")
+            data.get("sex", "male"),
+            data.get("age", 30),
+            data.get("weight", 70),
+            data.get("diabetes","Don't know" ),
+            data.get("blood_pressure","Don't know"),
+            data.get("illness",[]),
+            data.get("other_illness",""),
+            data.get("smoker","Don't know"),
         )
         
         active_sessions[session_id] = system

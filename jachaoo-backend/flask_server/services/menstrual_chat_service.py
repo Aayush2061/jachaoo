@@ -17,125 +17,57 @@ def get_menstrual_model(system_instruction):
         system_instruction=system_instruction
     )
 
-def detect_cycle_phase(first_day: str, cycle_length: int, duration_of_period: int):
-    try:
-        first_day_date = datetime.strptime(first_day, "%Y-%m-%d")
-        today = datetime.today()
-        days_since_last_period = (today - first_day_date).days
 
-        if days_since_last_period > 90:
-            return "Unknown (Cycle irregular or missing for 90+ days)"
-        if duration_of_period > cycle_length:
-            return "Invalid (Period longer than cycle length)"
+def build_system_prompt(duration_of_period, cycle_length, previous_conditions, trying_to_conceive, on_hormonal_contraceptive, first_day_of_last_period,current_cycle_phase):
+    print(duration_of_period, cycle_length, previous_conditions, trying_to_conceive, on_hormonal_contraceptive, first_day_of_last_period,current_cycle_phase)
+    #phase = detect_cycle_phase(first_day_of_last_period, int(cycle_length), int(duration_of_period))
+    if isinstance(previous_conditions, (list, tuple)):
+        known_conditions = ", ".join(previous_conditions) if previous_conditions else "None"
+    else:
+        known_conditions = previous_conditions if previous_conditions else "None"
 
-        phase_day = days_since_last_period % cycle_length
-
-        menstrual_end = duration_of_period
-        follicular_end = (cycle_length // 2) - 1
-        ovulatory_start = follicular_end
-        ovulatory_end = ovulatory_start + 2
-
-        if phase_day < menstrual_end:
-            return "Menstrual"
-        elif phase_day < ovulatory_start:
-            return "Follicular"
-        elif ovulatory_start <= phase_day <= ovulatory_end:
-            return "Ovulatory"
-        else:
-            return "Luteal"
-    except Exception:
-        return "Unknown"
-
-def build_system_prompt(duration_of_period, cycle_length, previous_conditions, trying_to_conceive, on_hormonal_contraceptive, first_day_of_last_period):
-    phase = detect_cycle_phase(first_day_of_last_period, int(cycle_length), int(duration_of_period))
     return f"""
-🔤 Input:
-- User may write in English or Roman Nepali
-- You must always reply in English
+# 1. CORE IDENTITY
+- Role: A warm, supportive friend for menstrual health.
+- Tone: Casual, empathetic, and personal 💗. Never clinical or robotic.
+- Language: Understands English & Roman Nepali. **Must reply in simple English.**
 
-🎭 Role:
-You're a warm, emotionally attuned chatbot supporting menstrual health.
+# 2. OUTPUT RULES (MANDATORY)
+- **NEVER exceed 3 short sentences.**
+- Each sentence should be simple (max ~10 words).
+- Give helpful suggestions or response .
+- Start replies naturally; never sound robotic.
 
-🩷 Tone:
-- Friendly, casual, never robotic or clinical
-- Respond like a caring friend
+# 3. CONVERSATION FLOW
+- First Message: If user sends a symptom, skip greeting and help immediately. Otherwise, Respond wisely.
+- Follow-ups: Use gentle, non-pushy invites.
+- Repetition: Never repeat advice or sympathy.
+- Emotional: If user shares feelings, just reflect and validate.
 
-🎯 Goals:
-- Help user feel truly heard and supported
-- Offer one helpful suggestion or response at a time
-- Keep replies under 3 short, warm sentences
+# 4. HOW TO HELP (THE LOGIC)
+- Symptoms (Pain, Mood, Sleep): Acknowledge with empathy. Give 1-2 simple, practical tips.
+- Food Tips: Suggest simple, comforting, varied Nepali-local foods(in simple english) . Do not repeat the same food examples.
+- Features: Gently mention the 'Sleep Feature' or 'Cycle Guide' features in app if relevant, but don't push.
+- Severe Symptoms: If it sounds bad, gently suggest: "If it gets worse, it's always okay to check with a doctor."
 
-👋 First Message Rules:
-- If user starts with a symptom or concern (e.g., cramps, flow, fatigue), skip greeting and reply with empathy + advice
-- Otherwise, greet once: “Hey there, I’m here for you. How’s your body feeling today? 💗”
-- DO NOT repeat greeting if it already happened in this conversation.
+# 5. CRITICAL MEDICAL LOGIC
+- Bleeding: **Check the {current_cycle_phase} variable.** If bleeding is reported *outside* the menstrual phase, be cautious. Suggest possibilities (e.g., ovulation spotting, hormonal changes) and gently suggest seeing a doctor.
+- Personalization: Acknowledge {known_conditions} (like PCOS) or {on_hormonal_contraceptive} and adapt advice. 
 
-💬 Chat Style:
-- Never repeat advice or questions already answered
-- Don’t push to switch topics — wait for user to signal
-- Don’t ask “Anything else?” too soon
-- Always stay aware of the full chat context — your past replies and the user's recent inputs — and respond accordingly.
-- Use gentle follow-ups like:
-  - “Want more tips or to talk about how you're feeling?”
-  - “Take your time—I'm here for you 💗”
-- Only respond to sex-related questions if the user brings them up. Use warm, respectful, and simple language — avoid explicit detail, and always prioritize safety, consent, and reassurance.
+# 6. BOUNDARIES (DO NOT DO)
+- Do NOT give long lists, links, or external resources.
+- Do NOT discuss tech, AI, or your creators. Reply: "I'm just here to help with menstrual health 💗."
+- Do Not discuss unrelevant topics (politics, sports, etc.).
+- Do NOT discuss sex unless the user does; keep it safe and respectful.
 
-🤒 If symptoms (pain, mood, fatigue, sleep):
-- Acknowledge with empathy (e.g., “That sounds rough.”, “Totally normal to feel off.”)
-- Give 3–4 thoughtful, varied tips in one reply
-- End with a gentle invite to continue or ask more
-
-🌙 If sleep trouble:
-- Suggest gentle night routines like : warm bottle, soft music, stretching - use your own also
-- Gently remind that we have Sleep Feature in Mental health which gives in detail.
-
-🥣 Food Suggestions:
-- Offer simple, comforting, varied Nepali-local foods
-  - like Ginger tea, turmeric water, bananas, nuts, warm soup, lemon water and others
-  -They are only examples donot reapeat these again and again , provide your own.
-- Gently remind that we have detail suggestion in Cycle Guide feature
-
-🩸Bleeding
-_ If there is anything realted to bleeding, first consider which phase user is in.
-- If flow is reported **outside the typical menstruation window** (i.e., not during the first few days of the cycle), treat it as potentially unusual.
-- Always Offer possible explanations such as ovulation spotting, implantation bleeding, or hormonal fluctuations, depending on the phase and you can also suggest to visit doctor .
-
-🏃‍♀️Body and mind support
-- Provide some suggestion according to the phase u know yoga, meditation, breathing and exercises
-- Always gently remind that we have detail suggestion in Cycle Guide feature
-
-🧬 If user has PCOS or hormonal contraceptives:
-- Gently adapt tips:
-  - “Since you mentioned PCOS, hydration and light exercise might ease flow.”
-  - “Hormonal contraceptives can affect symptoms — go easy on yourself.”
-
-🛟 If symptoms seem severe:
-- Kindly remind: “If it gets worse, it’s okay to check with a doctor.”
-
-❤️ If user shares emotional or personal info:
-- Never move on unless they signal to
-- Always reflect their tone and offer gentle support
-
-❌ Avoid:
-- Long lists
-- Repeating advice or greetings
-- Changing topics without user signal
-- Tech/coding/unrelated topics — kindly say it’s outside your scope
-- Talking about your AI model, company name, or creators — kindly reply: “I’m just here to help with menstrual health 💗 — not able to chat about that.”
-- Avoid telling about resources or information for appointment type of things.
-
-🧠 Personalization Inputs:
+# 7. USER DATA (Use this for context)
 - Period Duration: {duration_of_period} days
 - Cycle Length: {cycle_length} days
-- Known Conditions: {", ".join(previous_conditions) if previous_conditions else "None"}
+- Known Conditions: {known_conditions}
 - Trying to Conceive: {"Yes" if trying_to_conceive else "No"}
-- On Hormonal Contraceptives: {"Yes" if on_hormonal_contraceptive else "No"}
+- On Hormonal Contraceciples: {"Yes" if on_hormonal_contraceptive else "No"}
 - First Day of Last Period: {first_day_of_last_period}
-- Current Phase: {phase}
-
-Give best answer for the user query
-Before giving any output analyze and think about the user details in "Personalization Input" very deeply and strictly follow the abovev prompt
-💗 Keep it warm, clear, emotionally present, and practical.
+- Current Phase: {current_cycle_phase}
 """
 
 def build_summary_context(chat_history, user_query):
@@ -150,8 +82,9 @@ def build_summary_context(chat_history, user_query):
 
     # Combine for prompt context
     new_history = summary + last_user_model
-    new_history.append({"role": "user", "parts": [{"text": user_query}]})
     return new_history
+# REMOVE the global _chat_session variable!
+# _chat_session = None  ← DELETE THIS LINE
 
 def menstrual_chatbot(user_query: str,
                       chat_history: list,
@@ -160,27 +93,100 @@ def menstrual_chatbot(user_query: str,
                       previous_conditions: str,
                       trying_to_conceive: bool,
                       on_hormonal_contraceptive: bool,
-                      first_day_of_last_period: str) -> str:
+                      first_day_of_last_period: str,
+                      current_cycle_phase:str) -> str:
 
     if not user_query.strip():
         return "Could you tell me a bit more so I can help better? 💗"
 
+    # STEP 1: Build system instruction for THIS user
     system_instruction = build_system_prompt(duration_of_period, cycle_length, previous_conditions,
-                                             trying_to_conceive, on_hormonal_contraceptive, first_day_of_last_period)
-
+                                             trying_to_conceive, on_hormonal_contraceptive, first_day_of_last_period, current_cycle_phase)
     model = get_menstrual_model(system_instruction)
 
-    # Inject summary context + full last chat + user input
-    current_context = build_summary_context(chat_history, user_query)
-    chat = model.start_chat(history=current_context)
+    # STEP 2: STRATEGY - Use summary after 3 exchanges, else normal history
+    if len(chat_history) >= 6:  # 3+ exchanges (6 messages = 3 user + 3 assistant)
+        # Generate summary of entire conversation
+        summary = generate_conversation_summary(chat_history)
+        
+        # Prepare context: Summary + current query
+        context = f"Previous conversation summary: {summary}\n\nCurrent question: {user_query}"
+        
+        # Send only summary + current query (no conversation history)
+        gemini_history = []
+        final_query = context
+    else:
+        # For first 3 exchanges, use normal limited history
+        MAX_EXCHANGES = 3
+        max_messages = MAX_EXCHANGES * 2
+        
+        if len(chat_history) > max_messages:
+            limited_history = chat_history[-max_messages:]
+        else:
+            limited_history = chat_history
+
+        # Convert history to Gemini format
+        gemini_history = []
+        for msg in limited_history:
+            if msg["role"] == "user":
+                gemini_history.append({"role": "user", "parts": [{"text": msg["parts"][0]["text"]}]})
+            elif msg["role"] == "model":
+                gemini_history.append({"role": "model", "parts": [{"text": msg["parts"][0]["text"]}]})
+        
+        final_query = user_query
+
+    # STEP 3: Create NEW session for THIS user
+    chat_session = model.start_chat(history=gemini_history)
 
     try:
-        response = chat.send_message(user_query)
+        response = chat_session.send_message(final_query)
         reply = response.text
 
+        # STEP 4: Update the user's chat_history
         chat_history.append({"role": "user", "parts": [{"text": user_query}]})
         chat_history.append({"role": "model", "parts": [{"text": reply}]})
 
         return reply
     except Exception as e:
         return f"Something went wrong. Please try again later. ({e})"
+
+def generate_conversation_summary(chat_history):
+    """Generate 250-char summary of entire conversation"""
+    try:
+        conversation_text = ""
+        for msg in chat_history:
+            if msg["role"] == "user":
+                conversation_text += f"User: {msg['parts'][0]['text']}\n"
+            else:
+                conversation_text += f"Assistant: {msg['parts'][0]['text']}\n"
+        
+        # Use Gemini to create concise summary
+        summary_model = genai.GenerativeModel("gemini-2.0-flash")
+        summary_session = summary_model.start_chat(history=[])
+        
+        summary_prompt = f"""
+        Summarize this menstrual chat in ≤250 characters. 
+        Include: symptoms, concerns, key advice. Keep it brief and factual.
+
+        Conversation:
+        {conversation_text}
+        """
+        
+        response = summary_session.send_message(summary_prompt)
+        summary = response.text.strip()
+        
+        # Ensure max 250 characters
+        if len(summary) > 250:
+            summary = summary[:247] + "..."
+            
+        return summary
+        
+    except Exception as e:
+        # Fallback: simple concatenation if summary fails
+        main_points = []
+        for msg in chat_history[-6:]:  # Last 3 exchanges as fallback
+            if msg["role"] == "user" and len(msg['parts'][0]['text']) < 50:
+                main_points.append(msg['parts'][0]['text'][:40])
+        
+        fallback_summary = "User discussed: " + ", ".join(main_points)
+        return fallback_summary[:250]

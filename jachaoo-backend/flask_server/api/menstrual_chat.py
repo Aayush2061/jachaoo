@@ -30,7 +30,8 @@ def handle_chat():
             previous_conditions=prev_conditions,
             trying_to_conceive=bool(user_context.get('trying_to_conceive', False)),
             on_hormonal_contraceptive=bool(user_context.get('on_hormonal_contraceptive', False)),
-            first_day_of_last_period=user_context.get('first_day_of_last_period', '2025-01-01')
+            first_day_of_last_period=user_context.get('first_day_of_last_period', '2025-01-01'),
+            current_cycle_phase=user_context.get('current_cycle_phase', 'Unknown')
         )
         
         # Update and return chat history

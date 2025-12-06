@@ -2,6 +2,7 @@ import time
 import re
 import google.generativeai as genai
 import logging 
+import json
 from dotenv import load_dotenv
 import os
 
@@ -12,97 +13,113 @@ load_dotenv()
 API_KEY = os.getenv("FINAL_API_KEY") 
 genai.configure(api_key=API_KEY)
 
+
 # Your Original Full System Instruction (UNCHANGED)
 # ----------------------------
-SYSTEM_PROMPT = '''
-### MEDICAL INTERVIEW SYSTEM – HIGH-STAKES MODE ###
-
-ROLE:
-You are an expert AI clinician trained in diagnostic reasoning. Your task is to investigate this patient-reported symptom: **{symptom}**
-
-OBJECTIVE:
-Generate **one and only one** next best question to extract missing clinical information — no guessing, no repetition.
-Use very simple langauge 
-
-CONTEXT:
-The following has already been gathered:
-{context}
-And Do not repeat what already has been gathered.
-
-RULESET:
-
-1. ❌ Do NOT ask about dimensions that are already covered. If “Duration” has been asked, NEVER ask again.
-2. 💡 Ask only one **focused, medically relevant** question at a time.
-3. ✅ Question must be about a **new, unasked** clinical dimension.
-4. 🧠 Think like a sharp physician — dig into what changes decisions: onset, radiation, red flags, impact, triggers, type, location, etc.
-5. 🗣️ Keep language **clear**, **non-technical**, and **easily understood** by patients.
-6. 💬 Generate clear, distinct, and easily understandable answer choices for the question avoiding vague options .  
-    Use plain language with complete phrases. Avoid vague or ambiguous options like "maybe" or "sometimes."  
-    Make options mutually exclusive and cover the most relevant possibilities clearly.  
-    At least 3 options and include a final option like "Don't Know" to allow uncertainty .  
-    Focus on helping a non-medical user confidently pick the best answer.
-7. ⛔ NEVER use "Yes", "No", "Maybe", "Sometimes", "I think", or multi-meaning options like “green/yellow/brown”.
-8. 🔁 Do NOT repeat a question. Avoid any variation of questions already asked (even if phrased differently).
-
-PATIENT IS NON-MEDICAL:
-Use plain everyday words only. NO medical terms like “radiates”, “localized”, “onset”, “lumbar”, “inflammation”, etc.
-Examples:
-- Use “back” instead of “lumbar”
-- Say “pain goes to the leg” instead of “radiates”
-- Use “burning” instead of “neuropathic”
-
-DIMENSIONS TO CONSIDER (choose one that's still missing):
-- Duration (only once)
-- Location
-- Radiation
-- Character (type of pain/sensation)
-- Severity (only once: Mild, Moderate, Severe, None, Don't Know)
-- Timing (when is it worse? morning/night)
-- Trigger (what starts or worsens it)
-- Relief (what makes it better)
-- Functional impact (walking, sleeping, breathing)
-- Associated symptoms (fever, nausea, swelling)
-- Red flags (weight loss, weakness, dizziness, loss of bladder control)
-
-REPETITION SAFEGUARD (ALL DIMENSIONS):
-- Do not repeat or rephrase any previously asked question; never ask more than one question targeting the same information or dimension for a symptom.
-
-EXACT OUTPUT FORMAT:
-QUESTION: [Insert best possible question here]
-OPTIONS: [Option 1], [Option 2], [Option 3], [Option 4], ..., Don't Know
-
-NOW THINK, ANALYZE, AND GENERATE:
-Only return the question and its options in the correct format. Nothing else.
-'''
-
-#NAME CHANGE GARE HAI
-model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash",
-    system_instruction=SYSTEM_PROMPT
-)
-
 class MedicalDiagnosisSystem:
-    def __init__(self, smoker: str, diabetes: str, blood_pressure: str):
+    def __init__(self, sex: str, age: str, weight: str, diabetes: str, blood_pressure: str, 
+                 illnesses: list, other_illness: str, smoker: str):
         self.patient_data = {
             "basic_info": {
-                "smoker": smoker,
+                "sex": sex,
+                "age": age, 
+                "weight": weight,
                 "diabetes": diabetes,
-                "high_blood_pressure": blood_pressure
+                "high_blood_pressure": blood_pressure,
+                "illnesses": illnesses,
+                "other_illness": other_illness,
+                "smoker": smoker
             },
             "symptoms": [],
             "conversation_log": []
         }
-        self.current_stage = "main_symptom"
+        SYSTEM_PROMPT = '''
+### MEDICAL INTERVIEW SYSTEM – HIGH-STAKES MODE ###
+
+PATIENT BACKGROUND:
+- Age: {age}
+- Sex: {sex}
+- Weight: {weight} kg
+- Smoker: {smoker}
+- Diabetes: {diabetes}
+- High Blood Pressure: {blood_pressure}
+- Existing Illnesses: {illnesses}
+- Other Conditions: {other_illness}
+
+ROLE:
+You are an expert AI clinician. Investigate this patient-reported symptom.
+
+OBJECTIVE:
+Generate one — and only one — next best question to extract missing clinical information. Use very simple language.
+
+RULES:
+1) Ask exactly ONE focused, decision-relevant question (short, plain words).
+2) Do NOT ask about any dimension already covered in context.
+3) Choose one new dimension only (see list below).
+4) Must include at least THREE clear, mutually-exclusive full-phrase answer options, then "Don't Know" as a final option.
+5) NEVER use single-word answers like "Yes", "No", "Maybe", "Sometimes" or vague color labels.
+6) Use no medical jargon (e.g., use "back", "pain goes to the leg", "burning").
+7) If a red-flag is suspected, dimension = "redflag" and options should surface urgency.
+8) Keep the question ≤12 words and options short but complete.
+9) Striclty avoid the rating scale questions.
+10) Also include option "both" logically, when asking about sides.
+
+DIMENSIONS TO CONSIDER (choose most clinically useful missing dimension):
+- Onset & Duration (when it started, how long it's lasted)
+- Location (where exactly it occurs)
+- Radiation (does it spread anywhere)
+- If the symptom may be caused or influenced by any external or past event, the FIRST follow-up question must ALWAYS be a single, comprehensive “trigger-identification” question. This single question must cover ALL common real-world triggers in one shot (e.g., food/drink, physical activity, sudden movement, injury/accident, emotional stress, new medicine, exposure, or ‘nothing happened’). After this one trigger question is asked once, the model must NEVER ask any further trigger-related questions for the same symptom.
+- Character (type or nature of the feeling/pain)
+- Severity (mild, moderate, severe, none, don't know)
+- Timing & Pattern (when it happens or if it comes and goes)
+- Progression / Trend (getting better, worse, or same)
+- Trigger / Precipitating Event (what starts or worsens it)
+- Functional Impact (affecting work, walking, sleep, breathing)
+- Associated Symptoms (fever, nausea, swelling, etc.)
+- Previous Episodes / Recurrence (has it happened before)
+- Context (injury, infection, travel, menstruation, etc.)
+- Medication / Substance Use (any new drugs, alcohol, smoking)
+- Psychological / Stress Factors (stress, mood, anxiety links)
+- Red Flags (weight loss, weakness, dizziness, loss of bladder control)
+
+REPETITION SAFEGUARD (ALL DIMENSIONS):
+- Do not repeat or rephrase any previously asked question; never ask more than one question targeting the same information or dimension for a symptom.
+
+EXACT OUTPUT FORMAT(strict):
+QUESTION: [Insert best possible question here]
+OPTIONS: [Option 1], [Option 2], [Option 3], [Option 4], ..., Don't Know
+
+Only return the question and its options in the correct format. Nothing else.
+'''
+
+#NAME CHANGE GARE HAI
+        SYSTEM_PROMPT=SYSTEM_PROMPT.format(
+            age=age,
+            sex=sex,
+            weight=weight,
+            smoker=smoker,
+            diabetes=diabetes,
+            blood_pressure=blood_pressure,
+            illnesses=", ".join(illnesses),
+            other_illness=other_illness
+        )
+
+        self.model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash" ,
+    system_instruction=SYSTEM_PROMPT
+)
+
+        self.current_stage = "main_symptom" 
         self.last_question = ""
         self.current_options = []
         self.current_symptom_context = {}
-        self.expecting_free_text = True  # Only allow text when asking symptom description
-        self.diagnosis_completed = False  
+        self.expecting_free_text = True
+        self.diagnosis_completed = False
 
     # Call Gemini with just symptom/context prompt
     def call_gemini(self, prompt_text: str) -> str:
         try:
-            response = model.generate_content([{"role": "user", "parts": [prompt_text]}])
+            response = self.model.generate_content([{"role": "user", "parts": [prompt_text]}])
             return response.text.strip()
         except Exception as e:
             msg = str(e).lower()
@@ -277,8 +294,15 @@ class MedicalDiagnosisSystem:
         return "\n".join(filter(None, sections))
 
     def _get_symptom_prompt(self, symptom: str, context: str) -> str:
-        return SYSTEM_PROMPT.replace("{symptom}", symptom).replace("{context}", context)
-
+        symptom_data = self.patient_data["symptoms"][-1]
+        covered_dims = ", ".join(symptom_data['dimensions_covered']) if symptom_data['dimensions_covered'] else "None"
+# Here the system_prompt which was meant to be the system instruction is being passed every time okay man         
+        return f"""
+            Symptom to investigate: {symptom}
+            Current context gathered:{context}
+            Covered Dimensions : {covered_dims}
+            """
+    
     def _split_options_by_numbered_list(self, options_text: str) -> list:
         if not options_text:
             return []
@@ -317,56 +341,113 @@ class MedicalDiagnosisSystem:
         # Return max 6
         return filtered[:6]
 
-
-
-
+# little change in this function 
 
     def _get_next_symptom_question(self) -> str:
+        symptom_data = self.patient_data["symptoms"][-1]
+
+        # STOP regeneration if 4 questions already asked
+        if len(symptom_data["details"]) >= 4:
+            self.last_question = "Any other symptoms"
+            self.current_options = ["Yes", "No"]
+            return "Any other symptoms? 1) Yes 2) No"
+
+        def evaluate_question_quality(question_block: str, symptom_context: str):
+            """Use Gemini to self-critique the generated question."""
+            eval_prompt = f"""
+    You are an expert medical question evaluator.
+
+    Evaluate the following question and options against these criteria:
+    1. Question must be relevant to the symptom: {symptom_context}
+    2. No poor question which isnot useful for diagnosis and no vague and ambiguous options.
+    3. Best of best question inorder to provide best diagnosis.
+    4. Check the options criteria and make sure they are mutually exclusive and collectively exhaustive , atleast 2 generated options.
+    5. Be very strict in scoring.
+    Return a JSON strictly like this:
+    {{
+    "score": <float between 0 and 1>
+    }}
+
+    Question block:
+    {question_block}
+    """
+            try:
+                review = self.call_gemini(eval_prompt)
+                match = re.search(r"\{.*\}", review, re.DOTALL)
+                if match:
+                    data = json.loads(match.group())
+                    return float(data.get("score", 0)), data.get("reason", "")
+                return 0, "Invalid JSON returned"
+            except Exception as e:
+                return 0, f"Evaluation failed: {e}"
+
         try:
             symptom_data = self.patient_data["symptoms"][-1]
             covered = list(symptom_data["details"].keys())
             context = self._build_symptom_context(symptom_data, covered)
 
-            response = self.call_gemini(self._get_symptom_prompt(symptom_data["symptom"], context))
+            # Retry loop for regeneration until quality score ≥ 0.8
+            best_question = None
+            best_options = None
+            best_score = -1
+            best_attempt = 0
 
-            if response in ["QUOTA_EXCEEDED", "TRAFFIC_BUSY", "ERROR"]:
-                raise ConnectionError("API service unavailable")
+            for attempt in range(4):
+                response = self.call_gemini(self._get_symptom_prompt(symptom_data["symptom"], context))
+                if response in ["QUOTA_EXCEEDED", "TRAFFIC_BUSY", "ERROR"]:
+                    raise ConnectionError("API service unavailable")
 
-            # Extract question
-            question = "About your symptom"  # fallback
-            if "QUESTION:" in response:
-                question = response.split("QUESTION:")[1].split("\n")[0].strip().rstrip("?")
-            elif "\n" in response:
-                question = response.split("\n")[0].strip().rstrip("?")
+                # --- Extract question text ---
+                question = "About your symptom"
+                if "QUESTION:" in response:
+                    question = response.split("QUESTION:")[1].split("\n")[0].strip().rstrip("?")
+                elif "\n" in response:
+                    question = response.split("\n")[0].strip().rstrip("?")
 
-            # Extract options text
-            options_text = ""
-            if "OPTIONS:" in response:
-                options_text = response.split("OPTIONS:")[1].strip()
-            else:
-                # fallback: last line or comma separated
-                lines = response.strip().split("\n")
-                options_text = lines[-1] if len(lines) > 1 else response
+                # --- Extract options ---
+                options_text = ""
+                if "OPTIONS:" in response:
+                    options_text = response.split("OPTIONS:")[1].strip()
+                else:
+                    lines = response.strip().split("\n")
+                    options_text = lines[-1] if len(lines) > 1 else response
 
-            options = self._split_options_by_numbered_list(options_text)
+                options = self._split_options_by_numbered_list(options_text)
+                formatted_block = f"QUESTION: {question}\nOPTIONS: {', '.join(options)}"
 
-            # Ensure minimum options guaranteed by _split_options_by_numbered_list
+                # --- Evaluate quality ---
+                score, reason = evaluate_question_quality(formatted_block, symptom_data["symptom"])
+                #print(f"[Quality Check] Attempt {attempt+1}: Score={score} | Reason={reason}")
 
-            # Store question and options for validation and next steps
-            self.last_question = question
-            self.current_options = options
+                # Save best attempt (tie → earlier attempt wins)
+                if score > best_score:
+                    best_score = score
+                    best_question = question
+                    best_options = options
+                    best_attempt = attempt
 
-            # Format output as single column list (for simplicity & clarity)
-            formatted_options = "\n".join(f"{i+1}) {opt}" for i, opt in enumerate(options))
+                if score >= 0.8:
+                    self.last_question = question
+                    self.current_options = options
+                    formatted_options = "\n".join(f"{i+1}) {opt}" for i, opt in enumerate(options))
+                    return f"{question}?\n{formatted_options}"
 
-            return f"{question}?\n{formatted_options}"
+            # If none reached 0.8 → use BEST QUESTION
+            if best_question:
+                #print(f"⚠️ Using best attempt #{best_attempt+1} with score={best_score}")
+                self.last_question = best_question
+                self.current_options = best_options
+                formatted_options = "\n".join(f"{i+1}) {opt}" for i, opt in enumerate(best_options))
+                return f"{best_question}?\n{formatted_options}"
+
+            # If something went horribly wrong
+            return "Sorry, we are not able to process your request at this time."
 
         except Exception as e:
             logging.error(f"Question generation failed: {str(e)}")
-            self.last_question = "About your symptom"
-            self.current_options = ["Describe in your words", "Option 2", "Don't Know"]
             return "Sorry, we are not able to process your request at this time."
 
+    
 
     def _handle_additional_symptoms(self, user_input: str) -> str:
         normalized_input = user_input.strip().lower()
@@ -385,6 +466,8 @@ class MedicalDiagnosisSystem:
         else:
             return "Please select:\n1) Yes\n2) No"
     
+
+
     def _generate_final_diagnosis(self) -> str:
         # Create a clean model instance without the symptom-focused system prompt
         clean_model = genai.GenerativeModel(model_name="gemini-2.0-flash")
@@ -401,40 +484,41 @@ class MedicalDiagnosisSystem:
         # Build prompt
         prompt = f"""
 Patient Risk Factors:
-Smoker = {self.patient_data["basic_info"]["smoker"]}, 
-Diabetes = {self.patient_data["basic_info"]["diabetes"]}, 
-High BP = {self.patient_data["basic_info"]["high_blood_pressure"]}
-
+- Age: {self.patient_data["basic_info"]["age"]}
+- Sex: {self.patient_data["basic_info"]["sex"]} 
+- Weight: {self.patient_data["basic_info"]["weight"]} kg
+- Smoker: {self.patient_data["basic_info"]["smoker"]}
+- Diabetes: {self.patient_data["basic_info"]["diabetes"]}
+- High Blood Pressure: {self.patient_data["basic_info"]["high_blood_pressure"]}
+- Existing Illnesses: {', '.join(self.patient_data["basic_info"]["illnesses"])}
+- Other Conditions: {self.patient_data["basic_info"]["other_illness"]}
 Symptoms:
 {symptom_block if symptom_block else "No symptom details provided."}
 
 1. Three most likely conditions:
 - For each condition:
-    • Name + confidence percentage (e.g., 65%) Example format: Migrane (80%)
-    • 2 full lines in simple, everyday language
-    • No medical jargon or technical terms
-    • Do not use short or one-line explanations
+    - Name + confidence (%), Ex: Migrane (80%)
+    - Give two full lines in plain language, no jargon
+    - Do not use one-line explanations
 
 2. Recommended next steps:
-- Clearly state whether it's an emergency
-- Give specific, actionable advice (e.g., “See a doctor today”, “Go to hospital now”)
-- Use clear, direct language
+- State if this is an emergency deeply evaluating
+- Give clear, specific actions (e.g., "See a doctor today", "Go to hospital now")
+
 
 3. Red flags to watch for:
-- 5 points in bulletin list only urgent danger signs that need immediate help 
-- Use simple phrases (e.g., "trouble breathing", "very high fever")
+- Provide 5 urgent danger signs only (simple phrases, e.g., "trouble breathing")
 
 FORMAT RULES:
-- End immediately after the red flags — do not add any text after that
-- No greetings, disclaimers, notes, or extra messages
+- End immediately after  red flags — add no extra text
+- No greetings, disclaimers or notes
 - Use paragraph breaks only (no bullets in explanations)
 - No bold, asterisks, or decorative formatting
 
 REPETITION GUARD (STRICT):
-- Before finalizing, scan all parts for repeated ideas
-- If the same concept appears more than once (even reworded), keep only the clearest version
-- Delete all duplicate/rephrased content — do NOT say the same thing twice
-- Do NOT repeat any full paragraphs or sentences; your output must be concise and free of loops.
+- Remove duplicate or reworded ideas; keep only the clearest version
+- Do NOT repeat full paragraphs or sentences; output must be concise and non-redundant.
+
 """
 
 
@@ -452,4 +536,4 @@ REPETITION GUARD (STRICT):
         return (
             "MEDICAL ASSESSMENT REPORT\n"
             f"{diagnosis}\n\n"
-        )  # like now the code is running well but that error should be handled man
+        )  

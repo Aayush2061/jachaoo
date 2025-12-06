@@ -57,10 +57,11 @@ def ocr_function(model, img_input):
       ]
     }
 
-    If the image is **not a lab report**, Never attempt extraction. Instead, respond with `"warning"` key only like this:
+    If the image is **not a Medical lab report**, Never attempt extraction. Instead, respond with `"warning"` key only like this:
 
 
     Rules:
+    - Inside the lab result there can be heading of the test result also. so check the alignment properly and then extract
     - Do not guess or fill fields unless clearly visible in the image.
     - Always return structured JSON as shown above, no matter the input.
     - Keep fields empty if data is not present.
