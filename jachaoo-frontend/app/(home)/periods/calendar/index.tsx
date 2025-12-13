@@ -10,6 +10,7 @@ import {
   getCyclePhaseInfo,
   isPeriodIrregular,
 } from "../../../utils/cycleUtils";
+
 type PeriodData = {
   lastPeriodDate: string;
   cycleLength: number;
@@ -60,11 +61,12 @@ LocaleConfig.locales["en"] = {
 };
 LocaleConfig.defaultLocale = "en";
 
+// Theme colors matching home page
 const PHASE_COLORS = {
-  Menstrual: "#FF6B6B", // Red
-  Follicular: "#51CF66", // Green
-  Ovulatory: "#3498DB", // Blue
-  Luteal: "#FCC419", // Yellow
+  Menstrual: "#FF5C8D", // Blossom pink (Primary)
+  Follicular: "#9AD1A1", // Soft green (from home page)
+  Ovulatory: "#7CB9E8", // Soft blue (from home page)
+  Luteal: "#F5C76B", // Soft yellow (from home page)
 };
 
 export default function CalendarScreen() {
@@ -162,24 +164,19 @@ export default function CalendarScreen() {
       });
 
       const markedDates: any = {};
-      const phaseColors = {
-        Menstrual: "#FF6B6B",
-        Follicular: "#51CF66",
-        Ovulatory: "#3498DB",
-        Luteal: "#FCC419",
-      };
 
       Object.entries(phases).forEach(([phase, dates]) => {
         dates.forEach((date) => {
           markedDates[date] = {
             customStyles: {
               container: {
-                backgroundColor: phaseColors[phase as keyof typeof phaseColors],
+                backgroundColor:
+                  PHASE_COLORS[phase as keyof typeof PHASE_COLORS],
                 borderRadius: 16,
               },
               text: {
-                color: "#fff",
-                fontWeight: "bold",
+                color: "#FFFFFF",
+                fontFamily: "Poppins-Medium",
               },
             },
           };
@@ -194,7 +191,7 @@ export default function CalendarScreen() {
             container: {
               ...markedDates[date]?.customStyles?.container,
               borderWidth: 2,
-              borderColor: "#8e44ad",
+              borderColor: "#B76CFD", // Highlight color from home page
               borderStyle: "dotted",
             },
           },
@@ -207,8 +204,8 @@ export default function CalendarScreen() {
         customStyles: {
           ...markedDates[todayString]?.customStyles,
           text: {
-            color: "#000000",
-            fontWeight: "bold",
+            color: "#2D2D2D",
+            fontFamily: "Poppins-SemiBold",
           },
         },
       };
@@ -224,56 +221,84 @@ export default function CalendarScreen() {
     return phase?.replace(" Phase", "") || "Cycle data not available";
   };
 
-  // const isPeriodIrregular = (data: PeriodData | null) => {
-  //   if (!data) return false;
-  //   const NORMAL_RANGE = { min: 25, max: 35 };
-  //   return (
-  //     data.cycleLength < NORMAL_RANGE.min || data.cycleLength > NORMAL_RANGE.max
-  //   );
-  // };
-
   // Loading state
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#9B59B6" />
-      </View>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color="#B76CFD" />
+      </LinearGradient>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error Loading Data</Text>
-        <Text style={styles.errorSubtext}>{error}</Text>
-      </View>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.errorOuterContainer}
+      >
+        <View style={styles.errorContainer}>
+          <MaterialCommunityIcons
+            name="alert-circle-outline"
+            size={32}
+            color="#FF5C8D"
+            style={styles.errorIcon}
+          />
+          <Text style={styles.errorText}>Error Loading Data</Text>
+          <Text style={styles.errorSubtext}>{error}</Text>
+        </View>
+      </LinearGradient>
     );
   }
 
   // No data state
   if (!periodData) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No Period Data Available</Text>
-        <Text style={styles.errorSubtext}>
-          Please set up your period information first
-        </Text>
-      </View>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.errorOuterContainer}
+      >
+        <View style={styles.errorContainer}>
+          <MaterialCommunityIcons
+            name="calendar-blank-outline"
+            size={32}
+            color="#B76CFD"
+            style={styles.errorIcon}
+          />
+          <Text style={styles.errorText}>No Period Data Available</Text>
+          <Text style={styles.errorSubtext}>
+            Please set up your period information first
+          </Text>
+        </View>
+      </LinearGradient>
     );
   }
 
   // Irregular period state
   if (isPeriodIrregular(periodData)) {
     return (
-      <View style={styles.warningOuterContainer}>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={styles.warningOuterContainer}
+      >
         <View style={styles.warningContainer}>
           <MaterialCommunityIcons
             name="alert-circle-outline"
-            size={24}
+            size={32}
+            color="#FF5C8D"
             style={styles.warningIcon}
           />
-
           <View style={styles.warningTextContainer}>
             <Text style={styles.warningTitle}>Irregular Cycle Detected</Text>
             <Text style={styles.warningText}>
@@ -281,33 +306,32 @@ export default function CalendarScreen() {
               days. Consider tracking symptoms manually for more accurate
               insights.
             </Text>
-
-            {/* <TouchableOpacity 
-            onPress={() => navigation.navigate('TrackingTips')}
-          >
-            <Text style={styles.warningActionText}>
-              Learn about tracking irregular cycles →
-            </Text>
-          </TouchableOpacity> */}
           </View>
         </View>
-      </View>
+      </LinearGradient>
     );
   }
 
   // Main calendar view
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <View style={styles.container}>
         <View style={styles.headerContainer}>
-          <Text style={styles.headerCycleDay}>
-            {`Cycle Day - ${phaseInfo?.currentDay || "N/A"}`}
-          </Text>
-          <Text style={styles.headerPhaseText}>
-            {phaseInfo
-              ? `${formatPhaseName(phaseInfo.phase)}`
-              : "Loading cycle data..."}
-          </Text>
+          <View style={styles.cycleInfoCard}>
+            <Text style={styles.headerCycleDay}>
+              {`Cycle Day ${phaseInfo?.currentDay || "N/A"}`}
+            </Text>
+            <Text style={styles.headerPhaseText}>
+              {phaseInfo
+                ? `${formatPhaseName(phaseInfo.phase)}`
+                : "Loading cycle data..."}
+            </Text>
+          </View>
 
           <View style={styles.legendRow}>
             {Object.entries(PHASE_COLORS).map(([phase, color]) => (
@@ -318,48 +342,55 @@ export default function CalendarScreen() {
             ))}
             <View style={styles.legendItem}>
               <View style={styles.fertileCircle} />
-              <Text style={styles.legendLabel}>Fertile Days</Text>
+              <Text style={styles.legendLabel}>Fertile</Text>
             </View>
           </View>
         </View>
 
-        <Calendar
-          current={selectedDate.toISOString().split("T")[0]}
-          onDayPress={handleDayPress}
-          markedDates={getMarkedDates()}
-          markingType="custom"
-          hideExtraDays={true}
-          theme={{
-            backgroundColor: "#FFFFFF",
-            calendarBackground: "#FFFFFF",
-            textSectionTitleColor: "#7F8C8D",
-            dayTextColor: "#2C3E50",
-            todayTextColor: "#9B59B6",
-            selectedDayTextColor: "#FFFFFF",
-            selectedDayBackgroundColor: "#9B59B6",
-            arrowColor: "#9B59B6",
-            monthTextColor: "#2C3E50",
-            textDayFontWeight: "500",
-            textMonthFontWeight: "bold",
-            textDayHeaderFontWeight: "500",
-          }}
-          renderHeader={(date) => (
-            <View style={styles.calendarHeader}>
-              <Text style={styles.calendarMonthText}>
-                {date.toString("MMMM")}
-              </Text>
-              <Text style={styles.calendarYearText}>{date.getFullYear()}</Text>
-            </View>
-          )}
-          renderArrow={(direction) => (
-            <MaterialCommunityIcons
-              name={direction === "left" ? "chevron-left" : "chevron-right"}
-              size={24}
-              color="#9B59B6"
-            />
-          )}
-          style={styles.calendar}
-        />
+        <View style={styles.calendarCard}>
+          <Calendar
+            current={selectedDate.toISOString().split("T")[0]}
+            onDayPress={handleDayPress}
+            markedDates={getMarkedDates()}
+            markingType="custom"
+            hideExtraDays={true}
+            theme={{
+              backgroundColor: "#FFFFFF",
+              calendarBackground: "#FFFFFF",
+              textSectionTitleColor: "#8B8691",
+              dayTextColor: "#2D2D2D",
+              todayTextColor: "#FF5C8D",
+              selectedDayTextColor: "#FFFFFF",
+              selectedDayBackgroundColor: "#B76CFD",
+              arrowColor: "#B76CFD",
+              monthTextColor: "#2D2D2D",
+              textDayFontFamily: "Poppins-Medium",
+              textMonthFontFamily: "Poppins-SemiBold",
+              textDayHeaderFontFamily: "Poppins-Medium",
+              textDayFontSize: 14,
+              textMonthFontSize: 18,
+              textDayHeaderFontSize: 13,
+            }}
+            renderHeader={(date) => (
+              <View style={styles.calendarHeader}>
+                <Text style={styles.calendarMonthText}>
+                  {date.toString("MMMM")}
+                </Text>
+                <Text style={styles.calendarYearText}>
+                  {date.getFullYear()}
+                </Text>
+              </View>
+            )}
+            renderArrow={(direction) => (
+              <MaterialCommunityIcons
+                name={direction === "left" ? "chevron-left" : "chevron-right"}
+                size={24}
+                color="#B76CFD"
+              />
+            )}
+            style={styles.calendar}
+          />
+        </View>
       </View>
     </LinearGradient>
   );
@@ -368,182 +399,215 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: "#FFFFFF",
     padding: 20,
-    marginTop: 60,
+    paddingTop: 60,
   },
-  // Phase Display Styles
-  phaseContainer: {
-    marginBottom: 25,
-  },
-  cycleDayText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#2C3E50",
-    marginBottom: 4,
-  },
-  phaseText: {
-    fontSize: 16,
-    color: "#7F8C8D",
-    marginBottom: 16,
-  },
-  phaseGrid: {
-    gap: 8,
-  },
-  phaseRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
-  },
-  phasePill: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  phasePillText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  // Calendar Styles
-  calendarHeader: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  calendarMonthText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2C3E50",
-  },
-  calendarYearText: {
-    fontSize: 16,
-    color: "#7F8C8D",
-  },
-  calendar: {
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 20,
-  },
+
+  // Header Styles
   headerContainer: {
     alignItems: "center",
+    marginBottom: 24,
+  },
+
+  cycleInfoCard: {
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 18,
+    padding: 16,
     marginBottom: 20,
+    width: "100%",
+    alignItems: "center",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 24,
+    elevation: 6,
   },
 
   headerCycleDay: {
     fontSize: 22,
-    fontWeight: "bold",
-    color: "#2C3E50",
-    marginBottom: 6,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginBottom: 4,
   },
 
   headerPhaseText: {
-    fontSize: 16,
-    color: "#7F8C8D",
-    marginBottom: 14,
+    fontSize: 15,
+    fontFamily: "Poppins-Medium",
+    color: "#8B8691",
   },
 
+  // Legend Styles
   legendRow: {
     flexDirection: "row",
     justifyContent: "center",
     flexWrap: "wrap",
     gap: 16,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 3,
   },
 
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
     marginHorizontal: 6,
-    marginVertical: 4,
+    marginVertical: 2,
   },
 
   legendDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    marginRight: 6,
+    marginRight: 8,
   },
 
   legendLabel: {
-    fontSize: 14,
-    color: "#2C3E50",
+    fontSize: 13,
+    fontFamily: "Poppins-Medium",
+    color: "#2D2D2D",
   },
+
   fertileCircle: {
-    width: 16,
-    height: 16,
-    borderRadius: 8, // Makes it circular
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     borderWidth: 2,
-    borderColor: "#8e44ad",
+    borderColor: "#B76CFD",
     borderStyle: "dotted",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 6,
+    marginRight: 8,
   },
+
+  // Calendar Card
+  calendarCard: {
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 28,
+    elevation: 8,
+  },
+
+  calendarHeader: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+
+  calendarMonthText: {
+    fontSize: 20,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginBottom: 2,
+  },
+
+  calendarYearText: {
+    fontSize: 15,
+    fontFamily: "Poppins-Medium",
+    color: "#8B8691",
+  },
+
+  calendar: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+
+  // Warning/Irregular Cycle Styles
   warningOuterContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
+
   warningContainer: {
-    backgroundColor: "#FFF4F4",
-    borderRadius: 12, // More rounded corners
-    padding: 20,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 20,
+    padding: 24,
     width: "90%",
     maxWidth: 350,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#FFD6D6", // Lighter border
+    borderColor: "rgba(255, 92, 141, 0.15)",
+    shadowColor: "#FF5C8D",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 6,
   },
+
   warningIcon: {
-    color: "#FF6B6B",
-    marginBottom: 12,
+    marginBottom: 16,
   },
+
   warningTextContainer: {
     alignItems: "center",
   },
+
   warningTitle: {
-    fontSize: 18, // Slightly larger
-    fontWeight: "600",
-    color: "#D32F2F",
-    marginBottom: 8,
+    fontSize: 18,
+    fontFamily: "Poppins-SemiBold",
+    color: "#FF5C8D",
+    marginBottom: 12,
     textAlign: "center",
   },
+
   warningText: {
     fontSize: 14,
-    color: "#5D5D5D", // Dark gray for body
+    fontFamily: "Poppins-Regular",
+    color: "#6B7280",
     lineHeight: 20,
-  },
-  warningActionText: {
-    color: "#9B59B6", // Your app's purple
-    fontWeight: "500",
-    marginTop: 8,
+    textAlign: "center",
   },
 
-  // Error container (add this if you want a dedicated container)
-  errorContainer: {
+  // Error States
+  errorOuterContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
 
-  // Error text styles
+  errorContainer: {
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 20,
+    padding: 28,
+    width: "90%",
+    maxWidth: 350,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(183, 108, 253, 0.15)",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+
+  errorIcon: {
+    marginBottom: 16,
+  },
+
   errorText: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#D32F2F", // Dark red for emphasis
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
     marginBottom: 8,
     textAlign: "center",
   },
 
   errorSubtext: {
     fontSize: 14,
-    color: "#5D5D5D", // Dark gray for secondary text
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
     textAlign: "center",
     lineHeight: 20,
-    maxWidth: "80%",
   },
 });

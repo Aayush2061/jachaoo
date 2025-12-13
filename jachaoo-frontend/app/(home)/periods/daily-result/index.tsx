@@ -89,21 +89,31 @@ export default function DailyResult() {
 
   if (loading) {
     return (
-      <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6E56CF" />
-          <Text style={styles.loadingText}>Loading your analysis...</Text>
-        </View>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color="#B76CFD" />
+        <Text style={styles.loadingText}>Loading your analysis...</Text>
       </LinearGradient>
     );
   }
 
   if (!analysis) {
     return (
-      <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={{ flex: 1 }}
+      >
         <ScrollView contentContainerStyle={styles.emptyContainer}>
           <View style={styles.emptyCard}>
-            <Ionicons name="calendar-outline" size={48} color="#6E56CF" />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="calendar-outline" size={48} color="#B76CFD" />
+            </View>
             <Text style={styles.emptyTitle}>No Analysis Available</Text>
             <Text style={styles.emptyText}>
               Track your symptoms today to get a personalized analysis of your
@@ -123,8 +133,16 @@ export default function DailyResult() {
 
   if (analysis.error) {
     return (
-      <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={{ flex: 1 }}
+      >
         <View style={styles.errorContainer}>
+          <View style={styles.errorIconContainer}>
+            <Ionicons name="alert-circle-outline" size={48} color="#FF5C8D" />
+          </View>
           <Text style={styles.errorTitle}>Analysis Error</Text>
           <Text style={styles.errorText}>{analysis.error}</Text>
           <TouchableOpacity
@@ -139,31 +157,38 @@ export default function DailyResult() {
   }
 
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <ScrollView contentContainerStyle={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#6E56CF" />
+            <Ionicons name="arrow-back" size={24} color="#B76CFD" />
           </Pressable>
           <Text style={styles.title}>Your Daily Analysis</Text>
-          <View style={{ width: 24 }} />
+          <View style={{ width: 40 }} />
         </View>
 
         <View style={styles.contentContainer}>
-          <Text style={styles.date}>
-            {analysis.date || analysis.storedDate}
-          </Text>
-
+          {/* Analysis Card */}
           <View style={styles.resultCard}>
             <Markdown style={markdownStyles}>
               {formatAnalysisText(analysis.result)}
             </Markdown>
           </View>
-          <Text style={styles.disclaimer}>
-            Results are not a substitute for professional medical advice,
-            diagnosis, or treatment. Consult a healthcare provider for any
-            health decisions.
-          </Text>
+
+          {/* Disclaimer */}
+          <View style={styles.disclaimerContainer}>
+            <Text style={styles.disclaimer}>
+              Results are not a substitute for professional medical advice,
+              diagnosis, or treatment. Consult a healthcare provider for any
+              health decisions.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </LinearGradient>
@@ -173,8 +198,8 @@ export default function DailyResult() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingBottom: 60,
-    marginTop: 20,
+    paddingBottom: 40,
+    paddingTop: 20,
   },
   contentContainer: {
     paddingHorizontal: 20,
@@ -183,44 +208,67 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
-    paddingHorizontal: 16,
+    marginBottom: 24,
+    paddingHorizontal: 20,
     paddingTop: 16,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(183,108,253,0.06)",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 4,
   },
   backButton: {
     padding: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(183,108,253,0.08)",
   },
   title: {
     fontSize: 22,
-    fontWeight: "600",
-    color: "#2D3748",
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    letterSpacing: 0.3,
+  },
+  dateContainer: {
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    alignItems: "center",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.04)",
   },
   date: {
     fontSize: 16,
-    color: "#4A5568",
-    marginBottom: 20,
-    textAlign: "center",
+    fontFamily: "Poppins-Medium",
+    color: "#8B8691",
   },
   resultCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 12,
-    padding: 20,
-    // marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.04)",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: "#4A5568",
+    fontFamily: "Poppins-Medium",
+    color: "#8B8691",
   },
   emptyContainer: {
     flex: 1,
@@ -229,29 +277,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   emptyCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 12,
-    padding: 30,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 24,
+    padding: 32,
     width: "100%",
+    maxWidth: 350,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 24,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.08)",
+  },
+  emptyIconContainer: {
+    backgroundColor: "rgba(183,108,253,0.08)",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
   },
   emptyTitle: {
     fontSize: 22,
-    fontWeight: "600",
-    color: "#2D3748",
-    marginTop: 16,
-    marginBottom: 8,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginBottom: 12,
+    textAlign: "center",
   },
   emptyText: {
     fontSize: 16,
-    color: "#4A5568",
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 28,
     lineHeight: 24,
   },
   errorContainer: {
@@ -260,82 +321,125 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
   },
+  errorIconContainer: {
+    backgroundColor: "rgba(255,92,141,0.08)",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   errorTitle: {
     fontSize: 22,
-    fontWeight: "600",
-    color: "#2D3748",
-    marginBottom: 8,
+    fontFamily: "Poppins-SemiBold",
+    color: "#FF5C8D",
+    marginBottom: 12,
+    textAlign: "center",
   },
   errorText: {
     fontSize: 16,
-    color: "#E53E3E",
+    fontFamily: "Poppins-Regular",
+    color: "#6B7280",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 28,
     lineHeight: 24,
+    paddingHorizontal: 20,
   },
   trackButton: {
-    backgroundColor: "#6E56CF",
-    borderRadius: 10,
-    padding: 16,
+    backgroundColor: "#B76CFD",
+    borderRadius: 28,
+    padding: 18,
     width: "100%",
+    maxWidth: 250,
     alignItems: "center",
-    shadowColor: "#6E56CF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 6,
   },
   trackButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: "Poppins-SemiBold",
+  },
+  disclaimerContainer: {
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.06)",
   },
   disclaimer: {
-    fontSize: 12,
-    color: "#777",
-    marginTop: 16,
+    fontSize: 13,
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
     textAlign: "center",
-    lineHeight: 18,
-    marginBottom: 20,
+    lineHeight: 20,
   },
 });
 
 const markdownStyles = {
   body: {
     fontSize: 16,
-    color: "#2D3748",
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
     lineHeight: 26,
   },
   heading1: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#4a148c",
-    marginBottom: 10,
-    marginTop: 10,
+    fontSize: 22,
+    fontFamily: "Poppins-SemiBold",
+    color: "#FF5C8D",
+    marginBottom: 16,
+    marginTop: 8,
   },
   heading2: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#5e35b1",
-    marginTop: 10,
-    marginBottom: 8,
+    fontFamily: "Poppins-SemiBold",
+    color: "#B76CFD",
+    marginTop: 20,
+    marginBottom: 12,
   },
   strong: {
-    fontWeight: "bold",
-    color: "#000",
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
   },
   bullet_list: {
-    marginBottom: 10,
+    marginBottom: 16,
   },
   list_item: {
-    marginBottom: 8,
+    marginBottom: 10,
     flexDirection: "row",
   },
   paragraph: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   link: {
-    color: "#6E56CF",
+    color: "#B76CFD",
+    fontFamily: "Poppins-Medium",
     textDecorationLine: "underline",
+  },
+  em: {
+    fontFamily: "Poppins-Italic",
+    color: "#8B8691",
+  },
+  blockquote: {
+    backgroundColor: "rgba(255,242,248,0.9)",
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF5C8D",
+    paddingLeft: 16,
+    paddingVertical: 12,
+    marginVertical: 12,
+    borderRadius: 8,
+  },
+  code_inline: {
+    backgroundColor: "rgba(183,108,253,0.08)",
+    fontFamily: "monospace",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    color: "#B76CFD",
   },
 };

@@ -1,9 +1,10 @@
+// periods/dashboard/index.tsx
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { addDays, format, isToday } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -18,6 +19,13 @@ import {
 } from "../../../utils/cycleUtils";
 import SymptomsSection from "./components/SymptomsSection";
 
+/**
+ * Theme tokens (Ultra Soft)
+ * Primary: #FF5C8D (blossom)
+ * Soft bg: #FFF2F8 / secondary pastel: #F0E8FF
+ * Highlight: #B76CFD
+ */
+
 export default function PeriodDashboard() {
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -29,54 +37,55 @@ export default function PeriodDashboard() {
   const baseDate = new Date(); // today
 
   const getCalendarStripDates = () => {
-    // Show [yesterday, today, tomorrow, +2 more]
-    return [-1, 0, 1, 2, 3].map((offset) => addDays(baseDate, offset));
+    return [-2, -1, 0, 1, 2].map((offset) => addDays(baseDate, offset));
   };
 
   const getPhaseColor = (phase?: string) => {
     switch (phase) {
       case "Menstrual Phase":
-        return "#FF6B6B";
+        return "#FF5C8D";
       case "Follicular Phase":
-        return "#51CF66";
+        return "#9AD1A1";
       case "Ovulation Phase":
-        return "#3498DB";
+        return "#7CB9E8";
       case "Luteal Phase":
-        return "#FCC419";
+        return "#F5C76B";
       default:
-        return "#ffffff"; // fallback
+        return "#E0D7FF";
     }
   };
+
   useFocusEffect(
     useCallback(() => {
+      let mounted = true;
       const fetchPeriodData = async () => {
         try {
           setLoading(true);
           if (!user?.id) return;
-
           const token = await getToken();
-          const periodsDataResponse = await fetch(
-            `${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          const periodData = await periodsDataResponse.json();
-          setPeriodData(periodData);
 
-          const healthDataResponse = await fetch(
-            `${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`
-          );
-          const healthData = await healthDataResponse.json();
+          const [periodsRes, healthRes] = await Promise.all([
+            fetch(`${process.env.EXPO_PUBLIC_API_URL}/periods/${user.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            fetch(`${process.env.EXPO_PUBLIC_API_URL}/health/${user.id}`),
+          ]);
+          const periodData = await periodsRes.json();
+          const healthData = await healthRes.json();
+          if (!mounted) return;
+          setPeriodData(periodData);
           setHealthData(healthData);
         } catch (error) {
           console.error("Error fetching data:", error);
         } finally {
-          setLoading(false);
+          if (mounted) setLoading(false);
         }
       };
 
       fetchPeriodData();
+      return () => {
+        mounted = false;
+      };
     }, [user?.id])
   );
 
@@ -106,52 +115,55 @@ export default function PeriodDashboard() {
   const phaseInfo = getCurrentPhaseInfo();
   const currentSymptoms = periodData?.symptoms || [];
 
+  const quickActions = useMemo(
+    () => [
+      {
+        label: "How are you feeling?",
+        icon: "plus-circle-outline",
+        route: "/(home)/periods/daily-symptoms",
+      },
+      {
+        label: "Today’s summary",
+        icon: "clipboard-text-outline",
+        route: "/(home)/periods/daily-result",
+      },
+      {
+        label: "Calendar",
+        icon: "calendar-month-outline",
+        route: "/(home)/periods/calendar",
+      },
+      {
+        label: "Chat",
+        icon: "chat-processing-outline",
+        route: "/(home)/periods/chat",
+      },
+      {
+        label: "Cycle guide",
+        icon: "flower-outline",
+        route: "/(home)/periods/cycle-guide",
+      },
+    ],
+    []
+  );
+
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#9b59b6" />
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator size="large" color="#B76CFD" />
       </View>
     );
   }
 
-  const buttons = [
-    {
-      label: "Log your symptoms to track your cycle health",
-      icon: "plus-circle-outline",
-      route: "/(home)/periods/daily-symptoms",
-      colors: ["#fbc2eb", "#a6c1ee"],
-    },
-    {
-      label: "Get your daily test result",
-      icon: "clipboard-text-outline",
-      route: "/(home)/periods/daily-result",
-      colors: ["#fad0c4", "#ffd1ff"],
-    },
-    {
-      label: "Track your cycle on calendar",
-      icon: "calendar-month-outline",
-      route: "/(home)/periods/calendar",
-      colors: ["#c2e9fb", "#a1c4fd"],
-    },
-    {
-      label: "Start Chat",
-      icon: "chat-processing-outline",
-      route: "/(home)/periods/chat",
-      colors: ["#fddb92", "#d1fdff"],
-    },
-    {
-      label: "Cycle Guide",
-      icon: "flower-outline",
-      route: "/(home)/periods/cycle-guide",
-      colors: ["#fbc2eb", "#fceabb"],
-    },
-  ];
-
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={styles.headerRow}>
           <View>
             <Text style={styles.monthText}>
               {new Date().toLocaleString("default", { month: "long" })}
@@ -159,342 +171,387 @@ export default function PeriodDashboard() {
             <Text
               style={[
                 styles.phaseText,
-                {
-                  color: getPhaseColor(phaseInfo?.phase), // dynamic color
-                },
+                { color: getPhaseColor(phaseInfo?.phase) },
               ]}
             >
               {phaseInfo
                 ? isPeriodIrregular(periodData)
-                  ? `Irregular cycle`
-                  : `${phaseInfo.phase} - Day ${phaseInfo.currentDay}`
-                : "Cycle data not available"}
+                  ? "Irregular cycle"
+                  : `${phaseInfo.phase} • Day ${phaseInfo.currentDay}`
+                : "Cycle data not set"}
             </Text>
           </View>
-          {/* <Pressable
-            style={styles.editButton}
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerEditBtn,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={() => router.push("/(home)/periods/edit")}
           >
-            <Ionicons name="pencil" size={18} color="#9b59b6" />
-            <Text style={styles.editText}>Edit details</Text>
-          </Pressable> */}
+            <Ionicons name="pencil" size={16} color="#B76CFD" />
+            <Text style={styles.headerEditText}>Edit</Text>
+          </Pressable>
         </View>
 
-        {/* Calendar Strip */}
+        {/* Calendar strip */}
         <View style={styles.calendarStrip}>
-          {getCalendarStripDates().map((date, index) => {
-            const isCurrent = isToday(date);
+          {getCalendarStripDates().map((date, i) => {
+            const today = isToday(date);
             return (
-              <View
-                key={index}
-                style={[
-                  styles.calendarDay,
-                  isCurrent && styles.currentDayCircle,
-                ]}
-              >
-                <Text
+              <View key={i} style={styles.calendarDayWrap}>
+                <View
                   style={[
-                    styles.calendarDayText,
-                    isCurrent && styles.currentDayText,
+                    styles.calendarDayChip,
+                    today && {
+                      borderWidth: 2,
+                      borderColor: "rgba(183,108,253,0.18)",
+                      shadowColor: "#B76CFD",
+                      shadowOpacity: 0.08,
+                      shadowRadius: 8,
+                      transform: [{ scale: 1.02 }],
+                    },
                   ]}
                 >
-                  {format(date, "dd")}
-                </Text>
-                <Text style={styles.calendarDayLabel}>
-                  {format(date, "EEE")}
-                </Text>
+                  <Text
+                    style={[
+                      styles.calendarDayText,
+                      today && { color: "#FF5C8D", fontWeight: "700" },
+                    ]}
+                  >
+                    {format(date, "dd")}
+                  </Text>
+                </View>
+                <Text style={styles.calendarLabel}>{format(date, "EEE")}</Text>
               </View>
             );
           })}
         </View>
 
-        {/* Profile Card */}
-        <View style={styles.userCard}>
-          {/* User Info Section */}
-          <View style={styles.userInfoContainer}>
-            <LinearGradient
-              colors={["#9b59b6", "#8e44ad"]}
-              style={styles.avatarContainer}
-            >
-              <MaterialCommunityIcons
-                name="face-woman"
-                size={24}
-                color="#fff"
-              />
-            </LinearGradient>
-            <View style={styles.userTextContainer}>
-              <Text style={styles.userName}>{healthData?.name}</Text>
-              <Text style={styles.userAge}>{healthData?.age} years</Text>
+        {/* Profile + Cycle ring card */}
+        <View style={styles.profileCard}>
+          <View style={styles.topRow}>
+            <View style={styles.avatarRow}>
+              <LinearGradient
+                colors={["#FF8FB0", "#B76CFD"]}
+                style={styles.avatar}
+              >
+                <MaterialCommunityIcons
+                  name="face-woman"
+                  size={22}
+                  color="white"
+                />
+              </LinearGradient>
+              <View style={styles.userText}>
+                <Text style={styles.userName}>{healthData?.name || "-"}</Text>
+                <Text style={styles.userMeta}>
+                  {healthData?.age ? `${healthData.age} yrs` : ""}
+                </Text>
+              </View>
             </View>
-            <Pressable
-              style={({ pressed }) => [
-                styles.editButton,
-                { opacity: pressed ? 0.6 : 1 },
+
+            {/* Cycle ring (simple) */}
+            <View
+              style={[
+                styles.cycleRingOuter,
+                { borderColor: getPhaseColor(phaseInfo?.phase) },
               ]}
-              onPress={() => router.push("/(home)/periods/edit")}
             >
-              <Ionicons name="pencil" size={18} color="#9b59b6" />
-              <Text style={styles.editText}>Edit details</Text>
-            </Pressable>
+              <View style={styles.cycleRingInner}>
+                <Text style={styles.cycleDay}>
+                  {phaseInfo ? `Day ${phaseInfo.currentDay}` : `—`}
+                </Text>
+                <Text style={styles.cyclePhaseShort}>
+                  {phaseInfo ? phaseInfo.phase.split(" ")[0] : "No data"}
+                </Text>
+              </View>
+            </View>
           </View>
 
-          {/* Divider */}
           <View style={styles.divider} />
 
-          {/* Symptoms Section */}
+          {/* Symptoms */}
           <SymptomsSection
             initialSymptoms={currentSymptoms}
             userId={user?.id}
-            onSymptomsUpdate={(updatedSymptoms) => {
-              setPeriodData({ ...periodData, symptoms: updatedSymptoms });
-            }}
+            onSymptomsUpdate={(updatedSymptoms) =>
+              setPeriodData({ ...periodData, symptoms: updatedSymptoms })
+            }
             customStyles={{
-              symptomsContainer: styles.symptomsContainerCustom,
-              symptomPill: styles.symptomPillCustom,
-              symptomText: styles.symptomTextCustom,
-              sectionTitle: styles.symptomsTitleCustom,
-              addButton: styles.addButtonCustom,
-              removeButton: styles.removeButtonCustom,
+              symptomsContainer: styles.symptomsContainer,
+              symptomPill: styles.symptomPill,
+              symptomText: styles.symptomText,
+              sectionTitle: styles.symptomsTitle,
+              addButton: styles.symptomAddBtn,
+              removeButton: styles.symptomRemoveBtn,
             }}
           />
         </View>
 
-        {/* Feature Buttons */}
-        <View style={styles.grid}>
-          {buttons.map((btn, idx) => (
+        {/* Quick action tiles */}
+        <View style={styles.actionsGrid}>
+          {quickActions.map((b, idx) => (
             <Pressable
               key={idx}
-              onPress={() => router.push(btn.route)}
-              style={styles.pressable}
+              style={({ pressed }) => [
+                styles.actionTile,
+                pressed && { opacity: 0.8, transform: [{ scale: 0.995 }] },
+              ]}
+              onPress={() => router.push(b.route)}
             >
               <LinearGradient
-                colors={btn.colors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.card}
+                colors={["rgba(255,255,255,0.7)", "rgba(255,255,255,0.6)"]}
+                style={styles.actionInner}
               >
-                <MaterialCommunityIcons
-                  name={btn.icon}
-                  size={28}
-                  color="#333"
-                  style={{ marginBottom: 8 }}
-                />
-                <Text style={styles.cardText}>{btn.label}</Text>
+                <View style={styles.actionIconWrap}>
+                  <MaterialCommunityIcons
+                    name={b.icon}
+                    size={22}
+                    color="#FF5C8D"
+                  />
+                </View>
+                <Text style={styles.actionLabel}>{b.label}</Text>
               </LinearGradient>
             </Pressable>
           ))}
         </View>
+        <View style={{ height: 60 }} />
       </ScrollView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  // Layout Styles
   container: {
     padding: 20,
-    paddingBottom: 60,
-    marginTop: 10,
+    paddingBottom: 40,
   },
-  header: {
+
+  // Loading
+  loadingWrap: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFF7FA",
+  },
+
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 14,
   },
-  grid: {
+  monthText: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 22,
+    color: "#2D2D2D",
+  },
+  phaseText: {
+    marginTop: 4,
+    fontFamily: "Poppins-Medium",
+    fontSize: 14,
+    color: "#B76CFD",
+  },
+  headerEditBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(183,108,253,0.08)",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+  },
+  headerEditText: {
+    marginLeft: 6,
+    color: "#7F3BE7",
+    fontFamily: "Poppins-Medium",
+    fontSize: 13,
+  },
+
+  // Calendar strip
+  calendarStrip: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 18,
+    paddingHorizontal: 6,
+  },
+  calendarDayWrap: {
+    alignItems: "center",
+    width: 48,
+  },
+  calendarDayChip: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#B76CFD",
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  calendarDayText: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+    color: "#4A4A4A",
+  },
+  calendarLabel: {
+    marginTop: 6,
+    fontSize: 11,
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
+  },
+
+  // Profile card
+  profileCard: {
+    marginBottom: 18,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 18,
+    padding: 16,
+    shadowColor: "#B76CFD",
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 24,
+    elevation: 6,
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  avatarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  userText: {
+    flexDirection: "column",
+  },
+  userName: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 15,
+    color: "#2D2D2D",
+  },
+  userMeta: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 13,
+    color: "#8B8691",
+    marginTop: 4,
+  },
+
+  // Cycle ring
+  cycleRingOuter: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 3,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.7)",
+  },
+  cycleRingInner: {
+    width: 74,
+    height: 74,
+    borderRadius: 38,
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cycleDay: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 14,
+    color: "#2D2D2D",
+  },
+  cyclePhaseShort: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 11,
+    color: "#8B8691",
+    marginTop: 2,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(183,108,253,0.06)",
+    marginVertical: 14,
+    marginHorizontal: -16,
+  },
+
+  // Symptoms (customizable)
+  symptomsContainer: {
+    marginBottom: 6,
+  },
+  symptomsTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+    color: "#2D2D2D",
+    marginBottom: 10,
+  },
+
+  // Actions grid
+  actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 14,
-    marginTop: 20,
+    gap: 12,
+    marginTop: 6,
   },
-
-  // Text Styles
-  monthText: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#2c3e50",
+  actionTile: {
+    width: "48%",
+    marginBottom: 12,
   },
-  phaseText: {
-    fontSize: 17,
-    fontWeight: "600",
-    marginTop: 4,
-    textAlign: "center",
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+  actionInner: {
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 110,
+    backgroundColor: "rgba(255,255,255,0.88)",
+    shadowColor: "#000",
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 3,
   },
-
-  cardText: {
-    fontSize: 14,
-    fontWeight: "500",
+  actionIconWrap: {
+    backgroundColor: "rgba(255,92,141,0.08)",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  actionLabel: {
+    fontFamily: "Poppins-Medium",
+    fontSize: 13,
     color: "#333",
     textAlign: "center",
   },
 
-  // Calendar Styles
-  calendarStrip: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginBottom: 16,
-  },
-  calendarDay: {
-    alignItems: "center",
-    justifyContent: "center",
+  // symptom pill styles (defaults, can be overridden by props)
+  symptomPill: {
+    backgroundColor: "#FFF0F6",
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-  },
-  calendarDayText: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#444",
-  },
-  calendarDayLabel: {
-    fontSize: 12,
-    color: "#aaa",
-    marginTop: 2,
-  },
-  currentDayCircle: {
-    backgroundColor: "rgba(255, 105, 180, 0.15)",
-    borderRadius: 12,
-  },
-  currentDayText: {
-    color: "#e91e63",
-    fontWeight: "bold",
-  },
-
-  // Profile Card Styles
-  userCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 25,
-    shadowColor: "#8e44ad",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  userInfoContainer: {
+    borderRadius: 999,
+    marginRight: 8,
+    marginBottom: 8,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
   },
-  avatarContainer: {
-    width: 45,
-    height: 45,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-    shadowColor: "#8e44ad",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
+  symptomText: {
+    fontFamily: "Poppins-Medium",
+    color: "#FF5C8D",
+    fontSize: 13,
   },
-  userTextContainer: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#2c3e50",
-    letterSpacing: 0.2,
-  },
-  userAge: {
-    fontSize: 15,
-    color: "#7f8c8d",
-    marginTop: 4,
-    fontWeight: "500",
-  },
-  editButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(155, 89, 182, 0.1)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(155, 89, 182, 0.2)",
-  },
-  editText: {
-    color: "#9b59b6",
-    marginLeft: 6,
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(155, 89, 182, 0.1)",
-    marginBottom: 16,
-    marginHorizontal: -8,
-  },
-
-  // Feature Button Styles
-  pressable: {
-    width: "48%",
-  },
-  card: {
-    borderRadius: 16,
-    paddingVertical: 22,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-    minHeight: 130,
-  },
-
-  // Symptoms Section Styles
-  symptomsContainerCustom: {
-    marginTop: 0,
-  },
-  symptomsTitleCustom: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#8e44ad",
-    marginBottom: 14,
-    letterSpacing: 0.3,
-  },
-  symptomPillCustom: {
-    backgroundColor: "rgba(155, 89, 182, 0.1)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(155, 89, 182, 0.15)",
-    shadowColor: "#8e44ad",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  symptomTextCustom: {
-    color: "#8e44ad",
-    fontWeight: "500",
-    fontSize: 14,
-  },
-  addButtonCustom: {
-    backgroundColor: "rgba(155, 89, 182, 0.1)",
+  symptomAddBtn: {
     padding: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(155, 89, 182, 0.2)",
   },
-  removeButtonCustom: {
-    marginLeft: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderRadius: 10,
-    padding: 2,
+  symptomRemoveBtn: {
+    marginLeft: 8,
   },
 });

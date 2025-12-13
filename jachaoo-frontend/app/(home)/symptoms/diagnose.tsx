@@ -184,10 +184,26 @@ export default function Diagnose() {
         setCurrentQuestion("");
       } else {
         const q = data.question || "";
+
+        // Check if this is the red flag question (multiple select allowed)
+        const isRedFlagQuestion =
+          q.includes("additional warning signs") ||
+          (data.options &&
+            data.options.length > 2 &&
+            data.options.includes("None of these"));
+
         setCurrentQuestion(q.includes("?") ? q : `${q}?`);
         setOptions(data.options || []);
-        // clear input only if options are present (for MCQ)
-        if (data.options) setUserInput("");
+
+        // Clear input unless it's the red flag question (user needs to see their selection)
+        if (data.options && !isRedFlagQuestion) {
+          setUserInput("");
+        }
+
+        // For red flag questions, show instructions for multiple selection
+        if (isRedFlagQuestion) {
+          setCurrentQuestion(`${q}\n\n(Select aLL that apply.)`);
+        }
       }
     } catch (err) {
       console.error("submitAnswer error", err);
@@ -198,10 +214,50 @@ export default function Diagnose() {
   };
 
   const handleOptionSelect = (option: string) => {
-    // Many backends expect numeric index; original code used index+1
-    const optionIndex = options.indexOf(option) + 1;
-    // If backend expects the actual option text instead of index, change to submitAnswer(option)
-    submitAnswer(String(optionIndex));
+    // Check if we're in red flag mode (options include "None of these")
+    const isRedFlagMode = options.includes("None of these");
+
+    if (!isRedFlagMode) {
+      // Normal single selection mode
+      const optionIndex = options.indexOf(option) + 1;
+      submitAnswer(String(optionIndex));
+    } else {
+      // Red flag mode - multiple selection with "None of these" logic
+      const currentInput = userInput.trim();
+      const selectedNumbers = currentInput
+        .split(",")
+        .map((num) => num.trim())
+        .filter((num) => num !== "" && !isNaN(Number(num)))
+        .map((num) => parseInt(num));
+
+      if (option === "None of these") {
+        // If "None of these" is selected, clear all other selections
+        setUserInput(String(options.indexOf("None of these") + 1));
+      } else {
+        // Handle other options
+        const optionIndex = options.indexOf(option) + 1;
+
+        // Remove "None of these" if it was previously selected
+        const noneIndex = options.indexOf("None of these") + 1;
+        const filteredNumbers = selectedNumbers.filter(
+          (num) => num !== noneIndex
+        );
+
+        // Toggle the selected option
+        if (filteredNumbers.includes(optionIndex)) {
+          // Remove if already selected
+          const updatedNumbers = filteredNumbers.filter(
+            (num) => num !== optionIndex
+          );
+          setUserInput(updatedNumbers.join(", "));
+        } else {
+          // Add new selection
+          const updatedNumbers = [...filteredNumbers, optionIndex];
+          updatedNumbers.sort((a, b) => a - b);
+          setUserInput(updatedNumbers.join(", "));
+        }
+      }
+    }
   };
 
   const handleSubmit = () => {
@@ -279,36 +335,89 @@ export default function Diagnose() {
               {/* When question stage: show options or text input */}
               {stage === "question" && options && options.length > 0 ? (
                 <View style={styles.optionsContainer}>
-                  {options.map((opt, idx) => (
+                  {options.map((opt, idx) => {
+                    const isNoneOption = opt === "None of these";
+                    const optionNumber = idx + 1;
+                    const isSelected = userInput
+                      .split(",")
+                      .map((num) => num.trim())
+                      .includes(String(optionNumber));
+
+                    return (
+                      <Animated.View
+                        key={idx}
+                        entering={FadeInUp.delay(idx * 80)}
+                        style={styles.optionWrapper}
+                      >
+                        <TouchableOpacity
+                          style={[
+                            styles.optionCard,
+                            options.includes("None of these") &&
+                              styles.redFlagOptionCard,
+                            isSelected && styles.optionCardSelected,
+                            isNoneOption &&
+                              isSelected &&
+                              styles.noneOptionCardSelected,
+                          ]}
+                          onPress={() => handleOptionSelect(opt)}
+                          activeOpacity={0.85}
+                          disabled={loading}
+                        >
+                          <Text
+                            style={[
+                              styles.optionText,
+                              loading && { opacity: 0.6 },
+                              options.includes("None of these") &&
+                                styles.redFlagOptionText,
+                              isSelected && styles.optionTextSelected,
+                              isNoneOption && styles.noneOptionText,
+                              isNoneOption &&
+                                isSelected &&
+                                styles.noneOptionTextSelected,
+                            ]}
+                          >
+                            {opt}
+                          </Text>
+                        </TouchableOpacity>
+                      </Animated.View>
+                    );
+                  })}
+
+                  {/* Add submit button for red flag selections */}
+                  {options.includes("None of these") && (
                     <Animated.View
-                      key={idx}
-                      entering={FadeInUp.delay(idx * 80)}
-                      style={styles.optionWrapper}
+                      entering={FadeInUp.delay(options.length * 80)}
                     >
                       <TouchableOpacity
-                        style={styles.optionButton}
-                        onPress={() => handleOptionSelect(opt)}
-                        activeOpacity={0.85}
-                        disabled={loading}
+                        style={[
+                          styles.redFlagSubmitButton,
+                          (!userInput.trim() || loading) &&
+                            styles.redFlagSubmitButtonDisabled,
+                        ]}
+                        onPress={() => {
+                          if (userInput.trim()) {
+                            submitAnswer(userInput);
+                          }
+                        }}
+                        disabled={!userInput.trim() || loading}
                       >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            loading && { opacity: 0.6 },
-                          ]}
-                        >
-                          {opt}
+                        <Text style={styles.redFlagSubmitText}>
+                          {loading ? "Processing..." : "Submit Selections"}
                         </Text>
                       </TouchableOpacity>
                     </Animated.View>
-                  ))}
+                  )}
                 </View>
               ) : (
                 stage === "question" && (
                   <View style={styles.inputSection}>
                     <TextInput
                       style={[styles.input, loading && { opacity: 0.6 }]}
-                      placeholder="Describe how you're feeling in detail..."
+                      placeholder={
+                        options?.includes("None of these")
+                          ? "Enter selection numbers separated by commas (e.g., 1,3,5)..."
+                          : "Describe how you're feeling in detail..."
+                      }
                       placeholderTextColor="#94A3B8"
                       value={userInput}
                       onChangeText={setUserInput}
@@ -789,5 +898,72 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     fontFamily: "Poppins-Regular",
     marginBottom: 20,
+  },
+  redFlagOptionButton: {
+    backgroundColor: "#FFF5F5",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  selectedOptionButton: {
+    backgroundColor: "#FEE2E2",
+    borderWidth: 2,
+    borderColor: "#EF4444",
+  },
+  redFlagOptionText: {
+    color: "#991B1B",
+  },
+  noneOptionText: {
+    color: "#4F7CFF",
+    fontFamily: "Poppins-SemiBold",
+  },
+  redFlagSubmitButton: {
+    backgroundColor: "#EF4444",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 16,
+    shadowColor: "#EF4444",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  redFlagSubmitText: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+  },
+  // New styles for red flag selection UI
+  optionCard: {
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  redFlagOptionCard: {
+    backgroundColor: "#FFF5F5",
+    borderColor: "#FECACA",
+  },
+  optionCardSelected: {
+    backgroundColor: "#F3E5F5",
+    borderColor: "#8E24AA",
+    borderWidth: 2,
+  },
+  noneOptionCardSelected: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#4F7CFF",
+  },
+  optionTextSelected: {
+    color: "#8E24AA",
+    fontFamily: "Poppins-SemiBold",
+  },
+  noneOptionTextSelected: {
+    color: "#4F7CFF",
+    fontFamily: "Poppins-SemiBold",
+  },
+  redFlagSubmitButtonDisabled: {
+    opacity: 0.5,
   },
 });

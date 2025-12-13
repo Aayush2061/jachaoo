@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+
 const appearances = [
   "Bright Red",
   "Deep Red",
@@ -61,15 +62,16 @@ const symptoms = [
 ];
 
 const appearanceColors: Record<string, string> = {
-  "Bright Red": "#FF3B30", // vibrant red
-  "Deep Red": "#B00020", // rich red
-  "Light Red": "#FF6B6B", // soft red
-  "Pale Brown": "#A0522D", // light brown
-  // "Missing or irregular": "#9CA3AF", // neutral gray
+  "Bright Red": "#FF5C8D", // theme primary color
+  "Deep Red": "#D81B60", // deeper pink
+  "Light Red": "#FF8FB0", // lighter pink
+  "Pale Brown": "#A1887F", // brown
+  // "Missing or irregular": "#8B8691", // theme secondary color
 };
 
 const contraceptiveOptions = ["Yes", "No", "Never"];
 const conceiveOptions = ["Yes", "No", "Open but not trying"];
+
 export default function EditPeriodDetails() {
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -201,16 +203,29 @@ export default function EditPeriodDetails() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#9b59b6" />
-      </View>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color="#B76CFD" />
+      </LinearGradient>
     );
   }
 
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.username}>{user?.firstName || "User"}</Text>
+        <View style={styles.header}>
+          <Text style={styles.username}>{user?.firstName || "User"}</Text>
+          <Text style={styles.headerSubtitle}>Edit Period Details</Text>
+        </View>
 
         {/* Last Period Date */}
         <Text style={styles.sectionTitle}>Last Period Date</Text>
@@ -280,7 +295,7 @@ export default function EditPeriodDetails() {
                   <View
                     style={[
                       styles.colorDot,
-                      { backgroundColor: appearanceColors[item] || "#ccc" },
+                      { backgroundColor: appearanceColors[item] || "#B76CFD" },
                     ]}
                   />
                 )}
@@ -428,18 +443,13 @@ export default function EditPeriodDetails() {
         <Pressable
           disabled={saving}
           onPress={handleSave}
-          style={styles.saveButton}
+          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
         >
-          <LinearGradient
-            colors={["#A855F7", "#7E22CE"]} // Purple gradient
-            start={[0, 0]}
-            end={[1, 1]}
-            className="rounded-full px-6 py-3 shadow-lg"
-          >
-            <Text style={styles.saveButtonText}>
-              {saving ? "Saving..." : "Save Changes"}
-            </Text>
-          </LinearGradient>
+          {saving ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          )}
         </Pressable>
       </ScrollView>
     </LinearGradient>
@@ -449,175 +459,198 @@ export default function EditPeriodDetails() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingBottom: 70,
-    marginTop: 20,
+    paddingBottom: 60,
+    paddingTop: 40,
   },
-  card: {
-    backgroundColor: "#ffffffee",
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: "#9b59b6",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
+  header: {
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 24,
+    alignItems: "center",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 24,
     elevation: 6,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(183,108,253,0.04)",
+  },
+  username: {
+    fontSize: 24,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  username: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#8e44ad",
-    marginBottom: 20,
-    textAlign: "center",
-  },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6c3483",
+    fontSize: 17,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
     marginTop: 20,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 14,
-    backgroundColor: "#fafafa",
+    borderColor: "#F0E8FF",
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: "#FFF",
   },
   dateText: {
     fontSize: 15,
-    color: "#2c3e50",
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
+    textAlign: "center",
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 16,
-    marginBottom: 15,
+    marginBottom: 20,
   },
   inputContainer: {
     flex: 1,
   },
   label: {
     fontSize: 14,
-    color: "#7f8c8d",
-    marginBottom: 6,
+    fontFamily: "Poppins-Medium",
+    color: "#8B8691",
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: "#fff",
+    borderColor: "#F0E8FF",
+    borderRadius: 16,
+    padding: 14,
+    backgroundColor: "#FFF",
     fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
   },
   optionsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   optionButton: {
     paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: "#f3e5f5",
+    backgroundColor: "rgba(255,242,248,0.9)",
     borderWidth: 1,
-    borderColor: "#e1bee7",
+    borderColor: "rgba(255,92,141,0.1)",
   },
   selectedOption: {
-    backgroundColor: "#9b59b6",
-    borderColor: "#8e44ad",
-  },
-  optionText: {
-    fontSize: 14,
-    color: "#5e5e5e",
-    fontWeight: "500",
-  },
-  selectedOptionText: {
-    color: "#fff",
-  },
-  optionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 15,
-  },
-  gridOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
-    minWidth: "30%",
-    alignItems: "center",
-  },
-  selectedGridOption: {
-    backgroundColor: "#8e44ad",
-  },
-  gridOptionText: {
-    fontSize: 14,
-    color: "#333",
-    textAlign: "center",
-  },
-  selectedGridOptionText: {
-    color: "#fff",
-  },
-  toggleContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-    marginBottom: 20,
-  },
-  toggleOption: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 20,
-    backgroundColor: "#f4f4f4",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  selectedToggle: {
-    backgroundColor: "#9b59b6",
-    borderColor: "#8e44ad",
-  },
-  toggleText: {
-    fontSize: 14,
-    color: "#2c3e50",
-  },
-  selectedToggleText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  saveButton: {
-    marginTop: 30,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  saveButtonText: {
-    textAlign: "center",
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-    paddingVertical: 16,
-    paddingHorizontal: 10,
+    backgroundColor: "#FF5C8D",
+    borderColor: "#FF5C8D",
   },
   optionContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
-
   colorDot: {
     width: 14,
     height: 14,
     borderRadius: 7,
     borderWidth: 1,
-    borderColor: "#e5e7eb", // subtle border
+    borderColor: "rgba(0,0,0,0.1)",
+  },
+  optionText: {
+    fontSize: 14,
+    fontFamily: "Poppins-Medium",
+    color: "#FF5C8D",
+  },
+  selectedOptionText: {
+    color: "#FFFFFF",
+  },
+  optionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 20,
+  },
+  gridOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "rgba(183,108,253,0.08)",
+    minWidth: "30%",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.1)",
+  },
+  selectedGridOption: {
+    backgroundColor: "#B76CFD",
+    borderColor: "#B76CFD",
+  },
+  gridOptionText: {
+    fontSize: 14,
+    fontFamily: "Poppins-Medium",
+    color: "#B76CFD",
+    textAlign: "center",
+  },
+  selectedGridOptionText: {
+    color: "#FFFFFF",
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 25,
+  },
+  toggleOption: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: "#FFF",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#F0E8FF",
+  },
+  selectedToggle: {
+    backgroundColor: "#B76CFD",
+    borderColor: "#B76CFD",
+  },
+  toggleText: {
+    fontSize: 14,
+    fontFamily: "Poppins-Medium",
+    color: "#2D2D2D",
+  },
+  selectedToggleText: {
+    color: "#FFFFFF",
+  },
+  saveButton: {
+    marginTop: 30,
+    marginBottom: 40,
+    backgroundColor: "#B76CFD",
+    borderRadius: 28,
+    padding: 18,
+    alignItems: "center",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  saveButtonDisabled: {
+    backgroundColor: "#E0D7FF",
+    shadowOpacity: 0.1,
+  },
+  saveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: "Poppins-SemiBold",
   },
 });

@@ -2,7 +2,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-const router = useRouter();
 
 const actions = [
   {
@@ -28,11 +27,17 @@ const actions = [
 ];
 
 export default function PhaseActions() {
+  const router = useRouter();
   const params = useLocalSearchParams();
   const phase = JSON.parse(params.phase as string);
 
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>{phase.name} Guidance</Text>
         <Text style={styles.subtitle}>Select an area to explore</Text>
@@ -59,7 +64,12 @@ export default function PhaseActions() {
                 })
               }
             >
-              <View style={styles.actionIconContainer}>
+              <View
+                style={[
+                  styles.actionIconContainer,
+                  { backgroundColor: `${phase.color}15` },
+                ]}
+              >
                 <MaterialCommunityIcons
                   name={action.icon}
                   size={32}
@@ -87,22 +97,21 @@ export default function PhaseActions() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    // backgroundColor: "#fff",
     paddingHorizontal: 20,
-    paddingTop: 20,
-    marginTop: 20,
-    paddingBottom: 70,
+    paddingTop: 40,
+    paddingBottom: 60,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#2c3e50",
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: "#7f8c8d",
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
     textAlign: "center",
     marginBottom: 30,
   },
@@ -114,24 +123,23 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: "48%",
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 20,
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 180,
     borderWidth: 1.5,
-    shadowColor: "#000",
+    shadowColor: "#B76CFD",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 8,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
   },
   actionIconContainer: {
-    backgroundColor: "rgba(155, 89, 182, 0.1)",
     width: 60,
     height: 60,
     borderRadius: 16,
@@ -141,13 +149,14 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: "Poppins-SemiBold",
     marginBottom: 8,
     textAlign: "center",
   },
   actionDescription: {
     fontSize: 13,
-    color: "#7f8c8d",
+    fontFamily: "Poppins-Regular",
+    color: "#6B7280",
     textAlign: "center",
     marginBottom: 12,
     lineHeight: 18,

@@ -3,6 +3,13 @@ from services.symptoms import MedicalDiagnosisSystem
 import uuid
 MAX_INPUT_LENGTH = 300
 
+
+# At the top of symptoms.py
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+
+
 symptoms_bp = Blueprint('symptoms', __name__)
 
 # Store active sessions
@@ -12,6 +19,9 @@ active_sessions = {}
 def start_diagnosis():
     try:
         data = request.get_json()
+
+        # logging.info(f"Received start request: {data}")  # ADD THIS
+
         if not data:
             return jsonify({"error": "No JSON data received"}), 400
             
@@ -44,6 +54,9 @@ def start_diagnosis():
 @symptoms_bp.route('/answer', methods=['POST'])
 def answer_question():
     data = request.json
+
+    # logging.info(f"Received answer request: {data}")  # ADD THIS
+    
     session_id = data.get("session_id")
     user_input = data.get("answer")
 

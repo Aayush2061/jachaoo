@@ -67,7 +67,6 @@ export default function PeriodChat() {
           );
           const data = await response.json();
           setPeriodData(data);
-          // console.log(data);
 
           // Calculate cycle phase information
           if (
@@ -83,7 +82,6 @@ export default function PeriodChat() {
                 duration: data.duration,
                 today: new Date(),
               });
-              // console.log("Current Phase: ", phaseInfo.phase);
               setCyclePhaseInfo(phaseInfo);
             } catch (error) {
               console.error("Error calculating cycle phase:", error);
@@ -132,17 +130,6 @@ export default function PeriodChat() {
     setMessages((prev) => [...prev, userMessage]);
     setInputText("");
     setIsLoading(true);
-
-    // console.log("Sending user context:", {
-    //   user_id: user?.id,
-    //   duration_of_period: periodData.duration.toString(),
-    //   cycle_length: periodData.cycleLength.toString(),
-    //   previous_conditions: periodData.conditions.join(", "),
-    //   trying_to_conceive: periodData.tryingToConceive !== "No",
-    //   on_hormonal_contraceptive: periodData.contraceptive !== "No",
-    //   first_day_of_last_period: periodData.lastPeriodDate.split("T")[0],
-    //   current_cycle_phase: cyclePhaseInfo?.phase || "Unknown",
-    // });
 
     try {
       const token = await getToken();
@@ -222,23 +209,36 @@ export default function PeriodChat() {
 
   if (isFetchingData) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#9b59b6" />
-      </View>
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color="#B76CFD" />
+      </LinearGradient>
     );
   }
 
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1, marginTop: 10 }}
+    >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="#9b59b6" />
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#B76CFD" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Period Health Assistant</Text>
-            <View style={{ width: 24 }} />
+            <Text style={styles.headerTitle}>Health Assistant</Text>
+            <View style={{ width: 40 }} />
           </View>
 
           {/* Messages */}
@@ -279,7 +279,7 @@ export default function PeriodChat() {
             ))}
             {isLoading && (
               <View style={[styles.messageBubble, styles.botBubble]}>
-                <ActivityIndicator size="small" color="#9b59b6" />
+                <ActivityIndicator size="small" color="#B76CFD" />
               </View>
             )}
           </ScrollView>
@@ -287,7 +287,7 @@ export default function PeriodChat() {
           {/* Input Area */}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 55 : 0} // Try 20-60 depending on header height
+            keyboardVerticalOffset={Platform.OS === "ios" ? 85 : 0}
             style={[
               styles.inputWrapper,
               Platform.OS === "ios"
@@ -303,33 +303,35 @@ export default function PeriodChat() {
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder="Ask about your period..."
-                placeholderTextColor="#999"
+                placeholderTextColor="#B0A9B9"
                 multiline
                 enablesReturnKeyAutomatically
                 returnKeyType="send"
                 onSubmitEditing={handleSend}
               />
               <TouchableOpacity
-                style={styles.sendButton}
+                style={[
+                  styles.sendButton,
+                  (inputText.trim() === "" || isLoading) &&
+                    styles.sendButtonDisabled,
+                ]}
                 onPress={handleSend}
                 disabled={inputText.trim() === "" || isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator size="small" color="#ccc" />
+                  <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <Ionicons
                     name="send"
-                    size={24}
-                    color={inputText.trim() === "" ? "#ccc" : "#9b59b6"}
+                    size={20}
+                    color={inputText.trim() === "" ? "#D1D5DB" : "#FFFFFF"}
                   />
                 )}
               </TouchableOpacity>
             </View>
             {keyboardHeight === 0 && (
-              <View style={{ paddingHorizontal: 16, marginBottom: 4 }}>
-                <Text
-                  style={{ fontSize: 12, color: "#888", textAlign: "center" }}
-                >
+              <View style={styles.disclaimerContainer}>
+                <Text style={styles.disclaimerText}>
                   Not a substitute for professional care.
                 </Text>
               </View>
@@ -344,8 +346,6 @@ export default function PeriodChat() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    // backgroundColor: "#fff",
-    marginTop: 20,
   },
   container: {
     flex: 1,
@@ -358,77 +358,144 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "rgba(255,255,255,0.82)",
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    marginTop: Platform.OS === "android" ? 10 : 0,
+    borderBottomColor: "rgba(183,108,253,0.06)",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(183,108,253,0.08)",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#2c3e50",
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    letterSpacing: 0.3,
   },
   messagesContainer: {
-    padding: 15,
-    paddingBottom: 15,
+    padding: 20,
+    paddingBottom: 20,
   },
   messageBubble: {
     maxWidth: "80%",
-    padding: 12,
-    borderRadius: 15,
-    marginBottom: 10,
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   botBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#f0e6ff",
-    borderBottomLeftRadius: 5,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderBottomLeftRadius: 8,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.08)",
   },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: "#9b59b6",
-    borderBottomRightRadius: 5,
+    backgroundColor: "#B76CFD",
+    borderBottomRightRadius: 8,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   messageText: {
-    fontSize: 16,
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    lineHeight: 22,
   },
   botText: {
-    color: "#2c3e50",
+    color: "#2D2D2D",
   },
   userText: {
-    color: "#fff",
+    color: "#FFFFFF",
   },
   timestamp: {
-    fontSize: 10,
-    color: "#999",
-    marginTop: 5,
+    fontSize: 11,
+    color: "#8B8691",
+    marginTop: 6,
     alignSelf: "flex-end",
+    fontFamily: "Poppins-Regular",
   },
   inputWrapper: {
-    paddingHorizontal: 10,
-    paddingBottom: Platform.OS === "ios" ? 25 : 15,
-    // backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === "ios" ? 25 : 20,
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    borderTopColor: "rgba(183,108,253,0.06)",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 10,
-    backgroundColor: "#fff",
+    padding: 12,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.08)",
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 4,
   },
   input: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 44,
     maxHeight: 120,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 20,
-    fontSize: 16,
-    color: "#2c3e50",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#FFF",
+    borderRadius: 24,
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
+    borderWidth: 1,
+    borderColor: "#F0E8FF",
   },
   sendButton: {
-    marginLeft: 10,
-    padding: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#B76CFD",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 12,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  sendButtonDisabled: {
+    backgroundColor: "#E0D7FF",
+    shadowOpacity: 0,
+  },
+  disclaimerContainer: {
+    paddingHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  disclaimerText: {
+    fontSize: 12,
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
+    textAlign: "center",
   },
 });

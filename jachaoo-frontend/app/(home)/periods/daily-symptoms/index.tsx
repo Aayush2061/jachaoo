@@ -70,7 +70,6 @@ export default function SymptomTracker() {
               duration: data.duration,
               today: new Date(),
             });
-            console.log("Current Phase: ", phaseInfo.phase);
             setCyclePhaseInfo(phaseInfo);
           } catch (error) {
             console.error("Error calculating cycle phase:", error);
@@ -155,12 +154,6 @@ export default function SymptomTracker() {
     // Convert to float
     const temp = parseFloat(bodyTemp);
 
-    // Universal error for invalid input
-    // if (isNaN(temp)) {
-    //   setError("Please enter a valid temperature.");
-    //   return;
-    // }
-
     // Range validation
     if (tempUnit === "C") {
       if (temp < 20 || temp > 50) {
@@ -215,8 +208,6 @@ export default function SymptomTracker() {
         },
       };
 
-      console.log(requestData);
-
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/daily-analysis`,
         {
@@ -260,8 +251,26 @@ export default function SymptomTracker() {
     }
   };
 
+  if (isFetchingData) {
+    return (
+      <LinearGradient
+        colors={["#FFF2F8", "#F2F0FF"]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color="#B76CFD" />
+      </LinearGradient>
+    );
+  }
+
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -269,7 +278,7 @@ export default function SymptomTracker() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#6E56CF" />
+            <Ionicons name="arrow-back" size={24} color="#B76CFD" />
           </Pressable>
           <Text style={styles.title}>Track Your Symptoms</Text>
           <View style={{ width: 24 }} />
@@ -312,11 +321,9 @@ export default function SymptomTracker() {
             <Text style={styles.sectionTitle}>Health Metrics</Text>
 
             {/* Body Temperature */}
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
-            >
-              {/* Left Dropdown */}
-              <View style={styles.dropdownContainer}>
+            <View style={styles.temperatureContainer}>
+              {/* Unit Picker */}
+              <View style={styles.tempPickerContainer}>
                 <Picker
                   selectedValue={tempUnit}
                   style={styles.picker}
@@ -327,10 +334,11 @@ export default function SymptomTracker() {
                 </Picker>
               </View>
 
-              {/* Right Input */}
+              {/* Temperature Input */}
               <TextInput
                 style={styles.tempInput}
                 placeholder={tempUnit === "C" ? "37.0" : "98.6"}
+                placeholderTextColor="#B0A9B9"
                 keyboardType="decimal-pad"
                 value={bodyTemp}
                 onChangeText={(text) => setBodyTemp(text)}
@@ -564,23 +572,30 @@ export default function SymptomTracker() {
               <TextInput
                 style={styles.notesInput}
                 placeholder="Record any additional notes about your day..."
-                placeholderTextColor="#888"
+                placeholderTextColor="#B0A9B9"
                 multiline
                 numberOfLines={4}
                 value={dailyNotes}
                 onChangeText={setDailyNotes}
+                maxLength={DAILY_NOTES_MAX_LENGTH}
               />
+              <Text style={styles.charCounter}>
+                {dailyNotes.length}/{DAILY_NOTES_MAX_LENGTH}
+              </Text>
             </View>
           </View>
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[
+              styles.submitButton,
+              (loading || isFetchingData) && styles.submitButtonDisabled,
+            ]}
             onPress={handleSubmit}
             disabled={loading || isFetchingData}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.submitText}>Get Daily Analysis</Text>
             )}
@@ -594,64 +609,50 @@ export default function SymptomTracker() {
 }
 
 const styles = StyleSheet.create({
-  dropdownContainer: {
-    width: 90,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    justifyContent: "center",
-  },
-  picker: {
-    width: "100%",
-    height: 55,
-  },
-  tempInput: {
-    flex: 1,
-    height: 55,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-  },
   container: {
     flexGrow: 1,
-    paddingBottom: 70,
-    marginTop: 20,
+    paddingBottom: 40,
+    paddingTop: 20,
   },
   contentContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 16,
   },
   backButton: {
     padding: 8,
+    borderRadius: 12,
+    backgroundColor: "rgba(183,108,253,0.08)",
   },
   title: {
     fontSize: 22,
-    fontWeight: "600",
-    color: "#2D3748",
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    letterSpacing: 0.3,
   },
   card: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 24,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.04)",
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#4A5568",
+    fontSize: 17,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
     marginBottom: 16,
   },
   inputGroup: {
@@ -659,20 +660,41 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 15,
-    color: "#4A5568",
-    marginBottom: 8,
-    fontWeight: "500",
+    fontFamily: "Poppins-Medium",
+    color: "#2D2D2D",
+    marginBottom: 12,
   },
-  inputContainer: {
+  temperatureContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 20,
+  },
+  tempPickerContainer: {
+    width: 90,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 10,
-    padding: 14,
-    backgroundColor: "#F8FAFC",
+    borderColor: "#F0E8FF",
+    borderRadius: 14,
+    backgroundColor: "#FFF",
+    overflow: "hidden",
   },
-  input: {
-    fontSize: 16,
-    color: "#2D3748",
+  picker: {
+    width: "100%",
+    height: 60,
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
+  },
+  tempInput: {
+    flex: 1,
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#F0E8FF",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontFamily: "Poppins-Regular",
+    fontSize: 15,
+    color: "#2D2D2D",
+    backgroundColor: "#FFF",
   },
   symptomsGrid: {
     flexDirection: "row",
@@ -680,21 +702,24 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   symptomButton: {
-    backgroundColor: "#EDF2F7",
+    backgroundColor: "rgba(255,242,248,0.9)",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,92,141,0.1)",
   },
   selectedSymptom: {
-    backgroundColor: "#6E56CF",
+    backgroundColor: "#FF5C8D",
+    borderColor: "#FF5C8D",
   },
   symptomText: {
-    color: "#4A5568",
-    fontWeight: "500",
+    color: "#FF5C8D",
+    fontFamily: "Poppins-Medium",
     fontSize: 14,
   },
   selectedSymptomText: {
-    color: "#FFF",
+    color: "#FFFFFF",
   },
   optionRow: {
     flexDirection: "row",
@@ -703,23 +728,23 @@ const styles = StyleSheet.create({
   optionButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 10,
+    borderColor: "#F0E8FF",
+    borderRadius: 14,
     padding: 14,
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFF",
   },
   selectedOption: {
-    backgroundColor: "#6E56CF",
-    borderColor: "#6E56CF",
+    backgroundColor: "#B76CFD",
+    borderColor: "#B76CFD",
   },
   optionText: {
-    fontSize: 16,
-    color: "#4A5568",
-    fontWeight: "500",
+    fontSize: 15,
+    fontFamily: "Poppins-Medium",
+    color: "#2D2D2D",
   },
   selectedOptionText: {
-    color: "#FFF",
+    color: "#FFFFFF",
   },
   flowOptions: {
     flexDirection: "row",
@@ -727,21 +752,24 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   flowButton: {
-    backgroundColor: "#EDF2F7",
+    backgroundColor: "rgba(183,108,253,0.08)",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.1)",
   },
   selectedFlow: {
-    backgroundColor: "#6E56CF",
+    backgroundColor: "#B76CFD",
+    borderColor: "#B76CFD",
   },
   flowText: {
-    color: "#4A5568",
-    fontWeight: "500",
+    color: "#B76CFD",
+    fontFamily: "Poppins-Medium",
     fontSize: 14,
   },
   selectedFlowText: {
-    color: "#FFF",
+    color: "#FFFFFF",
   },
   moodsGrid: {
     flexDirection: "row",
@@ -749,62 +777,74 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   moodButton: {
-    backgroundColor: "#EDF2F7",
+    backgroundColor: "rgba(255,242,248,0.9)",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,92,141,0.1)",
   },
   selectedMood: {
-    backgroundColor: "#6E56CF",
+    backgroundColor: "#FF5C8D",
+    borderColor: "#FF5C8D",
   },
   moodText: {
-    color: "#4A5568",
-    fontWeight: "500",
+    color: "#FF5C8D",
+    fontFamily: "Poppins-Medium",
     fontSize: 14,
   },
   selectedMoodText: {
-    color: "#FFF",
+    color: "#FFFFFF",
   },
   notesContainer: {
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 10,
-    padding: 14,
-    backgroundColor: "#F8FAFC",
+    borderColor: "#F0E8FF",
+    borderRadius: 14,
+    padding: 16,
+    backgroundColor: "#FFF",
     minHeight: 120,
   },
   notesInput: {
-    fontSize: 16,
-    color: "#2D3748",
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
     textAlignVertical: "top",
-  },
-  submitButton: {
-    backgroundColor: "#6E56CF",
-    borderRadius: 10,
-    padding: 18,
-    alignItems: "center",
-    marginTop: 12,
-    shadowColor: "#6E56CF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  submitText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  errorText: {
-    color: "#E53E3E",
-    textAlign: "center",
-    marginTop: 16,
-    fontWeight: "500",
+    minHeight: 100,
   },
   charCounter: {
     alignSelf: "flex-end",
-    color: "#64748B",
+    color: "#8B8691",
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 8,
+    fontFamily: "Poppins-Regular",
+  },
+  submitButton: {
+    backgroundColor: "#B76CFD",
+    borderRadius: 28,
+    padding: 18,
+    alignItems: "center",
+    marginTop: 12,
+    marginBottom: 30,
+    shadowColor: "#B76CFD",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#E0D7FF",
+    shadowOpacity: 0.1,
+  },
+  submitText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontFamily: "Poppins-SemiBold",
+  },
+  errorText: {
+    color: "#FF5C8D",
+    textAlign: "center",
+    marginTop: 16,
+    fontFamily: "Poppins-Medium",
+    fontSize: 14,
   },
 });

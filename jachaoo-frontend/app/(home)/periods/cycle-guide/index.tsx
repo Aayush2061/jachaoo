@@ -2,10 +2,11 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+
 const phaseData = [
   {
     name: "Menstrual Phase",
-    color: "#FF6B6B",
+    color: "#FF5C8D", // Blossom pink from home page
     icon: "water",
     description:
       "The menstrual phase is when you have your period. This phase typically lasts 3-7 days as your body sheds the uterine lining.",
@@ -18,7 +19,7 @@ const phaseData = [
   },
   {
     name: "Follicular Phase",
-    color: "#51CF66",
+    color: "#9AD1A1", // Soft green from home page
     icon: "flower",
     description:
       "This phase begins after menstruation and lasts until ovulation. Your body prepares eggs for release and the uterine lining thickens.",
@@ -31,7 +32,7 @@ const phaseData = [
   },
   {
     name: "Ovulatory Phase",
-    color: "#3498DB",
+    color: "#7CB9E8", // Soft blue from home page
     icon: "egg",
     description:
       "Ovulation occurs when an egg is released from the ovary. This is your most fertile period, typically around day 14 of a 28-day cycle.",
@@ -44,7 +45,7 @@ const phaseData = [
   },
   {
     name: "Luteal Phase",
-    color: "#FCC419",
+    color: "#F5C76B", // Soft yellow from home page
     icon: "leaf",
     description:
       "After ovulation, the luteal phase begins. If pregnancy doesn't occur, hormone levels drop, leading to menstruation and the start of a new cycle.",
@@ -70,7 +71,12 @@ export default function CycleGuide() {
   };
 
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Menstrual Cycle Phases</Text>
         <Text style={styles.subtitle}>Tap on a phase to learn more</Text>
@@ -78,7 +84,7 @@ export default function CycleGuide() {
         {phaseData.map((phase, index) => (
           <Pressable
             key={index}
-            style={[styles.phaseCard, { backgroundColor: phase.color + "20" }]} // Add opacity to color
+            style={[styles.phaseCard, { backgroundColor: `${phase.color}20` }]}
             onPress={() => navigateToPhaseDetail(phase)}
           >
             <View style={styles.phaseHeader}>
@@ -108,30 +114,30 @@ export default function CycleGuide() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "rgba(255,255,255,0.4)",
     padding: 20,
+    paddingTop: 40,
     paddingBottom: 60,
-    marginTop: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#2c3e50",
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: "#7f8c8d",
+    fontFamily: "Poppins-Regular",
+    color: "#8B8691",
     textAlign: "center",
     marginBottom: 20,
   },
   phaseCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: "rgba(183,108,253,0.1)",
   },
   phaseHeader: {
     flexDirection: "row",
@@ -140,13 +146,14 @@ const styles = StyleSheet.create({
   },
   phaseTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "Poppins-SemiBold",
     marginLeft: 12,
     flex: 1,
   },
   phaseDescription: {
     fontSize: 15,
-    color: "#2c3e50",
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
     lineHeight: 22,
   },
   chevron: {

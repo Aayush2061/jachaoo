@@ -1,8 +1,8 @@
-// app/(home)/periods/phase-detail.tsx
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams } from "expo-router";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { phaseData } from "../../../utils/phaseData";
+
 // Correct bold text renderer (no duplicates)
 const renderBoldText = (text: string) => {
   const segments = [];
@@ -34,7 +34,9 @@ const renderBoldText = (text: string) => {
     <Text style={styles.inlineTextContainer}>
       {segments.map((segment, index) =>
         typeof segment === "string" ? (
-          <Text key={`text-${index}`}>{segment}</Text>
+          <Text key={`text-${index}`} style={styles.regularText}>
+            {segment}
+          </Text>
         ) : (
           segment
         )
@@ -222,13 +224,18 @@ export default function PhaseDetail() {
       });
     }
 
-    return <Text>Content format not recognized</Text>;
+    return <Text style={styles.errorText}>Content format not recognized</Text>;
   };
 
   return (
-    <LinearGradient colors={["#b3e5fc", "#ffe0b2"]} style={{ flex: 1 }}>
+    <LinearGradient
+      colors={["#FFF2F8", "#F2F0FF"]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={{ flex: 1 }}
+    >
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={[styles.header, { backgroundColor: `${phase.color}20` }]}>
+        <View style={[styles.header, { backgroundColor: `${phase.color}15` }]}>
           <Text style={styles.phaseName}>{phase.name}</Text>
           <Text style={styles.actionName}>{action}</Text>
         </View>
@@ -242,23 +249,23 @@ export default function PhaseDetail() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    // backgroundColor: "#fff",
     paddingBottom: 60,
-    marginTop: 20,
+    paddingTop: 20,
   },
   header: {
-    padding: 20,
+    padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "rgba(183,108,253,0.1)",
   },
   phaseName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2c3e50",
+    fontSize: 22,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
   },
   actionName: {
     fontSize: 18,
-    color: "#7f8c8d",
+    fontFamily: "Poppins-Medium",
+    color: "#8B8691",
     marginTop: 4,
   },
   contentContainer: {
@@ -268,173 +275,202 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
   },
+  regularText: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 16,
+    color: "#2D2D2D",
+  },
   sectionHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    marginTop: 20,
-    marginBottom: 10,
+    fontSize: 20,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginTop: 24,
+    marginBottom: 12,
   },
   sectionSubheader: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#2c3e50",
-    marginTop: 12,
-    marginBottom: 6,
+    fontSize: 17,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginTop: 16,
+    marginBottom: 8,
   },
   contentText: {
     fontSize: 16,
-    color: "#2c3e50",
-    marginBottom: 8,
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
+    marginBottom: 12,
     lineHeight: 24,
   },
   tipContainer: {
-    backgroundColor: "#f0e6ff",
-    borderRadius: 8,
-    padding: 12,
-    marginVertical: 10,
+    backgroundColor: "rgba(255,242,248,0.9)",
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF5C8D",
   },
   tipText: {
     fontSize: 15,
-    color: "#9b59b6",
+    fontFamily: "Poppins-Medium",
+    color: "#FF5C8D",
     fontStyle: "italic",
   },
   exerciseContainer: {
     marginBottom: 25,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 10,
-    padding: 15,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.04)",
   },
   exerciseImage: {
     width: "100%",
     height: 200,
-    borderRadius: 8,
-    marginBottom: 12,
+    borderRadius: 12,
+    marginBottom: 16,
     resizeMode: "contain",
   },
   imageContainer: {
-    // Add this container for better control
     width: "100%",
     height: 200,
-    marginBottom: 12,
-    borderRadius: 8,
-    overflow: "hidden", // Ensures borderRadius works
-    backgroundColor: "#f8f9fa", // Optional: shows while loading
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#F8F9FA",
   },
   exerciseName: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    marginBottom: 8,
+    fontSize: 18,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginBottom: 12,
   },
   stepText: {
-    fontSize: 14,
-    color: "#34495e",
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
+    color: "#6B7280",
     marginLeft: 8,
-    marginBottom: 4,
-    lineHeight: 20,
+    marginBottom: 6,
+    lineHeight: 22,
   },
   benefitText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontFamily: "Poppins-Regular",
     color: "#27ae60",
     fontStyle: "italic",
-    marginLeft: 8, // Add indentation for bullet points
-    marginBottom: 4, // Space between benefit items
-    lineHeight: 20, // Proper line spacing
+    marginLeft: 8,
+    marginBottom: 6,
+    lineHeight: 22,
   },
   boldText: {
-    fontWeight: "bold",
-    color: "#2c3e50",
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+  },
+  errorText: {
+    fontSize: 16,
+    fontFamily: "Poppins-Regular",
+    color: "#FF5C8D",
+    textAlign: "center",
+    marginTop: 20,
   },
   // Food Section Styles
   foodContainer: {
     marginBottom: 20,
   },
   foodCategory: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.04)",
   },
   foodCategoryName: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    marginBottom: 5,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginBottom: 8,
   },
   foodCategoryDesc: {
     fontSize: 15,
-    color: "#34495e",
-    marginBottom: 12,
+    fontFamily: "Poppins-Regular",
+    color: "#6B7280",
+    marginBottom: 16,
     lineHeight: 22,
   },
   foodItemsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   foodItem: {
     flexDirection: "row",
     alignItems: "center",
-    width: "50%",
-    marginBottom: 8,
+    width: "100%",
+    marginBottom: 10,
   },
   foodItemBullet: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#9b59b6",
-    marginRight: 8,
+    backgroundColor: "#B76CFD",
+    marginRight: 10,
   },
   foodItemText: {
     fontSize: 15,
-    color: "#2c3e50",
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
   },
   foodTipContainer: {
-    backgroundColor: "#e8f4f8",
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 8,
+    backgroundColor: "rgba(183,108,253,0.08)",
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 12,
   },
   foodTipText: {
     fontSize: 14,
-    color: "#2980b9",
+    fontFamily: "Poppins-Medium",
+    color: "#B76CFD",
     fontStyle: "italic",
   },
   generalTipsContainer: {
-    backgroundColor: "#fff5f5",
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 10,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.04)",
   },
   generalTipsHeader: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#e74c3c",
-    marginBottom: 10,
+    fontSize: 18,
+    fontFamily: "Poppins-SemiBold",
+    color: "#FF5C8D",
+    marginBottom: 12,
   },
   generalTipItem: {
-    marginBottom: 5,
+    marginBottom: 8,
   },
   generalTipText: {
     fontSize: 15,
-    color: "#c0392b",
+    fontFamily: "Poppins-Regular",
+    color: "#FF5C8D",
     lineHeight: 22,
   },
   focusLoveContainer: {
     marginBottom: 20,
   },
   focusLoveCategory: {
-    backgroundColor: "#f5f7fa",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(183,108,253,0.04)",
   },
   focusLoveCategoryName: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#4a6fa5",
-    marginBottom: 10,
+    fontFamily: "Poppins-SemiBold",
+    color: "#2D2D2D",
+    marginBottom: 12,
   },
   focusLoveItemsContainer: {
     marginLeft: 10,
@@ -442,40 +478,44 @@ const styles = StyleSheet.create({
   focusLoveItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   focusLoveBullet: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#4a6fa5",
-    marginRight: 10,
-    marginTop: 7,
+    backgroundColor: "#B76CFD",
+    marginRight: 12,
+    marginTop: 8,
   },
   focusLoveItemText: {
     fontSize: 15,
-    color: "#2c3e50",
+    fontFamily: "Poppins-Regular",
+    color: "#2D2D2D",
     lineHeight: 22,
     flex: 1,
   },
   focusLoveTipsContainer: {
-    backgroundColor: "#fff0f0",
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 10,
+    backgroundColor: "rgba(255,255,255,0.82)",
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,92,141,0.1)",
   },
   focusLoveTipsHeader: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#d45555",
-    marginBottom: 8,
+    fontSize: 18,
+    fontFamily: "Poppins-SemiBold",
+    color: "#FF5C8D",
+    marginBottom: 12,
   },
   focusLoveTipItem: {
-    marginBottom: 5,
+    marginBottom: 8,
   },
   focusLoveTipText: {
     fontSize: 15,
-    color: "#d45555",
+    fontFamily: "Poppins-Regular",
+    color: "#FF5C8D",
     lineHeight: 22,
   },
 });
