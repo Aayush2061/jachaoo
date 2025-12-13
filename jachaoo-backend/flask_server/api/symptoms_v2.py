@@ -1,17 +1,25 @@
 from flask import Blueprint, request, jsonify
-from services.symptoms import MedicalDiagnosisSystem
+from services.symptoms_v2 import MedicalDiagnosisSystem
 import uuid
 MAX_INPUT_LENGTH = 300
 
-symptoms_bp = Blueprint('symptoms', __name__)
+
+# # At the top of symptoms.py
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
+
+symptoms_v2_bp = Blueprint('symptoms_v2', __name__)
 
 # Store active sessions
 active_sessions = {}
 
-@symptoms_bp.route('/start', methods=['POST'])
+@symptoms_v2_bp.route('/start', methods=['POST'])
 def start_diagnosis():
     try:
         data = request.get_json()
+
+        # logging.info(f"Received start request: {data}")  # ADD THIS
+
         if not data:
             return jsonify({"error": "No JSON data received"}), 400
             
@@ -41,9 +49,12 @@ def start_diagnosis():
             "message": "Failed to start diagnosis"
         }), 500
 
-@symptoms_bp.route('/answer', methods=['POST'])
+@symptoms_v2_bp.route('/answer', methods=['POST'])
 def answer_question():
     data = request.json
+
+    # logging.info(f"Received answer request: {data}")  # ADD THIS
+    
     session_id = data.get("session_id")
     user_input = data.get("answer")
 

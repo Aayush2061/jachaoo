@@ -25,7 +25,7 @@ router.post('/start',
                 });
             }
             // Forward to Flask backend
-            const flaskResponse = await fetch(`${process.env.FLASK_API_URL}/symptoms/start`, {
+            const flaskResponse = await fetch(`${process.env.FLASK_API_URL}/v2/symptoms/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

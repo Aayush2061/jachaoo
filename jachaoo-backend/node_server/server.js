@@ -26,9 +26,10 @@ const reportsRouter = require('./routes/reports');
 const periodDataRouter = require('./routes/periodData');
 const mentalHealthRouter = require('./routes/mentalHealth');
 const symptomsRouter = require('./routes/symptoms');
-const firstAidRouter = require('./routes/firstAid')
-const menstrualChatRouter = require('./routes/menstrualChat')
-const periodAnalysisRouter = require('./routes/periodAnalysis')
+const symptomsRouterV2 = require('./routes/symptoms_v2');
+const firstAidRouter = require('./routes/firstAid');
+const menstrualChatRouter = require('./routes/menstrualChat');
+const periodAnalysisRouter = require('./routes/periodAnalysis');
 const dailyGoalsRouter = require('./routes/dailyGoals');
 const mentalHealthChatRouter = require('./routes/mentalHealthChat');
 const healthTipsRouter = require('./routes/healthTips');
@@ -39,6 +40,7 @@ app.use('/api/reports', clerkMiddleware, reportsRouter);
 app.use('/api/periods', clerkMiddleware, periodDataRouter);
 app.use('/api/mental-health', clerkMiddleware, mentalHealthRouter);
 app.use('/api/symptoms', clerkMiddleware, symptomsRouter);
+app.use('/api/v2/symptoms', clerkMiddleware, symptomsRouterV2);  // v2 route
 app.use('/api/firstaid', clerkMiddleware, firstAidRouter);
 app.use('/api/menstrual-chat', clerkMiddleware, menstrualChatRouter);
 app.use('/api/daily-analysis', clerkMiddleware, periodAnalysisRouter);

@@ -90,7 +90,7 @@ export default function Diagnose() {
       const token = await getToken();
 
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/symptoms/start`,
+        `${process.env.EXPO_PUBLIC_API_URL}/v2/symptoms/start`,
         {
           method: "POST",
           headers: {
@@ -160,7 +160,7 @@ export default function Diagnose() {
       setLoading(true);
 
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/symptoms/answer`,
+        `${process.env.EXPO_PUBLIC_FLASK_API_URL}/v2/symptoms/answer`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
