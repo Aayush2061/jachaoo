@@ -22,7 +22,12 @@ def analyze_report():
         health_data = {
             'diabetes': data.get('diabetes', "Don't know"),
             'hypertension': data.get('hypertension', "Don't know"),
-            'smoker': data.get('smoker', "Don't know")
+            'smoker': data.get('smoker', "Don't know"),
+            'sex': data.get('sex', ""),
+            'age': data.get('age', ""),
+            'weight': data.get('weight', ""),
+            'illnesses': data.get('illnesses', []),
+            'other_illness': data.get('other_illness', "")
         }
         
         analysis_result = analyze_medical_report(image_url, health_data)

@@ -48,7 +48,7 @@ def lab_report_analysis(cloudinary_url,health_data = None):
 
         if "warning" in data:
             return "Invalid image! Please send lab reports only."
-        
+
         extracted = {
         "age": data["patient_info"].get("age"),
         "sex": data["patient_info"].get("sex"),
@@ -58,13 +58,19 @@ def lab_report_analysis(cloudinary_url,health_data = None):
         genai.configure(api_key= api_key)
         model2 = genai.GenerativeModel("models/gemini-2.0-flash")
 
-        print(health_data)
+        # print(health_data)
         
         # Use provided health data or default values
         diabetes = health_data.get('diabetes', "Don't know") if health_data else "Don't know"
         hypertension = health_data.get('hypertension', "Don't know") if health_data else "Don't know"
         smoker = health_data.get('smoker', "Don't know") if health_data else "Don't know"
-        
+
+        # sex = health_data.get('sex', "")
+        # age = health_data.get('age', "")
+        weight = health_data.get('weight', "")
+        illnesses = health_data.get('illnesses', [])
+        other_illness = health_data.get('other_illness', "")
+
         eng_prompt = f"""
 You are a professional health and fitness advisor.
 
@@ -76,8 +82,8 @@ Your task is to analyze the lab report provided below and produce a **clean, con
 The report should have these sections:
 
 1. Lab Report Analysis
-- List each test in this format: Test Name – Short interpretation , only if some test is abnormal(if not inside the range be strict).
-- Only if all tests are normal, write "All test results are within normal ranges."
+- List each test in this format: Test Name – Short interpretation , only if some test is abnormal(Check properly all tests,if not inside the range be strict and list them).
+- if all tests are normal, write "All test results are within normal ranges."
 
 
 2. Personalized Diet Plan
@@ -98,8 +104,11 @@ The report should have these sections:
 - Provide 5–6 short bullet points (hydration, sleep, stress, sunlight, screen time, smoking/alcohol).
 
 Use the user’s health conditions to guide your advice:
+- weight:{weight} kg
 - Diabetes: {diabetes}
 - High Blood Pressure: {hypertension}
+- illnesses: {', '.join(illnesses) if illnesses else 'None'}
+- Other illnesses: {other_illness if other_illness else 'None'}
 - Smoker: {smoker}
 
 Lab Report:
