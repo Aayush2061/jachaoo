@@ -185,8 +185,9 @@ export default function ProfilePage() {
 
       setLoading(true);
 
-      // Update local state for testing
+      // Prepare the data for API call
       const updatedData = {
+        userId: user?.id, // Make sure to include userId
         name: formData.name,
         age: ageNumber,
         weight: weightNumber,
@@ -201,7 +202,26 @@ export default function ProfilePage() {
           : "",
       };
 
-      setHealthData(updatedData);
+      // Make API call to update database
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/health`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Update local state
+      setHealthData(result);
       setEditModalVisible(false);
       Alert.alert("Success", "Health information updated successfully");
     } catch (error) {

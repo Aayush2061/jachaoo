@@ -523,7 +523,14 @@ export default function SymptomTracker() {
                     styles.flowButton,
                     flow === option && styles.selectedFlow,
                   ]}
-                  onPress={() => setFlow(option)}
+                  onPress={() => {
+                    // Toggle functionality: if same option is clicked, clear it
+                    if (flow === option) {
+                      setFlow(""); // Clear the selection
+                    } else {
+                      setFlow(option); // Set new selection
+                    }
+                  }}
                 >
                   <Text
                     style={[
