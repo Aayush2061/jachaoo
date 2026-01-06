@@ -77,13 +77,11 @@ export default function FirstAidScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (scrollViewRef.current) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages, keyboardHeight]);
+useEffect(() => {
+  if (scrollViewRef.current) {
+    scrollViewRef.current.scrollToEnd({ animated: true });
+  }
+}, [messages, keyboardHeight]);
 
 
 
