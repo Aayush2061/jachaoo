@@ -36,3 +36,15 @@ pids
 
 # TypeScript cache
 *.tsbuildinfo
+
+# ========================
+# Python / Flask
+# ========================
+venv/
+__pycache__/
+*.pyc
+.python-version
+
+# Flask runtime
+instance/
+
