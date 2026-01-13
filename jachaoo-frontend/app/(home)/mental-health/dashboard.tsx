@@ -75,14 +75,14 @@ export default function MentalHealthDashboard() {
           <View style={styles.featureRow}>
             <Pressable
               style={styles.featureButton}
-              onPress={() => router.push("/(home)/mental-health/track")}
+              onPress={() => router.push("/(home)/mental-health/check")}
             >
               <ImageBackground
                 source={require("@/assets/images/mental-health-icons/track-bg.jpg")}
                 style={styles.featureBackground}
                 imageStyle={styles.featureBackgroundImage}
               >
-                <Text style={styles.featureButtonText}>Track my mood</Text>
+                <Text style={styles.featureButtonText}>Mental Health Check</Text>
               </ImageBackground>
             </Pressable>
 
@@ -157,22 +157,6 @@ export default function MentalHealthDashboard() {
               </ImageBackground>
             </Pressable>
           </View>
-
-          <View style={styles.featureRow}>
-             <Pressable
-              style={styles.featureButton}
-              onPress={() => router.push("/(home)/mental-health/check")}
-            >
-              <ImageBackground
-                source={require("@/assets/images/mental-health-icons/track-bg.jpg")}
-                style={styles.featureBackground}
-                imageStyle={styles.featureBackgroundImage}
-              >
-                <Text style={styles.featureButtonText}>Mental Health Check</Text>
-              </ImageBackground>
-            </Pressable>
-          </View>
-
         </View>
       </ScrollView>
     </MentalHealthBackground>
