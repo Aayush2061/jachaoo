@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
 import MentalHealthBackground from "../../MentalHealthBackground";
 
 export default function MixedIntro() {
@@ -7,78 +7,85 @@ export default function MixedIntro() {
 
   return (
     <MentalHealthBackground>
-      <View style={styles.container}>
-        {/* Header */}
-        <Text style={styles.title}>Mental Health Check</Text>
-        <Text style={styles.subtitle}>
-          Based on DASS-21 (Stress, Anxiety & Depression)
-        </Text>
-
-        {/* Info Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>What this check is about</Text>
-
-          <Text style={styles.cardText}>
-            This check is for times when your feelings feel mixed or hard to
-            explain.
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          {/* Header */}
+          <Text style={styles.title}>Mental Health Check</Text>
+          <Text style={styles.subtitle}>
+            Based on DASS-21 (Stress, Anxiety & Depression)
           </Text>
 
-          <Text style={styles.cardText}>
-            It looks at three areas together:
+          {/* Info Card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>What this check is about</Text>
+
+            <Text style={styles.cardText}>
+              This check is for times when your feelings feel mixed or hard to
+              explain.
+            </Text>
+
+            <Text style={styles.cardText}>
+              It looks at three areas together:
+            </Text>
+
+            <Text style={styles.cardText}>
+              • Stress (feeling tense, overwhelmed, irritated){"\n"}
+              • Anxiety (worry, fear, nervous energy){"\n"}
+              • Low mood (sadness, lack of interest or motivation)
+            </Text>
+          </View>
+
+          {/* Timeframe */}
+          <View style={styles.infoBox}>
+            <Text style={styles.infoTitle}>Important</Text>
+            <Text style={styles.infoText}>
+              Please answer based on how you felt during the{" "}
+              <Text style={styles.bold}>past 7 days</Text>.
+            </Text>
+          </View>
+
+          {/* Reassurance */}
+          <Text style={styles.reassurance}>
+            There are no right or wrong answers. Just choose what feels most true
+            for you.
           </Text>
 
-          <Text style={styles.cardText}>
-            • Stress (feeling tense, overwhelmed, irritated){"\n"}
-            • Anxiety (worry, fear, nervous energy){"\n"}
-            • Low mood (sadness, lack of interest or motivation)
+          {/* Start Button */}
+          <Pressable
+            style={styles.primaryButton}
+            onPress={() =>
+              router.push("/(home)/mental-health/check/mixed/questions")
+            }
+          >
+            <Text style={styles.primaryButtonText}>
+              Start Mental Health Check
+            </Text>
+          </Pressable>
+
+          {/* Disclaimer */}
+          <Text style={styles.disclaimer}>
+            This check is not a medical diagnosis. It is meant to help you better
+            understand how you've been feeling.
           </Text>
+
+          {/* Back */}
+          <Pressable
+            style={styles.backButton}
+            onPress={() =>
+              router.push("/(home)/mental-health/check")
+            }
+          >
+            <Text style={styles.backButtonText}>
+              Back to Mental Health Checks
+            </Text>
+          </Pressable>
         </View>
-
-        {/* Timeframe */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>Important</Text>
-          <Text style={styles.infoText}>
-            Please answer based on how you felt during the{" "}
-            <Text style={styles.bold}>past 7 days</Text>.
-          </Text>
-        </View>
-
-        {/* Reassurance */}
-        <Text style={styles.reassurance}>
-          There are no right or wrong answers. Just choose what feels most true
-          for you.
-        </Text>
-
-        {/* Start Button */}
-        <Pressable
-          style={styles.primaryButton}
-          onPress={() =>
-            router.push("/(home)/mental-health/check/mixed/questions")
-          }
-        >
-          <Text style={styles.primaryButtonText}>
-            Start Mental Health Check
-          </Text>
-        </Pressable>
-
-        {/* Disclaimer */}
-        <Text style={styles.disclaimer}>
-          This check is not a medical diagnosis. It is meant to help you better
-          understand how you’ve been feeling.
-        </Text>
-
-        {/* Back */}
-        <Pressable
-          style={styles.backButton}
-          onPress={() =>
-            router.push("/(home)/mental-health/check")
-          }
-        >
-          <Text style={styles.backButtonText}>
-            Back to Mental Health Checks
-          </Text>
-        </Pressable>
-      </View>
+      </ScrollView>
     </MentalHealthBackground>
   );
 }
@@ -86,8 +93,14 @@ export default function MixedIntro() {
 /* -------------------- STYLES -------------------- */
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40, // Extra padding at bottom for better scrolling
+  },
+  container: {
     padding: 24,
     paddingTop: 40,
   },
