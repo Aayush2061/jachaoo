@@ -192,25 +192,25 @@ export default function AnxietyResult() {
             </RNAnimated.View>
 
            <RNAnimated.View style={{ transform: [{ scale: scaleAnim3 }] }}>
-  <Pressable
-    onPressIn={() => handlePressIn(scaleAnim3)}
-    onPressOut={() => handlePressOut(scaleAnim3)}
-    onPress={() => {
-      Haptics.selectionAsync();
-      router.replace("/(home)/mental-health/check");
-    }}
-    style={styles.backButton}
-  >
-    <Ionicons
-      name="arrow-back"
-      size={18}
-      color="#4A90E2"
-    />
-    <Text style={styles.backButtonText}>
-      Back to mental health checks
-    </Text>
-  </Pressable>
-</RNAnimated.View>
+            <Pressable
+              onPressIn={() => handlePressIn(scaleAnim3)}
+              onPressOut={() => handlePressOut(scaleAnim3)}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.replace("/(home)/mental-health/check");
+              }}
+              style={styles.backButton}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={18}
+                color="#4A90E2"
+              />
+              <Text style={styles.backButtonText}>
+                Back to mental health checks
+              </Text>
+            </Pressable>
+          </RNAnimated.View>
 
           </View>
 

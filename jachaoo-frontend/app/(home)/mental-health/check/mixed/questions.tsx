@@ -1,22 +1,21 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
-  View,
-  Text,
   Pressable,
   StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
   ScrollView,
+  Animated as RNAnimated,
 } from "react-native";
-import MentalHealthBackground from "../../MentalHealthBackground";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-/**
- * DASS-21 MIXED QUESTIONS
- * Each question belongs to: stress | anxiety | depression
- * Scoring: 0–3
- */
-
+/* -------------------- DATA -------------------- */
 const QUESTIONS = [
-  // STRESS (7)
   {
     id: 1,
     type: "stress",
@@ -59,8 +58,6 @@ const QUESTIONS = [
     text: "I felt very sensitive or touchy.",
     example: "Feeling hurt or upset very easily.",
   },
-
-  // ANXIETY (7)
   {
     id: 8,
     type: "anxiety",
@@ -103,12 +100,10 @@ const QUESTIONS = [
     text: "My heart was beating very fast.",
     example: "Heart racing while resting.",
   },
-
-  // DEPRESSION (7)
   {
     id: 15,
     type: "depression",
-    text: "I couldn’t feel happy or enjoy things.",
+    text: "I couldn't feel happy or enjoy things.",
     example: "Things you liked no longer felt enjoyable.",
   },
   {
@@ -132,7 +127,7 @@ const QUESTIONS = [
   {
     id: 19,
     type: "depression",
-    text: "I couldn’t feel interested or excited about anything.",
+    text: "I couldn't feel interested or excited about anything.",
     example: "No excitement even for good news.",
   },
   {
@@ -149,34 +144,39 @@ const QUESTIONS = [
   },
 ];
 
-const OPTIONS = [
+const ANSWER_OPTIONS = [
   { label: "Did not happen at all", value: 0 },
   { label: "Happened sometimes", value: 1 },
   { label: "Happened often", value: 2 },
   { label: "Happened almost every day", value: 3 },
 ];
 
+/* -------------------- COMPONENT -------------------- */
 export default function MixedQuestions() {
   const router = useRouter();
+  const scaleAnims = useRef(
+    ANSWER_OPTIONS.reduce((acc, option) => {
+      acc[option.value] = new RNAnimated.Value(1);
+      return acc;
+    }, {} as Record<number, RNAnimated.Value>)
+  ).current;
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<{ [key: number]: number }>({});
+  const [answers, setAnswers] = useState<(number | null)[]>(
+    Array(QUESTIONS.length).fill(null)
+  );
 
   const currentQuestion = QUESTIONS[currentIndex];
-
-  const handleSelect = (value: number) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQuestion.id]: value,
-    }));
-  };
-
+  const answeredCount = answers.filter(a => a !== null).length;
+  
+  // Calculate scores (same logic as before)
   const calculateScores = () => {
     let stress = 0;
     let anxiety = 0;
     let depression = 0;
 
-    QUESTIONS.forEach((q) => {
-      const score = answers[q.id] ?? 0;
+    QUESTIONS.forEach((q, index) => {
+      const score = answers[index] ?? 0;
       if (q.type === "stress") stress += score;
       if (q.type === "anxiety") anxiety += score;
       if (q.type === "depression") depression += score;
@@ -187,150 +187,516 @@ export default function MixedQuestions() {
       stress: stress * 2,
       anxiety: anxiety * 2,
       depression: depression * 2,
+      stressRaw: stress,
+      anxietyRaw: anxiety,
+      depressionRaw: depression,
     };
   };
 
-  // questions.tsx - Update handleNext function
-const handleNext = () => {
-  if (currentIndex < QUESTIONS.length - 1) {
-    setCurrentIndex(currentIndex + 1);
-  } else {
-    const scores = calculateScores();
+  const scores = calculateScores();
+  const isAnswered = answers[currentIndex] !== null;
+  const allAnswered = answers.every(a => a !== null);
+
+  const handleSelect = (value: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    const updated = [...answers];
+    updated[currentIndex] = value;
+    setAnswers(updated);
+  };
+
+  const handleFinish = () => {
+    if (!allAnswered) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     router.push({
       pathname: "/(home)/mental-health/check/mixed/result",
       params: {
         stressScore: scores.stress.toString(),
         anxietyScore: scores.anxiety.toString(),
         depressionScore: scores.depression.toString(),
-        // Also pass the raw scores if needed
-        stressRaw: (scores.stress / 2).toString(),
-        anxietyRaw: (scores.anxiety / 2).toString(),
-        depressionRaw: (scores.depression / 2).toString(),
+        stressRaw: scores.stressRaw.toString(),
+        anxietyRaw: scores.anxietyRaw.toString(),
+        depressionRaw: scores.depressionRaw.toString(),
       },
     });
-  }
-};
+  };
 
-  const scoresDebug = calculateScores();
+  const handleNext = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCurrentIndex(i => i + 1);
+  };
+
+  const handleBack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCurrentIndex(i => i - 1);
+  };
+
+  const handlePressIn = (value: number) => {
+    RNAnimated.spring(scaleAnims[value], {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = (value: number) => {
+    RNAnimated.spring(scaleAnims[value], {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const getTypeColor = (type: string) => {
+    switch(type) {
+      case "stress": return "#2980B9";
+      case "anxiety": return "#E67E22";
+      case "depression": return "#8E44AD";
+      default: return "#666";
+    }
+  };
 
   return (
-    <MentalHealthBackground>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.progress}>
-          Question {currentIndex + 1} of {QUESTIONS.length}
-        </Text>
+    <SafeAreaView style={styles.background}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          {/* Header with Progress */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Mental Health Check</Text>
+            <Text style={styles.instructionText}>
+              Answer based on how often you've felt this way in the last 7 days
+            </Text>
+          </View>
 
-        <View style={styles.card}>
-          <Text style={styles.question}>{currentQuestion.text}</Text>
-          <Text style={styles.example}>{currentQuestion.example}</Text>
-        </View>
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>
+                Question {currentIndex + 1} of {QUESTIONS.length}
+              </Text>
+              <Text style={styles.progressPercent}>
+                {Math.round((answeredCount / QUESTIONS.length) * 100)}%
+              </Text>
+            </View>
+            <View style={styles.progressBar}>
+              <LinearGradient
+                colors={["#8E44AD", "#2980B9"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[
+                  styles.progressFill,
+                  { width: `${(answeredCount / QUESTIONS.length) * 100}%` }
+                ]}
+              />
+            </View>
+          </View>
 
-        {OPTIONS.map((opt) => (
-          <Pressable
-            key={opt.value}
-            style={[
-              styles.option,
-              answers[currentQuestion.id] === opt.value &&
-                styles.optionSelected,
-            ]}
-            onPress={() => handleSelect(opt.value)}
+          {/* Question Type Indicator */}
+          <View style={[styles.typeIndicator, { backgroundColor: `${getTypeColor(currentQuestion.type)}15` }]}>
+            <View style={[styles.typeDot, { backgroundColor: getTypeColor(currentQuestion.type) }]} />
+            <Text style={[styles.typeText, { color: getTypeColor(currentQuestion.type) }]}>
+              {currentQuestion.type.charAt(0).toUpperCase() + currentQuestion.type.slice(1)}
+            </Text>
+          </View>
+
+          {/* Question Card */}
+          <Animated.View 
+            entering={FadeInDown.delay(100)}
+            style={styles.questionCard}
           >
-            <Text style={styles.optionText}>{opt.label}</Text>
-          </Pressable>
-        ))}
+            <Text style={styles.questionText}>{currentQuestion.text}</Text>
+            <Text style={styles.questionExample}>{currentQuestion.example}</Text>
+          </Animated.View>
 
-        <Pressable
-          style={[
-            styles.nextButton,
-            answers[currentQuestion.id] === undefined &&
-              styles.nextButtonDisabled,
-          ]}
-          disabled={answers[currentQuestion.id] === undefined}
-          onPress={handleNext}
-        >
-          <Text style={styles.nextButtonText}>
-            {currentIndex === QUESTIONS.length - 1
-              ? "See Results"
-              : "Next"}
-          </Text>
-        </Pressable>
+          {/* Answer Options */}
+          <View style={styles.optionsContainer}>
+            {ANSWER_OPTIONS.map((option, index) => (
+              <Animated.View
+                key={option.value}
+                entering={FadeInDown.delay(200 + index * 50)}
+                style={styles.optionWrapper}
+              >
+                <RNAnimated.View style={{ transform: [{ scale: scaleAnims[option.value] }] }}>
+                  <Pressable
+                    onPressIn={() => handlePressIn(option.value)}
+                    onPressOut={() => handlePressOut(option.value)}
+                    onPress={() => handleSelect(option.value)}
+                    style={({ pressed }) => [
+                      styles.optionButton,
+                      pressed && styles.optionButtonPressed,
+                      answers[currentIndex] === option.value && styles.optionButtonSelected,
+                    ]}
+                  >
+                    <View style={styles.optionLeft}>
+                      <View style={[
+                        styles.radioOuter,
+                        answers[currentIndex] === option.value && styles.radioOuterSelected
+                      ]}>
+                        {answers[currentIndex] === option.value && (
+                          <View style={styles.radioInner} />
+                        )}
+                      </View>
+                      <Text style={[
+                        styles.optionLabel,
+                        answers[currentIndex] === option.value && styles.optionLabelSelected
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </View>
+                    
+                    {answers[currentIndex] === option.value && (
+                      <Ionicons name="checkmark-circle" size={20} color="#2980B9" />
+                    )}
+                  </Pressable>
+                </RNAnimated.View>
+              </Animated.View>
+            ))}
+          </View>
 
-        {/* DEBUG SCORES (REMOVE IN PRODUCTION) */}
-        <View style={styles.debugBox}>
-          <Text style={styles.debugText}>
-            Stress: {scoresDebug.stress} | Anxiety: {scoresDebug.anxiety} |
-            Depression: {scoresDebug.depression}
-          </Text>
+          {/* Navigation */}
+          <View style={styles.navigationContainer}>
+            {currentIndex > 0 && (
+              <Pressable
+                style={styles.backButton}
+                onPress={handleBack}
+              >
+                <Ionicons name="arrow-back" size={18} color="#1B3C73" />
+                <Text style={styles.backButtonText}>Previous</Text>
+              </Pressable>
+            )}
+
+            {currentIndex === QUESTIONS.length - 1 ? (
+              <Pressable
+                style={[
+                  styles.finishButton,
+                  !allAnswered && styles.disabledButton,
+                ]}
+                disabled={!allAnswered}
+                onPress={handleFinish}
+              >
+                <LinearGradient
+                  colors={["#8E44AD", "#2980B9"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.finishButtonGradient}
+                >
+                  <Text style={styles.finishButtonText}>See Results</Text>
+                  <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                </LinearGradient>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={[
+                  styles.nextButton,
+                  !isAnswered && styles.disabledButton,
+                ]}
+                disabled={!isAnswered}
+                onPress={handleNext}
+              >
+                <LinearGradient
+                  colors={["#8E44AD", "#2980B9"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.nextButtonGradient}
+                >
+                  <Text style={styles.nextButtonText}>Continue</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                </LinearGradient>
+              </Pressable>
+            )}
+          </View>
+
+          {/* Current Scores (for reference) */}
+          <View style={styles.scoresContainer}>
+            <View style={styles.scoreItem}>
+              <View style={[styles.scoreDot, { backgroundColor: "#2980B9" }]} />
+              <Text style={styles.scoreLabel}>Stress:</Text>
+              <Text style={styles.scoreValue}>{scores.stressRaw * 2}</Text>
+            </View>
+            <View style={styles.scoreItem}>
+              <View style={[styles.scoreDot, { backgroundColor: "#E67E22" }]} />
+              <Text style={styles.scoreLabel}>Anxiety:</Text>
+              <Text style={styles.scoreValue}>{scores.anxietyRaw * 2}</Text>
+            </View>
+            <View style={styles.scoreItem}>
+              <View style={[styles.scoreDot, { backgroundColor: "#8E44AD" }]} />
+              <Text style={styles.scoreLabel}>Depression:</Text>
+              <Text style={styles.scoreValue}>{scores.depressionRaw * 2}</Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
-    </MentalHealthBackground>
+    </SafeAreaView>
   );
 }
 
+/* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    backgroundColor: "#FAFAF7",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
   container: {
-    padding: 24,
-    paddingTop: 40,
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
-  progress: {
-    textAlign: "center",
-    color: "#666",
-    marginBottom: 16,
+  header: {
+    alignItems: "center",
+    marginBottom: 24,
   },
-  card: {
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 20,
-  },
-  question: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#2c3e50",
+  title: {
+    fontSize: 24,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
     marginBottom: 8,
   },
-  example: {
+  instructionText: {
     fontSize: 14,
-    color: "#555",
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    textAlign: "center",
     lineHeight: 20,
   },
-  option: {
-    backgroundColor: "white",
-    borderRadius: 14,
-    padding: 14,
+  progressContainer: {
+    marginBottom: 16,
+  },
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+  },
+  progressPercent: {
+    fontSize: 14,
+    color: "#8E44AD",
+    fontFamily: "Poppins-SemiBold",
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: "#E8F4F8",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+  typeIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginBottom: 16,
+  },
+  typeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  typeText: {
+    fontSize: 12,
+    fontFamily: "Poppins-SemiBold",
+  },
+  questionCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  questionText: {
+    fontSize: 20,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    lineHeight: 28,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
   },
-  optionSelected: {
-    borderColor: "#2980b9",
-    backgroundColor: "rgba(41,128,185,0.1)",
+  questionExample: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    lineHeight: 20,
+    fontStyle: "italic",
   },
-  optionText: {
-    fontSize: 15,
-    color: "#2c3e50",
+  optionsContainer: {
+    gap: 12,
+    marginBottom: 32,
+  },
+  optionWrapper: {
+    width: "100%",
+  },
+  optionButton: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  optionButtonPressed: {
+    opacity: 0.9,
+  },
+  optionButtonSelected: {
+    backgroundColor: "#F8FBFF",
+    borderColor: "#8E44AD",
+  },
+  optionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    flex: 1,
+  },
+  radioOuter: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#8E44AD",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioOuterSelected: {
+    backgroundColor: "#8E44AD",
+  },
+  radioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFFFFF",
+  },
+  optionLabel: {
+    fontSize: 16,
+    color: "#1B3C73",
+    fontFamily: "Poppins-Regular",
+    flex: 1,
+  },
+  optionLabelSelected: {
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+  },
+  navigationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
   },
   nextButton: {
-    backgroundColor: "#2980b9",
-    padding: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 20,
+    flex: 1,
+    marginLeft: 20,
+    borderRadius: 20,
+    overflow: "hidden",
   },
-  nextButtonDisabled: {
-    backgroundColor: "#aaa",
+  nextButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
   nextButtonText: {
-    color: "white",
     fontSize: 16,
-    fontWeight: "600",
+    color: "#FFFFFF",
+    fontFamily: "Poppins-SemiBold",
   },
-  debugBox: {
-    marginTop: 20,
+  finishButton: {
+    flex: 1,
+    marginLeft: 20,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  finishButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
-  debugText: {
+  finishButtonText: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontFamily: "Poppins-SemiBold",
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  scoresContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  scoreItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  scoreDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  scoreLabel: {
     fontSize: 12,
-    color: "#888",
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+  },
+  scoreValue: {
+    fontSize: 14,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
   },
 });
