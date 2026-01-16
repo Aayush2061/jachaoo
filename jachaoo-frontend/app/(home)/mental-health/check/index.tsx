@@ -1,24 +1,107 @@
 import { useRouter } from "expo-router";
-import { 
-  Pressable, 
-  StyleSheet, 
-  Text, 
-  View, 
-  ScrollView 
+import { useState, useRef } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  SafeAreaView,
+  Animated as RNAnimated,
 } from "react-native";
-import MentalHealthBackground from "../MentalHealthBackground";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeInDown } from "react-native-reanimated";
+
+const options = [
+  {
+    id: "anxiety",
+    title: "I worry a lot and can't relax",
+    description: "My mind keeps thinking too much",
+    icon: "😰",
+    gradient: ["#FF6B6B", "#FF8E53"],
+    iconColor: "#FF6B6B",
+  },
+  {
+    id: "depression",
+    title: "I feel sad or empty most days",
+    description: "Low mood, low energy",
+    icon: "😞",
+    gradient: ["#4A90E2", "#6BC4A1"],
+    iconColor: "#4A90E2",
+  },
+  {
+    id: "stress",
+    title: "I feel very stressed or burned out",
+    description: "Too much pressure, always tired",
+    icon: "😵",
+    gradient: ["#FFA726", "#FF7043"],
+    iconColor: "#FFA726",
+  },
+  {
+    id: "mixed",
+    title: "I'm not sure / everything feels mixed",
+    description: "Hard to explain",
+    icon: "😐",
+    gradient: ["#9575CD", "#7986CB"],
+    iconColor: "#9575CD",
+  },
+];
 
 export default function MentalHealthCheckStart() {
   const router = useRouter();
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  
+  // Create scale animations for each option
+  const scaleAnims = useRef(
+    options.reduce((acc, option) => {
+      acc[option.id] = new RNAnimated.Value(1);
+      return acc;
+    }, {} as Record<string, RNAnimated.Value>)
+  ).current;
 
-  const handleSelect = (
-    type: "anxiety" | "depression" | "stress" | "mixed"
-  ) => {
-    router.push(`/(home)/mental-health/check/${type}/intro`);
+  const handleSelect = (type: "anxiety" | "depression" | "stress" | "mixed") => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedOption(type);
+    
+    // Scale animation
+    RNAnimated.spring(scaleAnims[type], {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start(() => {
+      RNAnimated.spring(scaleAnims[type], {
+        toValue: 1,
+        friction: 4,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    });
+    
+    // Navigate after animation
+    setTimeout(() => {
+      router.push(`/(home)/mental-health/check/${type}/intro`);
+    }, 200);
+  };
+
+  const handlePressIn = (type: string) => {
+    RNAnimated.spring(scaleAnims[type], {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = (type: string) => {
+    RNAnimated.spring(scaleAnims[type], {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
-    <MentalHealthBackground>
+    <SafeAreaView style={styles.background}>
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -26,123 +109,230 @@ export default function MentalHealthCheckStart() {
       >
         <View style={styles.container}>
           {/* Title */}
-          <Text style={styles.title}>How have you been feeling lately?</Text>
-
-          {/* Helper text */}
-          <Text style={styles.helper}>
-            Just pick the one that feels closest. You can't choose the wrong one.
-          </Text>
+          <Text style={styles.title}>Mental Health Check</Text>
+          
+          {/* Intro Card */}
+          <Animated.View 
+            entering={FadeInDown.delay(100)}
+            style={styles.introCard}
+          >
+            <Text style={styles.introTitle}>
+              How have you been feeling lately?
+            </Text>
+            <Text style={styles.introDescription}>
+              Choose the option that feels closest. There is no right or wrong.
+            </Text>
+          </Animated.View>
 
           {/* Options */}
-          <Pressable
-            style={styles.optionCard}
-            onPress={() => handleSelect("anxiety")}
-          >
-            <Text style={styles.optionEmoji}>😰</Text>
-            <Text style={styles.optionText}>I worry a lot and can't relax</Text>
-            <Text style={styles.optionSubText}>
-              My mind keeps thinking too much
-            </Text>
-          </Pressable>
+          <View style={styles.optionsContainer}>
+            {options.map((option, index) => (
+              <Animated.View
+                key={option.id}
+                entering={FadeInDown.delay(200 + index * 100)}
+                style={{ width: "100%" }}
+              >
+                <RNAnimated.View style={{ transform: [{ scale: scaleAnims[option.id] }] }}>
+                  <Pressable
+                    onPressIn={() => handlePressIn(option.id)}
+                    onPressOut={() => handlePressOut(option.id)}
+                    onPress={() => handleSelect(option.id as any)}
+                    style={({ pressed }) => [
+                      styles.optionCard,
+                      pressed && styles.optionCardPressed,
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={option.gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.optionIconContainer}
+                    >
+                      <Text style={styles.optionIcon}>{option.icon}</Text>
+                    </LinearGradient>
 
-          <Pressable
-            style={styles.optionCard}
-            onPress={() => handleSelect("depression")}
-          >
-            <Text style={styles.optionEmoji}>😞</Text>
-            <Text style={styles.optionText}>I feel sad or empty most days</Text>
-            <Text style={styles.optionSubText}>Low mood, low energy</Text>
-          </Pressable>
+                    <View style={styles.optionContent}>
+                      <Text style={styles.optionTitle}>{option.title}</Text>
+                      <Text style={styles.optionDescription}>
+                        {option.description}
+                      </Text>
+                    </View>
 
-          <Pressable
-            style={styles.optionCard}
-            onPress={() => handleSelect("stress")}
-          >
-            <Text style={styles.optionEmoji}>😵</Text>
-            <Text style={styles.optionText}>
-              I feel very stressed or burned out
-            </Text>
-            <Text style={styles.optionSubText}>
-              Too much pressure, always tired
-            </Text>
-          </Pressable>
+                    <Ionicons 
+                      name="chevron-forward" 
+                      size={20} 
+                      color={option.iconColor}
+                    />
+                  </Pressable>
+                </RNAnimated.View>
+              </Animated.View>
+            ))}
+          </View>
 
-          <Pressable
-            style={styles.optionCard}
-            onPress={() => handleSelect("mixed")}
+          {/* Help Card */}
+          <Animated.View 
+            entering={FadeInDown.delay(600)}
+            style={{ width: "100%" }}
           >
-            <Text style={styles.optionEmoji}>😐</Text>
-            <Text style={styles.optionText}>
-              I'm not sure / everything feels mixed
-            </Text>
-            <Text style={styles.optionSubText}>Hard to explain</Text>
-          </Pressable>
+            <Pressable
+              style={styles.helpCard}
+              onPress={() => router.push("/(home)/mental-health/chat")}
+            >
+              <Ionicons name="chatbubble-ellipses" size={24} color="#4A90E2" />
+              <View style={styles.helpContent}>
+                <Text style={styles.helpTitle}>Need immediate support?</Text>
+                <Text style={styles.helpDescription}>
+                  Connect with our AI listener or find professional resources
+                </Text>
+              </View>
+              <Ionicons name="arrow-forward" size={18} color="#4A90E2" />
+            </Pressable>
+          </Animated.View>
 
           {/* Footer */}
           <Text style={styles.footer}>
-            This is not a medical diagnosis. It just helps us understand you
-            better.
+            This check is not a medical diagnosis. It helps us guide you better.
           </Text>
         </View>
       </ScrollView>
-    </MentalHealthBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    backgroundColor: "#FAFAF7",
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 20, // Extra padding at the bottom
+    paddingBottom: 40,
   },
   container: {
     flex: 1,
-    padding: 20,
-    paddingTop: 40,
+    padding: 24,
+    alignItems: "center",
   },
   title: {
-    fontSize: 26,
-    fontWeight: "bold",
+    fontSize: 24,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
     textAlign: "center",
-    marginBottom: 8,
-    color: "#2c3e50",
+    marginTop: 20,
+    marginBottom: 24,
   },
-  helper: {
-    textAlign: "center",
+  introCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  introTitle: {
+    fontSize: 20,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 12,
+    lineHeight: 28,
+  },
+  introDescription: {
     fontSize: 14,
-    color: "#555",
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    lineHeight: 22,
+  },
+  optionsContainer: {
+    width: "100%",
+    gap: 16,
     marginBottom: 24,
   },
   optionCard: {
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 3,
+    width: "100%",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    borderWidth: 2,
+    borderColor: "transparent",
   },
-  optionEmoji: {
-    fontSize: 32,
-    marginBottom: 6,
+  optionCardPressed: {
+    opacity: 0.9,
   },
-  optionText: {
-    fontSize: 17,
-    fontWeight: "600",
-    textAlign: "center",
-    color: "#2c3e50",
+  optionIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
   },
-  optionSubText: {
+  optionIcon: {
+    fontSize: 24,
+  },
+  optionContent: {
+    flex: 1,
+  },
+  optionTitle: {
+    fontSize: 16,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 4,
+    lineHeight: 22,
+  },
+  optionDescription: {
     fontSize: 13,
     color: "#666",
-    marginTop: 4,
-    textAlign: "center",
+    fontFamily: "Poppins-Regular",
+    lineHeight: 18,
+  },
+  helpCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    gap: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  helpContent: {
+    flex: 1,
+  },
+  helpTitle: {
+    fontSize: 14,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 2,
+  },
+  helpDescription: {
+    fontSize: 12,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
   },
   footer: {
-    marginTop: 20,
+    marginTop: 24,
     fontSize: 12,
     color: "#777",
     textAlign: "center",
+    fontFamily: "Poppins-Regular",
+    width: "100%",
   },
 });

@@ -3,13 +3,16 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 export default function MentalHealthOnboarding() {
   const { user } = useUser();
@@ -30,6 +33,7 @@ export default function MentalHealthOnboarding() {
       question: "Have you ever been diagnosed with a mental health condition?",
       options: ["Yes", "No", "I'm not sure"],
       type: "single",
+      icon: "medical",
     },
     {
       id: "support",
@@ -37,31 +41,33 @@ export default function MentalHealthOnboarding() {
         "Are you currently receiving any mental health support or medication?",
       options: ["Therapy", "Medication", "Both", "No"],
       type: "single",
+      icon: "heart",
       showIf: (answers: Record<string, string | string[]>) =>
         answers.diagnosed === "Yes",
     },
     {
       id: "frequency",
-      question: "How often do you think about mental health?",
+      question: "How often do you think about your mental health?",
       options: ["Every day", "Sometimes", "Rarely", "Not really"],
       type: "single",
+      icon: "time",
     },
     {
       id: "goals",
-      question: "What are you mainly looking for in this app?",
+      question: "What would you like to focus on?",
       options: [
         "Stress or anxiety relief",
         "Feeling low or depressed",
         "Sleep problems",
-        "Journaling or self-reflection",
+        "Mindfulness & meditation",
         "Just exploring",
         "Others",
       ],
       type: "multiple",
+      icon: "flag",
     },
   ];
 
-  // Filter questions based on conditional logic
   const getVisibleQuestions = () => {
     return allQuestions.filter((question) => {
       if (question.showIf) {
@@ -93,29 +99,14 @@ export default function MentalHealthOnboarding() {
       };
 
       setAnswers(newAnswers);
-
-      // If answering "diagnosed" question, we might need to adjust the current question index
-      if (currentQuestion.id === "diagnosed") {
-        const newVisibleQuestions = getVisibleQuestions();
-        const newTotal = newVisibleQuestions.length;
-
-        // If we added the support question, stay on current index (it will now point to support question)
-        // If we removed it, we might need to adjust
-        if (newTotal !== totalVisibleQuestions) {
-          // The simplest approach is to recalculate the position
-          const currentQuestionId = currentQuestion.id;
-          const newIndex = newVisibleQuestions.findIndex(
-            (q) => q.id === currentQuestionId
-          );
-          setCurrentQuestionIndex(Math.min(newIndex, newTotal - 1));
-        }
-      }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
   const handleNext = () => {
     if (currentQuestionIndex < totalVisibleQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } else {
       handleSubmit();
     }
@@ -124,13 +115,15 @@ export default function MentalHealthOnboarding() {
   const handleBack = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     console.log("Submitted answers:", answers);
-    const token = await getToken(); // 🔐 Get auth token
+    const token = await getToken();
+    
     try {
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/mental-health`,
@@ -162,47 +155,93 @@ export default function MentalHealthOnboarding() {
       ? (answers[currentQuestion.id] as string[])?.length > 0
       : answers[currentQuestion.id];
 
+  const getIconName = (iconType: string) => {
+    switch (iconType) {
+      case "medical": return "medical-outline";
+      case "heart": return "heart-outline";
+      case "time": return "time-outline";
+      case "flag": return "flag-outline";
+      default: return "help-outline";
+    }
+  };
+
   return (
-    <ImageBackground
-      source={require("@/assets/images/mental-health-background.jpg")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
+    <LinearGradient
+      colors={["#FAFAF7", "#E8F4F8"]}
+      style={styles.background}
     >
-      <View style={styles.overlay}>
-        <ScrollView contentContainerStyle={styles.container}>
-          <View style={styles.progressContainer}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.welcomeText}>Welcome to Mental Health</Text>
+          <Text style={styles.subtitle}>
+            Let's personalize your experience
+          </Text>
+        </View>
+
+        {/* Progress */}
+        <Animated.View 
+          entering={FadeIn.delay(100)}
+          style={styles.progressContainer}
+        >
+          <View style={styles.progressLabels}>
             <Text style={styles.progressText}>
-              Question {currentQuestionIndex + 1} of {totalVisibleQuestions}
+              Step {currentQuestionIndex + 1} of {totalVisibleQuestions}
             </Text>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${
-                      ((currentQuestionIndex + 1) / totalVisibleQuestions) * 100
-                    }%`,
-                  },
-                ]}
+            <Text style={styles.progressPercentage}>
+              {Math.round(((currentQuestionIndex + 1) / totalVisibleQuestions) * 100)}%
+            </Text>
+          </View>
+          <View style={styles.progressBar}>
+            <LinearGradient
+              colors={["#4A90E2", "#6BC4A1"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[
+                styles.progressFill,
+                { width: `${((currentQuestionIndex + 1) / totalVisibleQuestions) * 100}%` }
+              ]}
+            />
+          </View>
+        </Animated.View>
+
+        {/* Question Card */}
+        <Animated.View 
+          entering={FadeInDown.delay(200)}
+          style={styles.questionCard}
+        >
+          <View style={styles.questionHeader}>
+            <View style={styles.iconContainer}>
+              <Ionicons 
+                name={getIconName(currentQuestion.icon)} 
+                size={24} 
+                color="#4A90E2" 
               />
             </View>
+            <Text style={styles.questionNumber}>
+              Question {currentQuestionIndex + 1}
+            </Text>
           </View>
+          
+          <Text style={styles.questionText}>{currentQuestion.question}</Text>
 
-          <View style={styles.questionContainer}>
-            <Text style={styles.questionText}>{currentQuestion.question}</Text>
+          {/* Options */}
+          <View style={styles.optionsContainer}>
+            {currentQuestion.options.map((option, index) => {
+              const isSelected =
+                currentQuestion.type === "multiple"
+                  ? (answers[currentQuestion.id] as string[])?.includes(option)
+                  : answers[currentQuestion.id] === option;
 
-            <View style={styles.optionsContainer}>
-              {currentQuestion.options.map((option) => {
-                const isSelected =
-                  currentQuestion.type === "multiple"
-                    ? (answers[currentQuestion.id] as string[])?.includes(
-                        option
-                      )
-                    : answers[currentQuestion.id] === option;
-
-                return (
+              return (
+                <Animated.View
+                  key={option}
+                  entering={FadeInDown.delay(300 + index * 100)}
+                >
                   <Pressable
-                    key={option}
                     style={({ pressed }) => [
                       styles.optionButton,
                       isSelected && styles.selectedOption,
@@ -218,187 +257,266 @@ export default function MentalHealthOnboarding() {
                     >
                       {option}
                     </Text>
-                    {currentQuestion.type === "multiple" && (
+                    {currentQuestion.type === "multiple" ? (
                       <View style={styles.checkbox}>
-                        {isSelected && <View style={styles.checkboxSelected} />}
+                        {isSelected && (
+                          <Ionicons name="checkmark" size={16} color="#4A90E2" />
+                        )}
+                      </View>
+                    ) : (
+                      <View style={styles.radio}>
+                        {isSelected && <View style={styles.radioSelected} />}
                       </View>
                     )}
                   </Pressable>
-                );
-              })}
-            </View>
+                </Animated.View>
+              );
+            })}
           </View>
+        </Animated.View>
 
-          <View style={styles.navigationContainer}>
-            {currentQuestionIndex > 0 && (
-              <Pressable style={styles.backButton} onPress={handleBack}>
-                <Text style={styles.backButtonText}>Back</Text>
-              </Pressable>
-            )}
-
+        {/* Navigation */}
+        <View style={styles.navigationContainer}>
+          {currentQuestionIndex > 0 && (
             <Pressable
-              style={[
-                styles.nextButton,
-                !isAnswered && styles.nextButtonDisabled,
-              ]}
-              onPress={handleNext}
-              disabled={!isAnswered || isSubmitting}
+              style={styles.backButton}
+              onPress={handleBack}
+            >
+              <Ionicons name="arrow-back" size={18} color="#1B3C73" />
+              <Text style={styles.backButtonText}>Back</Text>
+            </Pressable>
+          )}
+
+          <Pressable
+            style={[
+              styles.nextButton,
+              !isAnswered && styles.nextButtonDisabled,
+            ]}
+            onPress={handleNext}
+            disabled={!isAnswered || isSubmitting}
+          >
+            <LinearGradient
+              colors={["#4A90E2", "#6BC4A1"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.nextButtonGradient}
             >
               <Text style={styles.nextButtonText}>
                 {currentQuestionIndex === totalVisibleQuestions - 1
                   ? isSubmitting
-                    ? "Submitting..."
-                    : "Complete"
-                  : "Next"}
+                    ? "Completing..."
+                    : "Complete Setup"
+                  : "Continue"}
               </Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </View>
-    </ImageBackground>
+              <Ionicons 
+                name={currentQuestionIndex === totalVisibleQuestions - 1 ? "checkmark" : "arrow-forward"} 
+                size={18} 
+                color="#FFFFFF" 
+              />
+            </LinearGradient>
+          </Pressable>
+        </View>
+
+        {/* Privacy Note */}
+        <Text style={styles.privacyNote}>
+          Your answers are private and secure. We use this information to personalize your experience.
+        </Text>
+      </ScrollView>
+    </LinearGradient>
   );
 }
+
 const styles = StyleSheet.create({
-  backgroundImage: {
+  background: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   container: {
-    flexGrow: 1,
-    padding: 25,
-    paddingTop: 50,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 32,
+    marginTop: 20,
+  },
+  welcomeText: {
+    fontSize: 28,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
   },
   progressContainer: {
-    marginBottom: 30,
+    marginBottom: 32,
+  },
+  progressLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   progressText: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 8,
-    textAlign: "center",
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+  },
+  progressPercentage: {
+    fontSize: 14,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
   },
   progressBar: {
-    height: 8,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: "#E8F4F8",
+    borderRadius: 3,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#2980b9",
-    borderRadius: 4,
+    borderRadius: 3,
   },
-  questionContainer: {
-    flex: 1,
+  questionCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+    marginBottom: 32,
+  },
+  questionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    gap: 12,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F0F8FF",
     justifyContent: "center",
+    alignItems: "center",
+  },
+  questionNumber: {
+    fontSize: 14,
+    color: "#4A90E2",
+    fontFamily: "Poppins-SemiBold",
   },
   questionText: {
-    fontSize: 28,
-    fontWeight: "600",
-    marginBottom: 30,
-    color: "#2c3e50",
-    textAlign: "center",
-    lineHeight: 36,
+    fontSize: 20,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    lineHeight: 28,
+    marginBottom: 24,
   },
   optionsContainer: {
     gap: 12,
-    marginBottom: 20,
   },
   optionButton: {
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#FAFAF7",
     padding: 18,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#E8F4F8",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   selectedOption: {
-    backgroundColor: "#2980b9",
-    borderColor: "#2980b9",
+    backgroundColor: "#F0F8FF",
+    borderColor: "#4A90E2",
   },
   pressedOption: {
     opacity: 0.8,
   },
   optionText: {
     fontSize: 16,
-    textAlign: "left",
-    color: "#333",
+    color: "#1B3C73",
+    fontFamily: "Poppins-Regular",
     flex: 1,
   },
   selectedOptionText: {
-    color: "#fff",
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
   },
   checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     borderWidth: 2,
-    borderColor: "#ccc",
+    borderColor: "#4A90E2",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 10,
+    marginLeft: 12,
   },
-  checkboxSelected: {
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#4A90E2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 12,
+  },
+  radioSelected: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#fff",
+    backgroundColor: "#4A90E2",
   },
   navigationContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 30,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   backButton: {
-    padding: 16,
-    backgroundColor: "#2980b9",
-    // padding: 16,
-    borderRadius: 30,
-    minWidth: 150,
+    flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
   },
   backButtonText: {
-    color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
   },
   nextButton: {
-    backgroundColor: "#2980b9",
-    padding: 16,
-    borderRadius: 30,
-    minWidth: 150,
+    flex: 1,
+    marginLeft: 20,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  nextButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: "center",
+    gap: 8,
   },
   nextButtonDisabled: {
     opacity: 0.6,
   },
   nextButtonText: {
-    color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
+    color: "#FFFFFF",
+    fontFamily: "Poppins-SemiBold",
+  },
+  privacyNote: {
+    fontSize: 12,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    textAlign: "center",
+    lineHeight: 18,
+    opacity: 0.7,
   },
 });
