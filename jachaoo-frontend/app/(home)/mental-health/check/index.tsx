@@ -108,8 +108,18 @@ export default function MentalHealthCheckStart() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
+           {/* Back Button */}
+<Pressable
+  style={styles.backButton}
+  onPress={() => router.push("/(home)/mental-health/dashboard")}
+>
+  <Ionicons name="arrow-back" size={24} color="#1B3C73" />
+</Pressable>
+         
+
           {/* Title */}
           <Text style={styles.title}>Mental Health Check</Text>
+          
           
           {/* Intro Card */}
           <Animated.View 
@@ -200,6 +210,14 @@ export default function MentalHealthCheckStart() {
 }
 
 const styles = StyleSheet.create({
+  backButton: {
+  position: "absolute",
+  top: 40,
+  left: 16,
+  padding: 8,
+  zIndex: 10,
+},
+
   background: {
     flex: 1,
     backgroundColor: "#FAFAF7",

@@ -1,10 +1,19 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 
 export const dailyTasks = [
   {
@@ -148,8 +157,9 @@ export default function DailyGoalScreen() {
         );
       } catch (error) {
         console.error("Error fetching daily goal:", error);
-        // Fallback to first task
-        setTask(dailyTasks[0]);
+        // Fallback to random task
+        const randomIndex = Math.floor(Math.random() * dailyTasks.length);
+        setTask(dailyTasks[randomIndex]);
       } finally {
         setLoading(false);
       }
@@ -161,6 +171,10 @@ export default function DailyGoalScreen() {
   }, [user?.id]);
 
   const handleMarkAsDone = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    if (isCompletedToday) return;
+    
     try {
       const token = await getToken();
       const today = new Date().toISOString().split("T")[0];
@@ -193,11 +207,11 @@ export default function DailyGoalScreen() {
         })
       );
 
-      Alert.alert("✅ Great job!", "You completed your daily mental task.");
+      Alert.alert("🎉 Great job!", "You completed your daily mental wellness task.");
     } catch (error) {
       Alert.alert(
-        "Error",
-        "Failed to mark task as complete. Please try again."
+        "Oops!",
+        "We couldn't mark your task as complete. Please try again."
       );
       console.error(error);
     }
@@ -205,162 +219,305 @@ export default function DailyGoalScreen() {
 
   if (loading) {
     return (
-      <LinearGradient
-        colors={["#f2d3e2", "#d9e4f5"]}
-        style={[styles.container, { justifyContent: "center" }]}
-      >
-        <Text>Loading your daily goal...</Text>
-      </LinearGradient>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={styles.loadingText}>Loading your daily goal...</Text>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={["#f2d3e2", "#d9e4f5"]} style={styles.container}>
-      {/* Close Button */}
-      <Pressable style={styles.closeButton} onPress={() => router.back()}>
-        <Ionicons name="close" size={28} color="#ff4d4d" />
-      </Pressable>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable 
+            style={styles.backButton} 
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1B3C73" />
+          </Pressable>
+          <Text style={styles.title}>Daily Goals</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-      <Text style={styles.greeting}>Hey, {user?.firstName}</Text>
-      <Text style={styles.streak}>
-        🔥 Streak: {streak} day{streak !== 1 ? "s" : ""}
-      </Text>
-      <Text style={styles.quote}>"Small step for mental wellbeing"</Text>
+        {/* Greeting */}
+        <View style={styles.greetingContainer}>
+          <Text style={styles.greeting}>Hello, {user?.firstName} 🌱</Text>
+          <Text style={styles.subtitle}>Small steps for mental wellbeing</Text>
+        </View>
 
-      {/* Task Box */}
-      <View style={styles.taskBox}>
-        <Text style={styles.taskHeader}>✨ TODAY'S CHALLENGE</Text>
-        <Text style={styles.taskText}>{task.task}</Text>
-        <Text style={styles.whyHeader}>💡 WHY THIS MATTERS</Text>
-        <Text style={styles.whyText}>{task.why}</Text>
-      </View>
+        {/* Streak Card */}
+        <View style={styles.streakCard}>
+          <View style={styles.streakContent}>
+            <View style={styles.streakIcon}>
+              <Ionicons name="flame" size={28} color="#FF9500" />
+            </View>
+            <View>
+              <Text style={styles.streakNumber}>{streak}</Text>
+              <Text style={styles.streakLabel}>Day Streak</Text>
+            </View>
+          </View>
+          <Text style={styles.streakMotivation}>
+            {streak === 0 
+              ? "Start your journey today!" 
+              : streak < 3 
+                ? "You're building momentum!" 
+                : streak < 7 
+                  ? "Amazing consistency!" 
+                  : "You're unstoppable! 🔥"}
+          </Text>
+        </View>
 
-      {/* Mark as done */}
-      <Pressable
-        style={[styles.markButton, isCompletedToday && styles.disabledButton]}
-        onPress={handleMarkAsDone}
-        disabled={isCompletedToday}
-      >
-        <Ionicons
-          name="checkmark-done-circle"
-          size={32}
-          color={isCompletedToday ? "#2ecc71" : "#fff"}
-        />
-        <Text style={styles.buttonText}>
-          {isCompletedToday ? "Completed today" : "Mark as done"}
-        </Text>
-      </Pressable>
-    </LinearGradient>
+        {/* Today's Challenge Card */}
+        <View style={styles.taskCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Today's Challenge</Text>
+            <View style={styles.timeBadge}>
+              <Ionicons name="time-outline" size={14} color="#4A90E2" />
+              <Text style={styles.timeText}>10-20 min</Text>
+            </View>
+          </View>
+          
+          <Text style={styles.taskText}>{task.task}</Text>
+          
+          <View style={styles.divider} />
+          
+          <View style={styles.whySection}>
+            <View style={styles.whyHeader}>
+              <Ionicons name="bulb-outline" size={20} color="#6BC4A1" />
+              <Text style={styles.whyTitle}>Why This Matters</Text>
+            </View>
+            <Text style={styles.whyText}>{task.why}</Text>
+          </View>
+        </View>
+
+        {/* Action Button */}
+        <Pressable
+          style={[
+            styles.actionButton,
+            isCompletedToday && styles.completedButton,
+          ]}
+          onPress={handleMarkAsDone}
+          disabled={isCompletedToday}
+        >
+          <Ionicons
+            name={isCompletedToday ? "checkmark-circle" : "checkmark-circle-outline"}
+            size={24}
+            color="#FFFFFF"
+          />
+          <Text style={styles.actionButtonText}>
+            {isCompletedToday ? "Completed Today" : "Mark as Done"}
+          </Text>
+        </Pressable>
+
+        {/* Progress */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill,
+                { width: `${isCompletedToday ? 100 : 0}%` }
+              ]} 
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {isCompletedToday ? "Daily goal achieved! 🎯" : "Ready to begin"}
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 60,
+    backgroundColor: "#FAFAF7",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
+    backgroundColor: "#FAFAF7",
   },
-  closeButton: {
-    position: "absolute",
-    top: 40,
-    left: 20,
-  },
-  greeting: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  streak: {
-    fontSize: 18,
-    marginTop: 10,
-    color: "#ff6600",
-  },
-  quote: {
-    marginVertical: 20,
-    fontSize: 14,
-    color: "#333",
-    fontStyle: "italic",
-    textAlign: "center",
-  },
-  // taskBox: {
-  //   backgroundColor: "#fff",
-  //   borderRadius: 20,
-  //   padding: 20,
-  //   width: "100%",
-  //   marginVertical: 20,
-  //   shadowColor: "#000",
-  //   shadowOffset: { width: 0, height: 4 },
-  //   shadowOpacity: 0.2,
-  //   shadowRadius: 6,
-  //   elevation: 4,
-  // },
-  taskText: {
+  loadingText: {
+    marginTop: 12,
     fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 10,
+    color: "#666",
   },
-  whyText: {
-    fontSize: 15,
-    color: "#333",
-  },
-  markButton: {
-    backgroundColor: "#27ae60",
-    borderRadius: 30,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "space-between",
+    marginBottom: 24,
   },
-  disabledButton: {
-    backgroundColor: "#95a5a6",
+  backButton: {
+    padding: 8,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+  title: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1B3C73",
   },
-  taskBox: {
-    backgroundColor: "white",
-    borderRadius: 20,
+  greetingContainer: {
+    marginBottom: 20,
+  },
+  greeting: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#1B3C73",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+  },
+  streakCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     padding: 20,
-    width: "100%",
-    height: "40%",
-    marginVertical: 15,
-    // Shadow for Android
-    elevation: 5,
-    // Shadow for iOS
+    marginBottom: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    borderLeftWidth: 5, // Red accent line
-    borderLeftColor: "#FF6B6B",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  taskHeader: {
+  streakContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 12,
+  },
+  streakIcon: {
+    backgroundColor: "rgba(255, 149, 0, 0.1)",
+    padding: 12,
+    borderRadius: 12,
+  },
+  streakNumber: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#1B3C73",
+  },
+  streakLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  streakMotivation: {
+    fontSize: 14,
+    color: "#4A90E2",
+    fontStyle: "italic",
+  },
+  taskCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  cardTitle: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#FF6B6B", // Red-pink
-    marginBottom: 8,
-    marginTop: 10,
+    fontWeight: "600",
+    color: "#1B3C73",
+  },
+  timeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(74, 144, 226, 0.1)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  timeText: {
+    fontSize: 12,
+    color: "#4A90E2",
+    fontWeight: "500",
   },
   taskText: {
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "#333",
-    marginBottom: 15,
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#F0F0F0",
+    marginVertical: 16,
+  },
+  whySection: {
+    backgroundColor: "rgba(107, 196, 161, 0.05)",
+    borderRadius: 12,
+    padding: 16,
   },
   whyHeader: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "#7F5DF0", // Purple
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 8,
-    marginTop: 40,
+  },
+  whyTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#6BC4A1",
   },
   whyText: {
-    fontSize: 15,
-    color: "green",
-    fontStyle: "italic",
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+  },
+  actionButton: {
+    backgroundColor: "#4A90E2",
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 20,
+  },
+  completedButton: {
+    backgroundColor: "#95A5A6",
+  },
+  actionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  progressContainer: {
+    alignItems: "center",
+  },
+  progressBar: {
+    width: "100%",
+    height: 6,
+    backgroundColor: "rgba(74, 144, 226, 0.1)",
+    borderRadius: 3,
+    marginBottom: 12,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#4A90E2",
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
   },
 });

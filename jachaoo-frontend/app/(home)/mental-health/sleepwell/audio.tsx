@@ -1,17 +1,19 @@
+import { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  SafeAreaView,
+  Animated,
+  ScrollView,
+  Image,
+} from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
-import { useEffect, useRef, useState } from "react";
-import {
-  Dimensions,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import MentalHealthBackground from "../MentalHealthBackground";
-const { width } = Dimensions.get("window");
-const CARD_WIDTH = (width - 40 - 12) / 2;
+import * as Haptics from "expo-haptics";
+
 const audioFiles = {
   "forest-night": {
     uri: "https://res.cloudinary.com/drgny2hcw/video/upload/v1763371245/fast_forest-night_mqy8h2.m4a",
@@ -35,307 +37,318 @@ const audioOptions = [
     id: 1,
     name: "Forest Night",
     key: "forest-night",
-    image: require("../../../../assets/images/sleepwell-audio/forest-night.jpg"),
     duration: "25 min",
   },
   {
     id: 2,
     name: "Camp Fire",
     key: "camp-fire",
-    image: require("../../../../assets/images/sleepwell-audio/camp-fire.webp"),
     duration: "25 min",
   },
   {
     id: 3,
     name: "Soft Wind",
     key: "soft-wind",
-    image: require("../../../../assets/images/sleepwell-audio/soft-wind.webp"),
     duration: "25 min",
   },
   {
     id: 4,
     name: "River",
     key: "ocean-waves",
-    image: require("../../../../assets/images/sleepwell-audio/river.jpeg"),
     duration: "25 min",
   },
   {
     id: 5,
     name: "Rainfall",
     key: "rainfall",
-    image: require("../../../../assets/images/sleepwell-audio/rainfall.webp"),
     duration: "25 min",
   },
 ];
 
 export default function AudioSection() {
-  const [loadedSounds, setLoadedSounds] = useState<Record<string, Audio.Sound>>(
-    {}
-  );
+  const router = useRouter();
   const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Use a ref to always access current sounds
+  const [isLoading, setIsLoading] = useState(false);
   const soundsRef = useRef<Record<string, Audio.Sound>>({});
-  soundsRef.current = loadedSounds;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    console.log("[AudioSection] Starting audio setup");
-    const startTime = Date.now();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
 
     Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      staysActiveInBackground: true, // Keep audio active when app is backgrounded
-      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      staysActiveInBackground: true,
       playsInSilentModeIOS: true,
-      shouldDuckAndroid: true,
-      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-      playThroughEarpieceAndroid: false,
-    }).then(() => {
-      console.log("[AudioSection] Audio mode set");
     });
 
-    const loadSounds = async () => {
-      console.log("[AudioSection] Starting sound preloading");
-      const soundMap: Record<string, Audio.Sound> = {};
-
-      try {
-        for (const key in audioFiles) {
-          const loadStart = Date.now();
-          console.log(`[AudioSection] Loading sound: ${key}`);
-
-          const { sound } = await Audio.Sound.createAsync(
-            audioFiles[key as keyof typeof audioFiles],
-            { shouldPlay: false }
-          );
-
-          const loadTime = Date.now() - loadStart;
-          console.log(`[AudioSection] Loaded sound: ${key} in ${loadTime}ms`);
-
-          sound.setOnPlaybackStatusUpdate((status) => {
-            if ((status as Audio.PlaybackStatus).didJustFinish) {
-              console.log(`[AudioSection] Sound finished: ${key}`);
-              setCurrentPlaying(null);
-            }
-          });
-          soundMap[key] = sound;
-        }
-
-        setLoadedSounds(soundMap);
-        setIsLoading(false);
-        console.log(
-          `[AudioSection] All sounds loaded in ${Date.now() - startTime}ms`
-        );
-      } catch (error) {
-        console.error("[AudioSection] Error loading sounds:", error);
-        setIsLoading(false);
-      }
-    };
-
-    loadSounds();
-
-    // Proper cleanup function
     return () => {
-      console.log("[AudioSection] Cleaning up sounds");
-      const cleanup = async () => {
-        // Stop currently playing sound
-        if (currentPlaying && soundsRef.current[currentPlaying]) {
-          console.log(
-            `[AudioSection] Stopping currently playing sound: ${currentPlaying}`
-          );
-          await soundsRef.current[currentPlaying].stopAsync();
-        }
-
-        // Unload all sounds
-        for (const key in soundsRef.current) {
-          try {
-            console.log(`[AudioSection] Unloading sound: ${key}`);
-            await soundsRef.current[key].unloadAsync();
-          } catch (error) {
-            console.error(
-              `[AudioSection] Error unloading sound ${key}:`,
-              error
-            );
-          }
-        }
-      };
-
-      // Don't wait for cleanup to complete to avoid memory leaks
-      cleanup().catch((error) => {
-        console.error("[AudioSection] Cleanup error:", error);
+      Object.values(soundsRef.current).forEach(sound => {
+        sound?.unloadAsync();
       });
     };
   }, []);
 
   const playSound = async (audioKey: string) => {
-    console.log(`[AudioSection] Play sound request: ${audioKey}`);
-    const startTime = Date.now();
-
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     try {
-      const currentSound = loadedSounds[audioKey];
+      // Stop currently playing sound
+      if (currentPlaying && soundsRef.current[currentPlaying]) {
+        await soundsRef.current[currentPlaying].stopAsync();
+      }
 
-      // If the user tapped the same sound that's currently playing
-      if (currentPlaying === audioKey && currentSound) {
-        console.log("[AudioSection] Stopping currently playing sound");
-        await currentSound.stopAsync();
+      // If clicking the same sound, toggle off
+      if (currentPlaying === audioKey) {
         setCurrentPlaying(null);
-        console.log(
-          `[AudioSection] Sound stopped in ${Date.now() - startTime}ms`
-        );
         return;
       }
 
-      // Stop the previously playing sound
-      if (currentPlaying && loadedSounds[currentPlaying]) {
-        console.log(
-          `[AudioSection] Stopping previous sound: ${currentPlaying}`
+      // Load and play new sound
+      if (!soundsRef.current[audioKey]) {
+        setIsLoading(true);
+        const { sound } = await Audio.Sound.createAsync(
+          audioFiles[audioKey as keyof typeof audioFiles],
+          { shouldPlay: false }
         );
-        await loadedSounds[currentPlaying].stopAsync();
+        soundsRef.current[audioKey] = sound;
+        setIsLoading(false);
       }
 
-      // Play new sound
-      if (currentSound) {
-        console.log("[AudioSection] Starting playback");
-        await currentSound.replayAsync();
-        setCurrentPlaying(audioKey);
-        console.log(
-          `[AudioSection] Playback started in ${Date.now() - startTime}ms`
-        );
-      }
+      await soundsRef.current[audioKey].replayAsync();
+      setCurrentPlaying(audioKey);
     } catch (error) {
-      console.error("[AudioSection] Playback error:", error);
+      console.error("Audio error:", error);
+      setIsLoading(false);
     }
   };
 
-  return (
-    <MentalHealthBackground>
-      <View style={styles.container}>
-        <Text style={styles.header}>Listen, Breathe & Sleep</Text>
-        {isLoading && (
-          <Text style={styles.loadingText}>Loading audio files...</Text>
-        )}
+  const handleBack = () => {
+    if (currentPlaying && soundsRef.current[currentPlaying]) {
+      soundsRef.current[currentPlaying].stopAsync();
+    }
+    router.back();
+  };
 
-        <View style={styles.gridContainer}>
-          {audioOptions.map((option) => (
-            <Pressable
-              key={option.id}
-              onPress={() => !isLoading && playSound(option.key)}
-              style={({ pressed }) => [
-                styles.audioCard,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Image
-                source={option.image}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
-              <View style={styles.cardOverlay} />
-              <View style={styles.cardContent}>
-                <Text style={styles.audioName}>{option.name}</Text>
-                <Text style={styles.audioDuration}>{option.duration}</Text>
-                <View style={styles.playButton}>
-                  {isLoading ? (
-                    <Ionicons name="time-outline" size={20} color="white" />
-                  ) : (
-                    <Ionicons
-                      name={currentPlaying === option.key ? "pause" : "play"}
-                      size={20}
-                      color="white"
-                    />
-                  )}
-                </View>
-              </View>
+  return (
+    <SafeAreaView style={styles.background}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Pressable onPress={handleBack} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#1B3C73" />
             </Pressable>
-          ))}
+            <View style={styles.headerContent}>
+              <Text style={styles.title}>Relaxing Audio</Text>
+              <Text style={styles.subtitle}>Calming sounds for better sleep</Text>
+            </View>
+          </View>
+
+          {/* Audio List */}
+          <View style={styles.audioList}>
+            {audioOptions.map((option) => (
+              <AudioCard
+                key={option.id}
+                option={option}
+                isPlaying={currentPlaying === option.key}
+                isLoading={isLoading}
+                onPress={() => playSound(option.key)}
+              />
+            ))}
+          </View>
+
+          {/* Tips */}
+          <View style={styles.tipsContainer}>
+            <Text style={styles.tipsTitle}>Tips for best experience:</Text>
+            <View style={styles.tipsGrid}>
+              <View style={styles.tipItem}>
+                <Ionicons name="headset" size={18} color="#4A90E2" />
+                <Text style={styles.tipText}>Use headphones</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <Ionicons name="volume-low" size={18} color="#4A90E2" />
+                <Text style={styles.tipText}>Medium volume</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <Ionicons name="bed" size={18} color="#4A90E2" />
+                <Text style={styles.tipText}>Comfortable position</Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </Animated.View>
+    </SafeAreaView>
+  );
+}
+
+function AudioCard({ option, isPlaying, isLoading, onPress }: any) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const pressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const pressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <Pressable
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+        onPress={onPress}
+        style={styles.audioCard}
+      >
+        <View style={styles.audioIcon}>
+          <Ionicons name="musical-note" size={24} color="#4A90E2" />
         </View>
-      </View>
-    </MentalHealthBackground>
+        <View style={styles.audioInfo}>
+          <Text style={styles.audioName}>{option.name}</Text>
+          <Text style={styles.audioDuration}>{option.duration}</Text>
+        </View>
+        <View style={styles.playButton}>
+          {isLoading ? (
+            <Ionicons name="time" size={20} color="#FFFFFF" />
+          ) : (
+            <Ionicons
+              name={isPlaying ? "pause" : "play"}
+              size={20}
+              color="#FFFFFF"
+            />
+          )}
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    padding: 20,
-    // backgroundColor: "#f8fafc",
-    marginTop: 20,
+    backgroundColor: "#FAFAF7",
+  },
+  container: {
+    padding: 24,
+    paddingBottom: 40,
   },
   header: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#111827",
-    marginTop: 15,
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: 24,
-    fontFamily: "Inter_600SemiBold",
   },
-  gridContainer: {
+  backButton: {
+    padding: 8,
+    marginRight: 16,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    marginTop: 2,
+  },
+  audioList: {
+    gap: 12,
+    marginBottom: 28,
+  },
+  audioCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  audioIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#F0F7FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  audioInfo: {
+    flex: 1,
+  },
+  audioName: {
+    fontSize: 16,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 2,
+  },
+  audioDuration: {
+    fontSize: 13,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+  },
+  playButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#4A90E2",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tipsContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  tipsTitle: {
+    fontSize: 16,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 12,
+  },
+  tipsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
   },
-  audioCard: {
-    width: CARD_WIDTH,
-    height: CARD_WIDTH * 1.2,
-    borderRadius: 12,
-    overflow: "hidden",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardImage: {
-    width: "100%",
-    height: "100%",
-    position: "absolute",
-  },
-  cardOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.3)",
-  },
-  cardContent: {
-    flex: 1,
-    padding: 12,
-    justifyContent: "flex-end",
-  },
-  audioName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "white",
-    marginBottom: 4,
-    fontFamily: "Inter_600SemiBold",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  audioDuration: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.8)",
-    fontFamily: "Inter_400Regular",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  playButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
+  tipItem: {
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#F0F7FF",
+    borderRadius: 12,
+    padding: 12,
+    flex: 1,
+    minWidth: "48%",
   },
-  buttonPressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.9,
-  },
-  loadingText: {
-    color: "#64748b",
-    textAlign: "center",
-    marginBottom: 16,
-    fontFamily: "Inter_400Regular",
+  tipText: {
+    fontSize: 13,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    marginLeft: 8,
+    flex: 1,
   },
 });

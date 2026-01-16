@@ -5,18 +5,14 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Dimensions,
   SafeAreaView,
-  Alert,
+  Animated,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
-import MentalHealthBackground from "../MentalHealthBackground";
+import * as Haptics from "expo-haptics";
 
-const { width } = Dimensions.get("window");
-
-// Your Cloudinary audio URLs
 const AUDIO_URLS = {
   "four-seven-eight":
     "https://res.cloudinary.com/drgny2hcw/video/upload/v1767717212/4_7_8_breathing_Audio_sx4w7a.mp3",
@@ -29,51 +25,20 @@ const AUDIO_URLS = {
 const EXERCISES = {
   "four-seven-eight": {
     title: "4-7-8 Breathing",
-    description: "Calms your nervous system",
-    steps: [
-      "Inhale for 4 seconds",
-      "Hold for 7 seconds",
-      "Exhale for 8 seconds",
-    ],
-    benefits: ["Reduces anxiety", "Improves sleep", "Calms the mind"],
-    phases: [
-      { label: "INHALE", duration: 4000, color: "#3498db" },
-      { label: "HOLD", duration: 7000, color: "#9b59b6" },
-      { label: "EXHALE", duration: 8000, color: "#2ecc71" },
-    ],
+    description: "Calms anxiety, improves sleep",
+    steps: ["Inhale for 4 seconds", "Hold for 7 seconds", "Exhale for 8 seconds"],
     audioUrl: AUDIO_URLS["four-seven-eight"],
   },
   "box-breathing": {
     title: "Box Breathing",
-    description: "Increases focus and reduces stress",
-    steps: [
-      "Inhale for 4 seconds",
-      "Hold for 4 seconds",
-      "Exhale for 4 seconds",
-      "Hold for 4 seconds",
-    ],
-    benefits: [
-      "Improves concentration",
-      "Reduces stress",
-      "Regulates breathing",
-    ],
-    phases: [
-      { label: "INHALE", duration: 4000, color: "#3498db" },
-      { label: "HOLD", duration: 4000, color: "#2980b9" },
-      { label: "EXHALE", duration: 4000, color: "#2ecc71" },
-      { label: "HOLD", duration: 4000, color: "#27ae60" },
-    ],
+    description: "Increases focus, reduces stress",
+    steps: ["Inhale for 4 seconds", "Hold for 4 seconds", "Exhale for 4 seconds", "Hold for 4 seconds"],
     audioUrl: AUDIO_URLS["box-breathing"],
   },
   "coherent-breathing": {
     title: "Coherent Breathing",
-    description: "Balances emotions and steadies the mind",
+    description: "Balances emotions, steadies mind",
     steps: ["Inhale for 5 seconds", "Exhale for 5 seconds"],
-    benefits: ["Emotional balance", "Reduces anxiety", "Improves heart rate"],
-    phases: [
-      { label: "INHALE", duration: 5000, color: "#3498db" },
-      { label: "EXHALE", duration: 5000, color: "#2ecc71" },
-    ],
     audioUrl: AUDIO_URLS["coherent-breathing"],
   },
 };
@@ -81,577 +46,360 @@ const EXERCISES = {
 export default function BreathingExercise() {
   const { exercise } = useLocalSearchParams();
   const router = useRouter();
-
-  const [isActive, setIsActive] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const [audioLoaded, setAudioLoaded] = useState(false);
-  const [showInstruction, setShowInstruction] = useState(true);
-
+  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  
+  const exerciseData = EXERCISES[exercise as keyof typeof EXERCISES] || EXERCISES["four-seven-eight"];
 
-  const exerciseData =
-    EXERCISES[exercise as keyof typeof EXERCISES] ||
-    EXERCISES["four-seven-eight"];
-
-  // Initialize audio on mount
   useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
+
     Audio.setAudioModeAsync({
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
-      shouldDuckAndroid: true,
-      playThroughEarpieceAndroid: false,
     });
 
     return () => {
-      cleanup();
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
     };
   }, []);
 
-  const cleanup = async () => {
-    // Unload audio
-    if (soundRef.current) {
-      try {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
-      } catch (error) {
-        console.log("Error cleaning up audio:", error);
-      }
-    }
-  };
-
-  const loadAudio = async () => {
-    if (!exerciseData.audioUrl) return;
-
+  const loadAndPlayAudio = async () => {
     try {
-      setIsLoadingAudio(true);
-      console.log("Loading audio:", exerciseData.audioUrl);
+      setIsLoading(true);
+      
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+      }
 
       const { sound } = await Audio.Sound.createAsync(
         { uri: exerciseData.audioUrl },
         { shouldPlay: false }
       );
 
-      // Add playback status update listener
       sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded) {
-          if (status.didJustFinish) {
-            console.log("Audio finished playing");
-            setIsActive(false);
-            setShowInstruction(false); // Show completion screen
-          }
+        if (status.isLoaded && status.didJustFinish) {
+          setIsPlaying(false);
         }
       });
 
       soundRef.current = sound;
-      setAudioLoaded(true);
-      console.log("Audio loaded successfully");
+      await sound.playAsync();
+      setIsPlaying(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (error) {
-      console.error("Error loading audio:", error);
-      Alert.alert(
-        "Audio Error",
-        "Could not load audio guide. Please check your internet connection."
-      );
+      console.error("Audio error:", error);
     } finally {
-      setIsLoadingAudio(false);
+      setIsLoading(false);
     }
   };
 
-  const startExercise = async () => {
-    // Load audio first if not loaded
+  const togglePlayback = async () => {
     if (!soundRef.current) {
-      await loadAudio();
-    }
-
-    if (!soundRef.current) {
-      Alert.alert("Error", "Could not load audio. Please try again.");
+      await loadAndPlayAudio();
       return;
     }
 
-    setIsActive(true);
-    setShowInstruction(false);
-
-    // Start playing audio
     try {
-      await soundRef.current.replayAsync();
+      const status = await soundRef.current.getStatusAsync();
+      
+      if (status.isLoaded) {
+        if (status.isPlaying) {
+          await soundRef.current.pauseAsync();
+          setIsPlaying(false);
+        } else {
+          await soundRef.current.playAsync();
+          setIsPlaying(true);
+        }
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
     } catch (error) {
-      console.error("Error playing audio:", error);
-      Alert.alert("Playback Error", "Could not play audio. Please try again.");
-      setIsActive(false);
-      setShowInstruction(true);
+      console.error("Playback error:", error);
     }
   };
 
-  const stopExercise = async () => {
-    setIsActive(false);
-    setShowInstruction(true);
-
-    // Stop audio
+  const stopAudio = async () => {
     if (soundRef.current) {
       try {
         await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
       } catch (error) {
-        console.error("Error stopping audio:", error);
+        console.error("Stop error:", error);
       }
     }
+    setIsPlaying(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const pauseExercise = async () => {
-    if (soundRef.current) {
-      try {
-        await soundRef.current.pauseAsync();
-        setIsActive(false);
-      } catch (error) {
-        console.error("Error pausing audio:", error);
-      }
-    }
-  };
-
-  const resumeExercise = async () => {
-    if (soundRef.current) {
-      try {
-        await soundRef.current.playAsync();
-        setIsActive(true);
-      } catch (error) {
-        console.error("Error resuming audio:", error);
-      }
-    }
+  const handleBack = () => {
+    stopAudio();
+    router.back();
   };
 
   return (
-    <MentalHealthBackground>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.background}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         {/* Header */}
         <View style={styles.header}>
-          <Pressable
-            onPress={() => {
-              stopExercise();
-              router.back();
-            }}
+          <Pressable 
+            onPress={handleBack}
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#2c3e50" />
+            <Ionicons name="arrow-back" size={24} color="#1B3C73" />
           </Pressable>
-          <Text style={styles.headerTitle}>{exerciseData.title}</Text>
-          <View style={styles.placeholder} />
+          <View style={styles.headerContent}>
+            <Text style={styles.title}>{exerciseData.title}</Text>
+            <Text style={styles.subtitle}>{exerciseData.description}</Text>
+          </View>
         </View>
 
-        {showInstruction ? (
-          // Instruction View
-          <View style={styles.instructionContainer}>
-            <View style={styles.iconContainer}>
-              <Text style={styles.icon}>🌬</Text>
-            </View>
-
-            <Text style={styles.exerciseTitle}>{exerciseData.title}</Text>
-            <Text style={styles.exerciseDescription}>
-              {exerciseData.description}
-            </Text>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>What this does:</Text>
-              {exerciseData.benefits.map((benefit, index) => (
-                <View key={index} style={styles.bulletPoint}>
-                  <Ionicons name="checkmark-circle" size={20} color="#2ecc71" />
-                  <Text style={styles.bulletText}>{benefit}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>How to do it:</Text>
+        {/* Main Content */}
+        <View style={styles.content}>
+          {/* Steps List */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>How to practice:</Text>
+            <View style={styles.stepsContainer}>
               {exerciseData.steps.map((step, index) => (
-                <View key={index} style={styles.bulletPoint}>
-                  <Ionicons name="ellipse" size={10} color="#3498db" />
-                  <Text style={styles.bulletText}>{step}</Text>
+                <View key={index} style={styles.stepItem}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  </View>
+                  <Text style={styles.stepText}>{step}</Text>
                 </View>
               ))}
             </View>
+          </View>
 
-            <View style={styles.audioNote}>
-              <Ionicons name="headset" size={20} color="#3498db" />
-              <Text style={styles.audioNoteText}>
-                Includes guided audio instructions
-              </Text>
+          {/* Audio Player */}
+          <View style={styles.audioPlayer}>
+            <View style={styles.playerHeader}>
+              <Ionicons name="headset" size={22} color="#4A90E2" />
+              <Text style={styles.playerTitle}>Guided Audio Session</Text>
             </View>
-
-            <Pressable
-              style={[
-                styles.startButton,
-                isLoadingAudio && styles.startButtonDisabled,
-              ]}
-              onPress={startExercise}
-              disabled={isLoadingAudio}
-            >
-              {isLoadingAudio ? (
-                <>
-                  <Ionicons name="time-outline" size={24} color="white" />
-                  <Text style={styles.startButtonText}>Loading Audio...</Text>
-                </>
-              ) : audioLoaded ? (
-                <>
-                  <Ionicons name="play" size={24} color="white" />
-                  <Text style={styles.startButtonText}>
-                    Start Guided Session
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Ionicons name="download" size={24} color="white" />
-                  <Text style={styles.startButtonText}>
-                    Load & Start Session
-                  </Text>
-                </>
+            
+            <View style={styles.playerControls}>
+              <Pressable
+                onPress={togglePlayback}
+                disabled={isLoading}
+                style={[
+                  styles.playButton,
+                  isPlaying && styles.playButtonActive
+                ]}
+              >
+                {isLoading ? (
+                  <Ionicons name="time" size={28} color="#FFFFFF" />
+                ) : isPlaying ? (
+                  <Ionicons name="pause" size={28} color="#FFFFFF" />
+                ) : (
+                  <Ionicons name="play" size={28} color="#FFFFFF" />
+                )}
+              </Pressable>
+              
+              {isPlaying && (
+                <Pressable onPress={stopAudio} style={styles.stopButton}>
+                  <Ionicons name="stop" size={24} color="#FFFFFF" />
+                </Pressable>
               )}
-            </Pressable>
+            </View>
+            
+            <Text style={styles.playerHint}>
+              {isLoading ? "Loading audio..." : 
+               isPlaying ? "Playing guided session..." : 
+               "Tap play to start"}
+            </Text>
           </View>
-        ) : isActive ? (
-          // Active Session View
-          <View style={styles.sessionContainer}>
-            <View style={styles.audioPlayingContainer}>
-              <View style={styles.playingIcon}>
-                <Ionicons name="volume-high" size={40} color="#3498db" />
+
+          {/* Tips */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.sectionTitle}>Tips:</Text>
+            <View style={styles.tipsContainer}>
+              <View style={styles.tipItem}>
+                <Ionicons name="body" size={18} color="#4A90E2" />
+                <Text style={styles.tipText}>Sit comfortably</Text>
               </View>
-
-              <Text style={styles.listeningTitle}>Listening to Guide</Text>
-              <Text style={styles.listeningSubtitle}>
-                Follow the audio instructions
-              </Text>
-
-              <View style={styles.phaseIndicator}>
-                {exerciseData.phases.map((phase, index) => (
-                  <View key={index} style={styles.phaseItem}>
-                    <View
-                      style={[
-                        styles.phaseDot,
-                        { backgroundColor: phase.color },
-                      ]}
-                    />
-                    <Text style={styles.phaseLabel}>{phase.label}</Text>
-                    <Text style={styles.phaseDuration}>
-                      {phase.duration / 1000}s
-                    </Text>
-                  </View>
-                ))}
+              <View style={styles.tipItem}>
+                <Ionicons name="eye-off" size={18} color="#4A90E2" />
+                <Text style={styles.tipText}>Close your eyes</Text>
               </View>
-
-              <View style={styles.audioControls}>
-                <Pressable style={styles.pauseButton} onPress={pauseExercise}>
-                  <Ionicons name="pause" size={24} color="white" />
-                  <Text style={styles.pauseButtonText}>Pause</Text>
-                </Pressable>
-
-                <Pressable style={styles.stopButton} onPress={stopExercise}>
-                  <Ionicons name="stop" size={24} color="white" />
-                  <Text style={styles.stopButtonText}>Stop</Text>
-                </Pressable>
+              <View style={styles.tipItem}>
+                <Ionicons name="volume-high" size={18} color="#4A90E2" />
+                <Text style={styles.tipText}>Use headphones</Text>
               </View>
             </View>
           </View>
-        ) : (
-          // Paused or Completed View
-          <View style={styles.sessionContainer}>
-            <View style={styles.pausedContainer}>
-              <View style={styles.pausedIcon}>
-                <Ionicons name="pause-circle" size={60} color="#f39c12" />
-              </View>
-
-              <Text style={styles.pausedTitle}>
-                {soundRef.current ? "Session Paused" : "Session Completed"}
-              </Text>
-              <Text style={styles.pausedSubtitle}>
-                {soundRef.current
-                  ? "Tap resume to continue"
-                  : "Great job! You completed the breathing exercise."}
-              </Text>
-
-              <View style={styles.resumeControls}>
-                {soundRef.current ? (
-                  <Pressable
-                    style={styles.resumeButton}
-                    onPress={resumeExercise}
-                  >
-                    <Ionicons name="play" size={24} color="white" />
-                    <Text style={styles.resumeButtonText}>Resume Session</Text>
-                  </Pressable>
-                ) : null}
-
-                <Pressable
-                  style={styles.restartButton}
-                  onPress={() => {
-                    stopExercise();
-                    setShowInstruction(true);
-                  }}
-                >
-                  <Ionicons name="refresh" size={24} color="#3498db" />
-                  <Text style={styles.restartButtonText}>
-                    Start New Session
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        )}
-      </SafeAreaView>
-    </MentalHealthBackground>
+        </View>
+      </Animated.View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    padding: 20,
+    backgroundColor: "#FAFAF7",
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 30,
+    alignItems: "flex-start",
+    padding: 24,
+    paddingBottom: 16,
   },
   backButton: {
     padding: 8,
+    marginRight: 16,
   },
-  headerTitle: {
+  headerContent: {
     flex: 1,
+  },
+  title: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    textAlign: "center",
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 4,
   },
-  placeholder: {
-    width: 40,
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
   },
-  instructionContainer: {
+  content: {
     flex: 1,
-    alignItems: "center",
-  },
-  iconContainer: {
-    marginBottom: 20,
-  },
-  icon: {
-    fontSize: 64,
-  },
-  exerciseTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  exerciseDescription: {
-    fontSize: 18,
-    color: "#7f8c8d",
-    textAlign: "center",
-    marginBottom: 30,
+    paddingHorizontal: 24,
   },
   section: {
-    width: "100%",
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#2c3e50",
-    marginBottom: 12,
+    fontSize: 18,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginBottom: 16,
   },
-  bulletPoint: {
+  stepsContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  stepItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
-    gap: 12,
+    marginBottom: 16,
   },
-  bulletText: {
-    fontSize: 16,
-    color: "#34495e",
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#4A90E2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  stepNumberText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontFamily: "Poppins-SemiBold",
+  },
+  stepText: {
+    fontSize: 15,
+    color: "#1B3C73",
+    fontFamily: "Poppins-Regular",
     flex: 1,
     lineHeight: 22,
   },
-  audioNote: {
+  audioPlayer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 28,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  playerHeader: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#e8f4fc",
-    padding: 12,
-    borderRadius: 12,
-    gap: 8,
-    marginTop: 10,
     marginBottom: 20,
   },
-  audioNoteText: {
-    fontSize: 14,
-    color: "#3498db",
-    fontWeight: "500",
-  },
-  startButton: {
-    backgroundColor: "#3498db",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 30,
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-  },
-  startButtonDisabled: {
-    backgroundColor: "#95a5a6",
-  },
-  startButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "white",
-  },
-  sessionContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  audioPlayingContainer: {
-    alignItems: "center",
-    width: "100%",
-  },
-  playingIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#e8f4fc",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  listeningTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  listeningSubtitle: {
+  playerTitle: {
     fontSize: 16,
-    color: "#7f8c8d",
-    textAlign: "center",
-    marginBottom: 40,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    marginLeft: 10,
   },
-  phaseIndicator: {
-    width: "100%",
-    gap: 12,
-    marginBottom: 40,
-  },
-  phaseItem: {
+  playerControls: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
-    padding: 16,
-    borderRadius: 12,
-    gap: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  phaseDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  phaseLabel: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#2c3e50",
-  },
-  phaseDuration: {
-    fontSize: 16,
-    color: "#7f8c8d",
-    fontWeight: "500",
-  },
-  audioControls: {
-    flexDirection: "row",
+    justifyContent: "center",
     gap: 20,
-    width: "100%",
+    marginBottom: 16,
   },
-  pauseButton: {
-    flex: 1,
-    backgroundColor: "#f39c12",
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: "center",
-    flexDirection: "row",
+  playButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#4A90E2",
     justifyContent: "center",
-    gap: 8,
+    alignItems: "center",
   },
-  pauseButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "white",
+  playButtonActive: {
+    backgroundColor: "#3A80D2",
   },
   stopButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#E74C3C",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  playerHint: {
+    fontSize: 13,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    textAlign: "center",
+  },
+  tipsSection: {
+    marginBottom: 20,
+  },
+  tipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  tipItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 12,
     flex: 1,
-    backgroundColor: "#e74c3c",
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
+    minWidth: "48%",
+    shadowColor: "#000",
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  stopButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "white",
-  },
-  pausedContainer: {
-    alignItems: "center",
-    width: "100%",
-  },
-  pausedIcon: {
-    marginBottom: 24,
-  },
-  pausedTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  pausedSubtitle: {
-    fontSize: 16,
-    color: "#7f8c8d",
-    textAlign: "center",
-    marginBottom: 40,
-    lineHeight: 24,
-  },
-  resumeControls: {
-    width: "100%",
-    gap: 16,
-  },
-  resumeButton: {
-    backgroundColor: "#2ecc71",
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  resumeButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "white",
-  },
-  restartButton: {
-    backgroundColor: "white",
-    paddingVertical: 16,
-    borderRadius: 30,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-    borderWidth: 2,
-    borderColor: "#3498db",
-  },
-  restartButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#3498db",
+  tipText: {
+    fontSize: 13,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    marginLeft: 8,
+    flex: 1,
   },
 });

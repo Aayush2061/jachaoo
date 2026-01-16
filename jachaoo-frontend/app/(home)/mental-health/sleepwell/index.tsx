@@ -1,123 +1,222 @@
-import {
-  Feather,
-  FontAwesome5,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import MentalHealthBackground from "../MentalHealthBackground";
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  Pressable, 
+  SafeAreaView,
+  Animated,
+  ScrollView
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useEffect, useRef } from "react";
+
 export default function SleepwellScreen() {
   const router = useRouter();
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const features = [
     {
       title: "Audio Section",
       route: "/(home)/mental-health/sleepwell/audio",
-      icon: <Ionicons name="musical-notes" size={24} color="#6366f1" />,
-      bgColor: "#e0e7ff",
+      icon: "musical-notes",
     },
     {
       title: "Herbal Remedies",
       route: "/(home)/mental-health/sleepwell/herbal",
-      icon: <FontAwesome5 name="leaf" size={24} color="#10b981" />,
-      bgColor: "#d1fae5",
+      icon: "leaf",
     },
     {
       title: "Home Rituals",
       route: "/(home)/mental-health/sleepwell/rituals",
-      icon: <MaterialCommunityIcons name="candle" size={24} color="#f59e0b" />,
-      bgColor: "#fef3c7",
+      icon: "cafe",
     },
     {
       title: "Sleep Checklist",
       route: "/(home)/mental-health/sleepwell/checklist",
-      icon: <Feather name="check-circle" size={24} color="#3b82f6" />,
-      bgColor: "#dbeafe",
+      icon: "checkmark-circle",
     },
   ];
 
   return (
-    <MentalHealthBackground>
-      <View style={styles.container}>
-        <Text style={styles.header}>Sleepwell</Text>
-        <Text style={styles.subheader}>Choose what helps you sleep better</Text>
-
-        <View style={styles.featuresContainer}>
-          {features.map((feature, index) => (
-            <Pressable
-              key={index}
-              style={({ pressed }) => [
-                styles.featureButton,
-                { backgroundColor: feature.bgColor },
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={() => router.push(feature.route)}
+    <SafeAreaView style={styles.background}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Pressable 
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.back();
+              }}
+              style={styles.backButton}
             >
-              <View style={styles.iconContainer}>{feature.icon}</View>
-              <Text style={styles.featureText}>{feature.title}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#64748b" />
+              <Ionicons name="arrow-back" size={24} color="#1B3C73" />
             </Pressable>
-          ))}
+            <View style={styles.headerContent}>
+              <Text style={styles.title}>Sleep Well</Text>
+              <Text style={styles.subtitle}>
+                Tools for better sleep and relaxation
+              </Text>
+            </View>
+          </View>
+
+          {/* Features Grid */}
+          <View style={styles.featuresGrid}>
+            {features.map((feature) => (
+              <FeatureCard
+                key={feature.title}
+                feature={feature}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(feature.route);
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Description */}
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.descriptionText}>
+              Explore different approaches to improve your sleep quality and create a relaxing bedtime routine.
+            </Text>
+          </View>
+        </ScrollView>
+      </Animated.View>
+    </SafeAreaView>
+  );
+}
+
+function FeatureCard({ feature, onPress }: any) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const pressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const pressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{ transform: [{ scale }], width: '48%' }}>
+      <Pressable
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+        onPress={onPress}
+        style={styles.featureCard}
+      >
+        <View style={styles.featureIconContainer}>
+          <Ionicons name={feature.icon} size={28} color="#4A90E2" />
         </View>
-      </View>
-    </MentalHealthBackground>
+        <Text style={styles.featureTitle}>{feature.title}</Text>
+        <Ionicons name="chevron-forward" size={18} color="#CCCCCC" style={styles.featureArrow} />
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
+    backgroundColor: "#FAFAF7",
+  },
+  container: {
     padding: 24,
-    // backgroundColor: "rgba(255,255,255,0.1)",
-    marginTop: 20,
   },
   header: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 8,
-    color: "#0f172a",
-    fontFamily: "Inter_600SemiBold",
-  },
-  subheader: {
-    fontSize: 16,
-    marginBottom: 32,
-    color: "#64748b",
-    fontFamily: "Inter_400Regular",
-  },
-  featuresContainer: {
-    gap: 16,
-  },
-  featureButton: {
-    width: "100%",
-    padding: 20,
-    borderRadius: 12,
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    alignItems: "flex-start",
+    marginBottom: 24,
   },
-  buttonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+  backButton: {
+    padding: 8,
+    marginRight: 16,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  featureText: {
-    fontSize: 18,
+  headerContent: {
     flex: 1,
-    color: "#0f172a",
-    fontFamily: "Inter_500Medium",
+  },
+  title: {
+    fontSize: 24,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    marginTop: 2,
+  },
+  featuresGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 16,
+    marginBottom: 28,
+  },
+  featureCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    alignItems: "center",
+  },
+  featureIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#F0F7FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  featureTitle: {
+    fontSize: 14,
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    textAlign: "center",
+  },
+  featureArrow: {
+    marginTop: 8,
+  },
+  descriptionContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: "#666",
+    fontFamily: "Poppins-Regular",
+    textAlign: "center",
+    lineHeight: 22,
   },
 });
