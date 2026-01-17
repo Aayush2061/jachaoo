@@ -74,8 +74,8 @@ export default function SleepwellScreen() {
             </View>
           </View>
 
-          {/* Features Grid */}
-          <View style={styles.featuresGrid}>
+          {/* Features - Single Column */}
+          <View style={styles.featuresColumn}>
             {features.map((feature) => (
               <FeatureCard
                 key={feature.title}
@@ -120,18 +120,22 @@ function FeatureCard({ feature, onPress }: any) {
   };
 
   return (
-    <Animated.View style={{ transform: [{ scale }], width: '48%' }}>
+    <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
         onPressIn={pressIn}
         onPressOut={pressOut}
         onPress={onPress}
         style={styles.featureCard}
       >
-        <View style={styles.featureIconContainer}>
-          <Ionicons name={feature.icon} size={28} color="#4A90E2" />
+        <View style={styles.featureContent}>
+          <View style={styles.featureLeft}>
+            <View style={styles.featureIconContainer}>
+              <Ionicons name={feature.icon} size={28} color="#4A90E2" />
+            </View>
+            <Text style={styles.featureTitle}>{feature.title}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
         </View>
-        <Text style={styles.featureTitle}>{feature.title}</Text>
-        <Ionicons name="chevron-forward" size={18} color="#CCCCCC" style={styles.featureArrow} />
       </Pressable>
     </Animated.View>
   );
@@ -144,11 +148,12 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 24,
+    marginTop:10
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 24,
+    marginBottom: 32,
   },
   backButton: {
     padding: 8,
@@ -168,40 +173,46 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-Regular",
     marginTop: 2,
   },
-  featuresGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 16,
-    marginBottom: 28,
+  featuresColumn: {
+    marginBottom: 32,
   },
   featureCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
     shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+    marginBottom: 16,
+    width: "100%", // Full width, centered by parent
+  },
+  featureContent: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+  featureLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
   featureIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#F0F7FF",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginRight: 16,
   },
   featureTitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#1B3C73",
     fontFamily: "Poppins-SemiBold",
-    textAlign: "center",
-  },
-  featureArrow: {
-    marginTop: 8,
+    flex: 1,
   },
   descriptionContainer: {
     backgroundColor: "#FFFFFF",
@@ -210,6 +221,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   descriptionText: {

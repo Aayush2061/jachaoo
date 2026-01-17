@@ -7,6 +7,7 @@ import {
   Pressable,
   SafeAreaView,
   Animated,
+  ScrollView
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -163,6 +164,11 @@ export default function BreathingExercise() {
             <Text style={styles.subtitle}>{exerciseData.description}</Text>
           </View>
         </View>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
 
         {/* Main Content */}
         <View style={styles.content}>
@@ -239,6 +245,7 @@ export default function BreathingExercise() {
             </View>
           </View>
         </View>
+          </ScrollView>
       </Animated.View>
     </SafeAreaView>
   );
@@ -248,6 +255,12 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     backgroundColor: "#FAFAF7",
+  },
+   scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    // Remove any fixed height constraints
   },
   header: {
     flexDirection: "row",
@@ -276,6 +289,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    marginBottom:30
   },
   section: {
     marginBottom: 28,
@@ -394,6 +408,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.02,
     shadowRadius: 4,
     elevation: 1,
+    
   },
   tipText: {
     fontSize: 13,
@@ -401,5 +416,6 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-Regular",
     marginLeft: 8,
     flex: 1,
+    // marginBottom:10
   },
 });

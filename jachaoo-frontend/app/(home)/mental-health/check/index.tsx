@@ -102,25 +102,24 @@ export default function MentalHealthCheckStart() {
 
   return (
     <SafeAreaView style={styles.background}>
+      {/* Fixed Header */}
+      <View style={styles.headerContainer}>
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.push("/(home)/mental-health/dashboard")}
+        >
+          <Ionicons name="arrow-back" size={24} color="#1B3C73" />
+        </Pressable>
+        <Text style={styles.headerTitle}>Mental Health Check</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-           {/* Back Button */}
-<Pressable
-  style={styles.backButton}
-  onPress={() => router.push("/(home)/mental-health/dashboard")}
->
-  <Ionicons name="arrow-back" size={24} color="#1B3C73" />
-</Pressable>
-         
-
-          {/* Title */}
-          <Text style={styles.title}>Mental Health Check</Text>
-          
-          
           {/* Intro Card */}
           <Animated.View 
             entering={FadeInDown.delay(100)}
@@ -210,18 +209,37 @@ export default function MentalHealthCheckStart() {
 }
 
 const styles = StyleSheet.create({
-  backButton: {
-  position: "absolute",
-  top: 40,
-  left: 16,
-  padding: 8,
-  zIndex: 10,
-},
-
   background: {
     flex: 1,
     backgroundColor: "#FAFAF7",
   },
+  
+  // Header Styles
+  headerContainer: {
+    marginTop:10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: "#FAFAF7",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  headerTitle: {
+    fontSize: 24, // Correct size - was 18 before
+    color: "#1B3C73",
+    fontFamily: "Poppins-SemiBold",
+    textAlign: "center",
+    flex: 1,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  backButton: {
+    padding: 8,
+  },
+  
   scrollView: {
     flex: 1,
   },
@@ -233,15 +251,19 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     alignItems: "center",
+    paddingTop: 8, // Reduced since we have fixed header
   },
-  title: {
-    fontSize: 24,
-    color: "#1B3C73",
-    fontFamily: "Poppins-SemiBold",
-    textAlign: "center",
-    marginTop: 20,
-    marginBottom: 24,
-  },
+  
+  // Remove the old title style if not needed
+  // title: {
+  //   fontSize: 24,
+  //   color: "#1B3C73",
+  //   fontFamily: "Poppins-SemiBold",
+  //   textAlign: "center",
+  //   marginTop: 20,
+  //   marginBottom: 24,
+  // },
+  
   introCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
