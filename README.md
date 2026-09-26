@@ -1,6 +1,8 @@
 # Jachao — AI-Powered HealthTech Application
 
-Jachao is a full-stack, AI-powered healthcare application built with **React Native**, **Node.js**, **Flask**, and **MongoDB**. It combines conversational AI health support (via the Gemini API) with core healthcare features like symptom diagnosis, medical report management, and menstrual cycle tracking. The app is live on the Google Play Store with 1,000+ downloads.
+Jachao is a full-stack, AI-powered healthcare application built with **React Native**, **Node.js**, **Flask**, and **MongoDB**. It combines conversational AI health support (via the Gemini API) with core healthcare features like symptom diagnosis, medical report management, and menstrual cycle tracking. The app was published on the Google Play Store and reached 1,000+ downloads.
+
+> ⚠️ **Note:** The backend is currently offline, so live app functionality is temporarily unavailable. The codebase and architecture remain fully intact — see below for an overview of what was built.
 
 ## Features
 
@@ -42,27 +44,13 @@ The backend exposes RESTful APIs for:
 - **Menstrual Cycle Tracking** — log and retrieve cycle data
 - **AI Assistant** — conversational health support endpoints
 
-> Detailed API documentation (endpoints, request/response schemas) can be added here or linked to a Postman collection.
-
 ## Deployment
 
 - Backend services are deployed on **Google Cloud Platform**.
 - The mobile app is published on the **Google Play Store**.
 - The landing page is built with **Next.js** for SEO optimization.
 
-## Screenshots / Demo
-
-> Add screenshots or a demo video/GIF of the app here.
-
 ## Author
 
 **Aayush Bhandari**
 Final-year Computer Engineering student, Institute of Engineering, Tribhuvan University
-
-- [LinkedIn](https://www.linkedin.com/in/aayush-bhandari-68b70933a/)
-- [GitHub](https://github.com/Aayush2061)
-- [Portfolio](https://portfolio-v2-nine-chi.vercel.app/)
-
-## License
-
-This project is currently unlicensed. Add a license (e.g., MIT) if you intend to open it up for contributions.
